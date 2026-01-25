@@ -20,9 +20,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { deleteClient } from "@/app/actions/clients"
+import { deleteMember } from "@/app/actions/members"
 
-interface Client {
+interface Member {
   id: number
   name: string | null
   email: string
@@ -34,26 +34,26 @@ interface Client {
   }
 }
 
-interface ClientsTableProps {
-  clients: Client[]
+interface MembersTableProps {
+  members: Member[]
 }
 
-export function ClientsTable({ clients }: ClientsTableProps) {
+export function MembersTable({ members }: MembersTableProps) {
   const router = useRouter()
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Delete this client? This action cannot be undone.")) return
+    if (!confirm("Delete this member? This action cannot be undone.")) return
 
-    const result = await deleteClient(id)
+    const result = await deleteMember(id)
     if (result.success) {
       router.refresh()
     }
   }
 
-  if (clients.length === 0) {
+  if (members.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-muted-foreground">No clients yet</p>
+        <p className="text-muted-foreground">No members yet</p>
       </div>
     )
   }
@@ -71,25 +71,25 @@ export function ClientsTable({ clients }: ClientsTableProps) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {clients.map((client) => (
+        {members.map((member) => (
           <TableRow
-            key={client.id}
+            key={member.id}
             className="cursor-pointer hover:bg-muted/50"
-            onClick={() => router.push(`/clients/${client.id}`)}
+            onClick={() => router.push(`/members/${member.id}`)}
           >
-            <TableCell className="font-medium">{client.name}</TableCell>
-            <TableCell>{client.email}</TableCell>
+            <TableCell className="font-medium">{member.name}</TableCell>
+            <TableCell>{member.email}</TableCell>
             <TableCell>
-              {format(new Date(client.createdAt), "MMM dd, yyyy")}
+              {format(new Date(member.createdAt), "MMM dd, yyyy")}
             </TableCell>
             <TableCell>
               <Badge variant="outline">
-                {client._count.appointments}
+                {member._count.appointments}
               </Badge>
             </TableCell>
             <TableCell>
               <Badge variant="outline">
-                {client._count.cohortMemberships}
+                {member._count.cohortMemberships}
               </Badge>
             </TableCell>
             <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
@@ -101,10 +101,10 @@ export function ClientsTable({ clients }: ClientsTableProps) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild>
-                    <Link href={`/clients/${client.id}`}>View</Link>
+                    <Link href={`/members/${member.id}`}>View</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => handleDelete(client.id)}
+                    onClick={() => handleDelete(member.id)}
                     className="text-destructive"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />

@@ -2,35 +2,35 @@ import { notFound } from "next/navigation"
 import { requireCoach } from "@/lib/auth"
 import { auth } from "@/auth"
 import { AppLayout } from "@/components/layouts/AppLayout"
-import { ClientDetail } from "@/components/clients/ClientDetail"
-import { getClientById } from "@/app/actions/clients"
+import { MemberDetail } from "@/features/members/MemberDetail"
+import { getMemberById } from "@/app/actions/members"
 
-interface ClientPageProps {
+interface MemberPageProps {
   params: Promise<{ id: string }>
 }
 
-export default async function ClientPage({ params }: ClientPageProps) {
+export default async function MemberPage({ params }: MemberPageProps) {
   await requireCoach()
   const session = await auth()
 
   if (!session) return null
 
   const { id } = await params
-  const clientId = parseInt(id, 10)
+  const memberId = parseInt(id, 10)
 
-  if (isNaN(clientId)) {
+  if (isNaN(memberId)) {
     notFound()
   }
 
-  const client = await getClientById(clientId)
+  const member = await getMemberById(memberId)
 
-  if (!client) {
+  if (!member) {
     notFound()
   }
 
   return (
     <AppLayout session={session}>
-      <ClientDetail client={client} />
+      <MemberDetail member={member} />
     </AppLayout>
   )
 }

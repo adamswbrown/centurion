@@ -13,11 +13,11 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { updateClient } from "@/app/actions/clients"
+import { updateMember } from "@/app/actions/members"
 import { Pencil } from "lucide-react"
 
-interface EditClientDialogProps {
-  client: {
+interface EditMemberDialogProps {
+  member: {
     id: number
     name: string | null
     email: string
@@ -25,7 +25,7 @@ interface EditClientDialogProps {
   }
 }
 
-export function EditClientDialog({ client }: EditClientDialogProps) {
+export function EditMemberDialog({ member }: EditMemberDialogProps) {
   const [open, setOpen] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
@@ -39,7 +39,7 @@ export function EditClientDialog({ client }: EditClientDialogProps) {
     const formData = new FormData(e.currentTarget)
 
     try {
-      const result = await updateClient(client.id, formData)
+      const result = await updateMember(member.id, formData)
 
       if (result.error) {
         setError(result.error)
@@ -63,9 +63,9 @@ export function EditClientDialog({ client }: EditClientDialogProps) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Client</DialogTitle>
+          <DialogTitle>Edit Member</DialogTitle>
           <DialogDescription>
-            Update client information
+            Update member information
           </DialogDescription>
         </DialogHeader>
 
@@ -75,7 +75,7 @@ export function EditClientDialog({ client }: EditClientDialogProps) {
             <Input
               id="name"
               name="name"
-              defaultValue={client.name || ""}
+              defaultValue={member.name || ""}
               required
             />
           </div>
@@ -86,7 +86,7 @@ export function EditClientDialog({ client }: EditClientDialogProps) {
               id="email"
               name="email"
               type="email"
-              defaultValue={client.email}
+              defaultValue={member.email}
               required
             />
           </div>
@@ -97,7 +97,7 @@ export function EditClientDialog({ client }: EditClientDialogProps) {
               id="image"
               name="image"
               type="url"
-              defaultValue={client.image || ""}
+              defaultValue={member.image || ""}
             />
           </div>
 
@@ -116,7 +116,7 @@ export function EditClientDialog({ client }: EditClientDialogProps) {
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Updating..." : "Update Client"}
+              {loading ? "Updating..." : "Update Member"}
             </Button>
           </div>
         </form>

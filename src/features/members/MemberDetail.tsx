@@ -18,10 +18,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { EditClientDialog } from "./EditClientDialog"
+import { EditMemberDialog } from "./EditMemberDialog"
 
-interface ClientDetailProps {
-  client: {
+interface MemberDetailProps {
+  member: {
     id: number
     name: string | null
     email: string
@@ -51,36 +51,36 @@ interface ClientDetailProps {
   }
 }
 
-export function ClientDetail({ client }: ClientDetailProps) {
+export function MemberDetail({ member }: MemberDetailProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">{client.name}</h1>
-          <p className="text-muted-foreground">{client.email}</p>
+          <h1 className="text-3xl font-bold">{member.name}</h1>
+          <p className="text-muted-foreground">{member.email}</p>
         </div>
-        <EditClientDialog client={client} />
+        <EditMemberDialog member={member} />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Client Information</CardTitle>
+          <CardTitle>Member Information</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-4">
           <div>
             <Label className="text-muted-foreground">Email</Label>
-            <p className="text-sm font-medium">{client.email}</p>
+            <p className="text-sm font-medium">{member.email}</p>
           </div>
           <div>
             <Label className="text-muted-foreground">Joined</Label>
             <p className="text-sm font-medium">
-              {format(new Date(client.createdAt), "MMM dd, yyyy")}
+              {format(new Date(member.createdAt), "MMM dd, yyyy")}
             </p>
           </div>
           <div>
             <Label className="text-muted-foreground">Email Verified</Label>
-            <Badge variant={client.emailVerified ? "default" : "outline"}>
-              {client.emailVerified ? "Verified" : "Pending"}
+            <Badge variant={member.emailVerified ? "default" : "outline"}>
+              {member.emailVerified ? "Verified" : "Pending"}
             </Badge>
           </div>
         </CardContent>
@@ -90,11 +90,11 @@ export function ClientDetail({ client }: ClientDetailProps) {
         <CardHeader>
           <CardTitle>Recent Appointments</CardTitle>
           <CardDescription>
-            {client.appointments.length} appointment(s)
+            {member.appointments.length} appointment(s)
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {client.appointments.length === 0 ? (
+          {member.appointments.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               No appointments yet
             </p>
@@ -108,7 +108,7 @@ export function ClientDetail({ client }: ClientDetailProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {client.appointments.map((apt) => (
+                {member.appointments.map((apt) => (
                   <TableRow key={apt.id}>
                     <TableCell>
                       {format(new Date(apt.startTime), "MMM dd, yyyy")}
@@ -133,17 +133,17 @@ export function ClientDetail({ client }: ClientDetailProps) {
         <CardHeader>
           <CardTitle>Active Cohorts</CardTitle>
           <CardDescription>
-            {client.cohortMemberships.length} cohort(s)
+            {member.cohortMemberships.length} cohort(s)
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {client.cohortMemberships.length === 0 ? (
+          {member.cohortMemberships.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               Not part of any cohorts
             </p>
           ) : (
             <div className="space-y-2">
-              {client.cohortMemberships.map((membership) => (
+              {member.cohortMemberships.map((membership) => (
                 <div
                   key={membership.id}
                   className="flex items-center justify-between p-2 border rounded"
@@ -166,11 +166,11 @@ export function ClientDetail({ client }: ClientDetailProps) {
         <CardHeader>
           <CardTitle>Recent Invoices</CardTitle>
           <CardDescription>
-            {client.invoices.length} invoice(s)
+            {member.invoices.length} invoice(s)
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {client.invoices.length === 0 ? (
+          {member.invoices.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               No invoices yet
             </p>
@@ -184,7 +184,7 @@ export function ClientDetail({ client }: ClientDetailProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {client.invoices.map((invoice) => (
+                {member.invoices.map((invoice) => (
                   <TableRow key={invoice.id}>
                     <TableCell>
                       {format(new Date(invoice.month), "MMM yyyy")}

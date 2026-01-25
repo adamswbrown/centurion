@@ -1,38 +1,38 @@
 import { requireCoach } from "@/lib/auth"
 import { auth } from "@/auth"
 import { AppLayout } from "@/components/layouts/AppLayout"
-import { ClientsTable } from "@/components/clients/ClientsTable"
-import { CreateClientDialog } from "@/components/clients/CreateClientDialog"
+import { MembersTable } from "@/features/members/MembersTable"
+import { CreateMemberDialog } from "@/features/members/CreateMemberDialog"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { getClients } from "@/app/actions/clients"
+import { getMembers } from "@/app/actions/members"
 
-export default async function ClientsPage() {
+export default async function MembersPage() {
   await requireCoach()
   const session = await auth()
 
   if (!session) return null
 
-  const clients = await getClients()
+  const members = await getMembers()
 
   return (
     <AppLayout session={session}>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Clients</h1>
+            <h1 className="text-3xl font-bold">Members</h1>
             <p className="text-muted-foreground">
-              Manage your clients and their fitness journey
+              Manage your members and their fitness journey
             </p>
           </div>
-          <CreateClientDialog />
+          <CreateMemberDialog />
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Client List</CardTitle>
+            <CardTitle>Member List</CardTitle>
           </CardHeader>
           <CardContent>
-            <ClientsTable clients={clients} />
+            <MembersTable members={members} />
           </CardContent>
         </Card>
       </div>

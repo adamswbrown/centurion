@@ -28,7 +28,7 @@ const navigation = {
   ADMIN: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Users", href: "/admin/users", icon: UserCog },
-    { name: "Clients", href: "/clients", icon: Users },
+    { name: "Members", href: "/members", icon: Users },
     { name: "Appointments", href: "/appointments", icon: Calendar },
     { name: "Bootcamps", href: "/bootcamps", icon: Dumbbell },
     { name: "Cohorts", href: "/cohorts", icon: Heart },
@@ -38,7 +38,7 @@ const navigation = {
   ],
   COACH: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Clients", href: "/clients", icon: Users },
+    { name: "Members", href: "/members", icon: Users },
     { name: "Appointments", href: "/appointments", icon: Calendar },
     { name: "Bootcamps", href: "/bootcamps", icon: Dumbbell },
     { name: "Cohorts", href: "/cohorts", icon: Heart },

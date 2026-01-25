@@ -4,15 +4,15 @@ import { prisma } from "@/lib/prisma"
 import { requireCoach } from "@/lib/auth"
 import { z } from "zod"
 
-const createClientSchema = z.object({
+const createMemberSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   image: z.string().optional(),
 })
 
-const updateClientSchema = createClientSchema.partial()
+const updateMemberSchema = createMemberSchema.partial()
 
-export async function getClients() {
+export async function getMembers() {
   await requireCoach()
 
   return await prisma.user.findMany({
@@ -34,7 +34,7 @@ export async function getClients() {
   })
 }
 
-export async function getClientById(id: number) {
+export async function getMemberById(id: number) {
   await requireCoach()
 
   return await prisma.user.findUnique({
@@ -55,10 +55,10 @@ export async function getClientById(id: number) {
   })
 }
 
-export async function createClient(formData: FormData) {
+export async function createMember(formData: FormData) {
   await requireCoach()
 
-  const result = createClientSchema.safeParse({
+  const result = createMemberSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
     image: formData.get("image"),
@@ -82,7 +82,7 @@ export async function createClient(formData: FormData) {
     }
   }
 
-  const client = await prisma.user.create({
+  const member = await prisma.user.create({
     data: {
       name,
       email,
@@ -92,13 +92,13 @@ export async function createClient(formData: FormData) {
     },
   })
 
-  return { success: true, client }
+  return { success: true, member }
 }
 
-export async function updateClient(id: number, formData: FormData) {
+export async function updateMember(id: number, formData: FormData) {
   await requireCoach()
 
-  const result = updateClientSchema.safeParse({
+  const result = updateMemberSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
     image: formData.get("image"),
@@ -110,13 +110,13 @@ export async function updateClient(id: number, formData: FormData) {
     }
   }
 
-  const client = await prisma.user.findUnique({
+  const member = await prisma.user.findUnique({
     where: { id },
   })
 
-  if (!client || client.role !== "CLIENT") {
+  if (!member || member.role !== "CLIENT") {
     return {
-      error: "Client not found",
+      error: "Member not found",
     }
   }
 
@@ -125,19 +125,19 @@ export async function updateClient(id: number, formData: FormData) {
     data: result.data,
   })
 
-  return { success: true, client: updated }
+  return { success: true, member: updated }
 }
 
-export async function deleteClient(id: number) {
+export async function deleteMember(id: number) {
   await requireCoach()
 
-  const client = await prisma.user.findUnique({
+  const member = await prisma.user.findUnique({
     where: { id },
   })
 
-  if (!client || client.role !== "CLIENT") {
+  if (!member || member.role !== "CLIENT") {
     return {
-      error: "Client not found",
+      error: "Member not found",
     }
   }
 

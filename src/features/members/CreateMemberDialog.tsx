@@ -14,9 +14,9 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { createClient } from "@/app/actions/clients"
+import { createMember } from "@/app/actions/members"
 
-export function CreateClientDialog() {
+export function CreateMemberDialog() {
   const [open, setOpen] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
@@ -30,7 +30,7 @@ export function CreateClientDialog() {
     const formData = new FormData(e.currentTarget)
 
     try {
-      const result = await createClient(formData)
+      const result = await createMember(formData)
 
       if (result.error) {
         setError(result.error)
@@ -49,14 +49,14 @@ export function CreateClientDialog() {
       <DialogTrigger asChild>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
-          New Client
+          New Member
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Client</DialogTitle>
+          <DialogTitle>Add New Member</DialogTitle>
           <DialogDescription>
-            Create a new client profile in the system
+            Create a new member profile in the system
           </DialogDescription>
         </DialogHeader>
 
@@ -107,7 +107,7 @@ export function CreateClientDialog() {
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Creating..." : "Create Client"}
+              {loading ? "Creating..." : "Create Member"}
             </Button>
           </div>
         </form>
