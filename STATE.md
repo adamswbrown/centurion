@@ -1,10 +1,10 @@
 # Centurion State
 
-Last updated: 2026-01-25 16:20 GMT
+Last updated: 2026-01-25 16:45 GMT
 
 ## Project Summary
 - Unified fitness platform combining Personal Trainer Planner (appointments, bootcamps, invoicing) and CoachFit (cohorts, health data).
-- **Phase 4 (Bootcamps) complete**. Ready for Phase 5: Cohort System.
+- **Phase 5 (Cohort System) complete**. Ready for Phase 6: Invoicing & Payments.
 
 ## What’s Implemented
 - Member management aligned to spec naming (members, not clients): list, detail, create/edit/delete.
@@ -24,6 +24,15 @@ Last updated: 2026-01-25 16:20 GMT
   - Bootcamp calendar (month/week), list view, create form, and detail attendee management.
   - Capacity warnings in coach UI (at-capacity alerts, spot count indicators).
   - Client registration flow: `/client/bootcamps` page with browse/register/unregister functionality.
+- Cohort system (Phase 5 ✅):
+  - CRUD actions for cohorts with validation (name uniqueness, date validation).
+  - Multi-coach assignment per cohort.
+  - Member management with status tracking (ACTIVE/PAUSED/INACTIVE).
+  - Status transitions (ACTIVE → COMPLETED → ARCHIVED).
+  - Cohort list with status filtering.
+  - Cohort detail page with inline editing for name, description, dates.
+  - Coach assignment UI with add/remove functionality.
+  - Member management UI with status changes and timestamps.
 - Google Calendar integration module using service account credentials.
 
 ## Key Files
@@ -51,6 +60,16 @@ Last updated: 2026-01-25 16:20 GMT
   - `src/features/bootcamps/BootcampCalendar.tsx`
   - `src/features/bootcamps/BootcampDetail.tsx` (with capacity warnings)
   - `src/features/bootcamps/BootcampRegistration.tsx` (client view)
+- Cohort actions: `src/app/actions/cohorts.ts`
+- Cohort hooks: `src/hooks/useCohorts.ts`, `src/hooks/useMembers.ts`
+- Cohort UI:
+  - `src/app/cohorts/page.tsx` (coach/admin)
+  - `src/app/cohorts/[id]/page.tsx` (cohort detail)
+  - `src/features/cohorts/CohortForm.tsx`
+  - `src/features/cohorts/CohortList.tsx`
+  - `src/features/cohorts/CohortDetail.tsx` (with inline editing)
+  - `src/features/cohorts/CoachAssignment.tsx` (multi-coach management)
+  - `src/features/cohorts/MemberManagement.tsx` (status tracking)
 - Calendar utilities: `src/lib/calendar.ts`
 - Google Calendar: `src/lib/google-calendar.ts`
 - Work log: `WORKLOG.md`
@@ -59,6 +78,8 @@ Last updated: 2026-01-25 16:20 GMT
 - Prisma Appointment model uses `startTime`, `endTime`, `fee`, `status`, optional `googleEventId`, `invoiceId`.
 - Conflict checks enforced on create and update for overlapping sessions per member.
 - Bootcamp attendee capacity enforced when adding attendees.
+- Cohort model with `status` (ACTIVE/COMPLETED/ARCHIVED), optional `endDate`, multi-coach support.
+- CohortMembership tracks member status (ACTIVE/PAUSED/INACTIVE) with `joinedAt`/`leftAt` timestamps.
 
 ## Environment / Dependencies
 - `google-auth-library` + `googleapis` for Calendar sync (lockfile updated).
@@ -66,7 +87,7 @@ Last updated: 2026-01-25 16:20 GMT
 
 ## Open TODOs
 - Consider adding global toast notifications for feedback (currently inline messages).
-- Begin Phase 5: Cohort System (cohort CRUD, member management, coach assignment).
+- Begin Phase 6: Invoicing & Payments (invoice CRUD, payment tracking, Stripe integration).
 
 ## How to Run
 - `npm run dev`

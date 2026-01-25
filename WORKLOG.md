@@ -43,3 +43,18 @@
 - Clients can now browse upcoming bootcamps and self-register/unregister.
 - Fixed TypeScript build errors (server action types, session.user.id conversions).
 - Phase 4 (Bootcamps) fully complete.
+
+## 2026-01-25 16:45 GMT
+- Implemented Phase 5 Cohort System:
+  - Created server actions with CRUD operations, member management, coach assignment.
+  - Built React Query hooks for cohorts, members, and coaches.
+  - Implemented UI components: CohortForm, CohortList, CoachAssignment, MemberManagement, CohortDetail.
+  - Created cohort pages at `/cohorts` and `/cohorts/[id]`.
+  - Inline editing for cohort details (name, description, dates).
+  - Status transitions (ACTIVE → COMPLETED → ARCHIVED).
+  - Multi-coach assignment per cohort.
+  - Member management with status tracking (ACTIVE/PAUSED/INACTIVE).
+  - Fixed TypeScript build errors (relation naming, nullable endDate handling).
+  - Installed shadcn alert-dialog component.
+  - Created useMembers hook for member selection.
+- Phase 5 (Cohort System) fully complete.
