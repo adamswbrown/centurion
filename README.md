@@ -43,8 +43,22 @@ Centurion merges two specialized fitness applications into a comprehensive platf
   - Role-aware navigation menus
   - Dashboard with stats cards
 
+### Phase 3: Client Management ✅
+- **Client CRUD Operations**
+  - List all clients with stats (appointments, cohorts)
+  - Create new client profiles
+  - Edit client information
+  - Delete clients
+  - Server actions with Zod validation
+
+- **Client Views**
+  - Table view with sortable columns
+  - Detail page with appointments history
+  - Cohort memberships tracking
+  - Invoice history
+  - Role-based access (ADMIN and COACH only)
+
 ### Upcoming
-- Phase 3: Client Management
 - Phase 4: Appointments & Scheduling
 - Phase 5: Bootcamps & Group Sessions
 - Phase 6: Invoicing & Payments
