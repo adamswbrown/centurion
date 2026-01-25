@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
 import { useDeleteAppointment } from "@/hooks/useAppointments"
+import Link from "next/link"
 
 interface AppointmentListProps {
   appointments: Array<{
@@ -52,7 +53,12 @@ export function AppointmentList({ appointments }: AppointmentListProps) {
         {appointments.map((appointment) => (
           <TableRow key={appointment.id}>
             <TableCell className="font-medium">
-              {appointment.user.name || appointment.user.email}
+              <Link
+                href={`/appointments/${appointment.id}`}
+                className="hover:underline"
+              >
+                {appointment.user.name || appointment.user.email}
+              </Link>
             </TableCell>
             <TableCell>
               {format(new Date(appointment.startTime), "MMM dd, yyyy")}

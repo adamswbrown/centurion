@@ -6,6 +6,7 @@ import { getMembers } from "@/app/actions/members"
 import { getAppointments } from "@/app/actions/appointments"
 import { AppointmentForm } from "@/features/appointments/AppointmentForm"
 import { AppointmentList } from "@/features/appointments/AppointmentList"
+import { AppointmentCalendar } from "@/features/appointments/AppointmentCalendar"
 
 export default async function AppointmentsPage() {
   await requireCoach()
@@ -37,6 +38,15 @@ export default async function AppointmentsPage() {
           </CardHeader>
           <CardContent>
             <AppointmentForm members={members} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Calendar</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AppointmentCalendar />
           </CardContent>
         </Card>
 

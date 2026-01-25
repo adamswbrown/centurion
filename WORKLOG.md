@@ -1,10 +1,9 @@
 # Work Log
 
 ## TODO (as of 2026-01-25 13:39 GMT)
-- Build appointments calendar view (monthly + weekly) and event cards aligned with personal-trainer-planner UI patterns.
-- Add appointment detail/edit view with status updates and conflict re-checks.
-- Wire recurring appointments UI with prefill on selected weekday in calendar view.
 - Run `npm install` to sync `package-lock.json` with new Google Calendar dependencies.
+- Wire recurring appointments UI with prefill on selected weekday in calendar view.
+- Add appointment edit flow feedback (toast) and error handling for conflict messaging.
 
 ## 2026-01-25 13:30 GMT
 - Initialized work log.
@@ -18,3 +17,8 @@
 - Added appointment backbone (actions, hooks, calendar utils) following personal-trainer-planner patterns.
 - Introduced Google Calendar integration module and React Query provider.
 - Added initial appointments UI (create form + list page) and supporting UI textarea component.
+
+## 2026-01-25 13:45 GMT
+- Added appointments calendar (month/week) with event cards and navigation.
+- Added appointment detail view with inline edits, status updates, and calendar sync/delete actions.
+- Added conflict re-checks on appointment updates.

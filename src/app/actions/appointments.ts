@@ -278,6 +278,20 @@ export async function updateAppointment(input: UpdateAppointmentInput) {
 
   ensureValidRange(startDateTime, endDateTime)
 
+  const conflict = await prisma.appointment.findFirst({
+    where: {
+      id: { not: id },
+      userId: appointment.userId,
+      startTime: { lt: endDateTime },
+      endTime: { gt: startDateTime },
+    },
+    select: { id: true },
+  })
+
+  if (conflict) {
+    throw new Error("Appointment conflicts with an existing session")
+  }
+
   const updated = await prisma.appointment.update({
     where: { id },
     data: {
