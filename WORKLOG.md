@@ -1,7 +1,6 @@
 # Work Log
 
 ## TODO (as of 2026-01-25 13:39 GMT)
-- Run `npm install` to sync `package-lock.json` with new Google Calendar dependencies.
 - Wire recurring appointments UI with prefill on selected weekday in calendar view.
 - Add appointment edit flow feedback (toast) and error handling for conflict messaging.
 
@@ -22,3 +21,6 @@
 - Added appointments calendar (month/week) with event cards and navigation.
 - Added appointment detail view with inline edits, status updates, and calendar sync/delete actions.
 - Added conflict re-checks on appointment updates.
+
+## 2026-01-25 14:05 GMT
+- Ran npm install to update package-lock.json with Google Calendar dependencies.
