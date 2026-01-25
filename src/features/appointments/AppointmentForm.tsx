@@ -1,6 +1,7 @@
 "use client"
 
-import { useMemo } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { format } from "date-fns"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -35,13 +36,17 @@ const weekdayOptions = [
 
 interface AppointmentFormProps {
   members: Array<{ id: number; name: string | null; email: string }>
+  initialDate?: Date
 }
 
-export function AppointmentForm({ members }: AppointmentFormProps) {
+export function AppointmentForm({ members, initialDate }: AppointmentFormProps) {
   const createAppointment = useCreateAppointment()
+  const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
   const defaultMemberId = useMemo(() => {
     return members[0]?.id?.toString() ?? ""
   }, [members])
+  const lastPresetRef = useRef<string | null>(null)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -59,23 +64,45 @@ export function AppointmentForm({ members }: AppointmentFormProps) {
 
   const selectedDays = form.watch("selectedDays") || []
 
+  useEffect(() => {
+    if (!initialDate) return
+    const formatted = format(initialDate, "yyyy-MM-dd")
+    if (lastPresetRef.current === formatted) return
+    lastPresetRef.current = formatted
+    form.setValue("date", formatted, { shouldDirty: true })
+    form.setValue("selectedDays", [initialDate.getDay()], {
+      shouldDirty: true,
+    })
+  }, [form, initialDate])
+
   const onSubmit = form.handleSubmit(async (values) => {
-    await createAppointment.mutateAsync({
-      memberId: Number(values.memberId),
-      date: values.date,
-      startTime: values.startTime,
-      endTime: values.endTime,
-      fee: values.fee,
-      notes: values.notes,
-      weeksToRepeat: values.weeksToRepeat ?? 0,
-      selectedDays: values.selectedDays ?? [],
-    })
-    form.reset({
-      ...values,
-      notes: "",
-      weeksToRepeat: 0,
-      selectedDays: [],
-    })
+    setError(null)
+    setMessage(null)
+    try {
+      const result = await createAppointment.mutateAsync({
+        memberId: Number(values.memberId),
+        date: values.date,
+        startTime: values.startTime,
+        endTime: values.endTime,
+        fee: values.fee,
+        notes: values.notes,
+        weeksToRepeat: values.weeksToRepeat ?? 0,
+        selectedDays: values.selectedDays ?? [],
+      })
+      if (!result.syncStatus.success) {
+        setError(result.syncStatus.message ?? "Calendar sync failed")
+      } else {
+        setMessage("Appointment created")
+      }
+      form.reset({
+        ...values,
+        notes: "",
+        weeksToRepeat: 0,
+        selectedDays: [],
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create appointment")
+    }
   })
 
   return (
@@ -156,6 +183,17 @@ export function AppointmentForm({ members }: AppointmentFormProps) {
           </div>
         </div>
       </div>
+
+      {error && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/10 p-2 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+      {message && (
+        <div className="rounded-md border border-emerald-200 bg-emerald-50 p-2 text-sm text-emerald-700">
+          {message}
+        </div>
+      )}
 
       <div className="flex justify-end">
         <Button type="submit" disabled={createAppointment.isPending}>

@@ -23,7 +23,13 @@ const viewOptions = ["month", "week"] as const
 
 type ViewMode = (typeof viewOptions)[number]
 
-export function AppointmentCalendar() {
+export function AppointmentCalendar({
+  selectedDate,
+  onSelectDate,
+}: {
+  selectedDate?: Date
+  onSelectDate?: (date: Date) => void
+}) {
   const [view, setView] = useState<ViewMode>("month")
   const [cursor, setCursor] = useState(() => new Date())
 
@@ -117,14 +123,17 @@ export function AppointmentCalendar() {
             const dayKey = format(dayDate, "yyyy-MM-dd")
             const items = appointmentsByDay.get(dayKey) ?? []
             const isToday = isSameDay(dayDate, new Date())
+            const isSelected = selectedDate ? isSameDay(dayDate, selectedDate) : false
 
             return (
               <div
                 key={dayKey}
                 className={cn(
-                  "min-h-[120px] rounded-md border p-2",
+                  "min-h-[120px] rounded-md border p-2 transition-colors",
                   isToday && "border-primary",
+                  isSelected && "bg-primary/5 border-primary",
                 )}
+                onClick={() => onSelectDate?.(dayDate)}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium">
@@ -155,8 +164,16 @@ export function AppointmentCalendar() {
           {weekDays.map((day) => {
             const dayKey = format(day, "yyyy-MM-dd")
             const items = appointmentsByDay.get(dayKey) ?? []
+            const isSelected = selectedDate ? isSameDay(day, selectedDate) : false
             return (
-              <div key={dayKey} className="rounded-md border p-2">
+              <div
+                key={dayKey}
+                className={cn(
+                  "rounded-md border p-2 transition-colors",
+                  isSelected && "bg-primary/5 border-primary",
+                )}
+                onClick={() => onSelectDate?.(day)}
+              >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium">
                     {format(day, "EEE dd")}

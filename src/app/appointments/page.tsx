@@ -4,9 +4,8 @@ import { auth } from "@/auth"
 import { requireCoach } from "@/lib/auth"
 import { getMembers } from "@/app/actions/members"
 import { getAppointments } from "@/app/actions/appointments"
-import { AppointmentForm } from "@/features/appointments/AppointmentForm"
 import { AppointmentList } from "@/features/appointments/AppointmentList"
-import { AppointmentCalendar } from "@/features/appointments/AppointmentCalendar"
+import { AppointmentDashboard } from "@/features/appointments/AppointmentDashboard"
 
 export default async function AppointmentsPage() {
   await requireCoach()
@@ -34,19 +33,10 @@ export default async function AppointmentsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Create Appointment</CardTitle>
+            <CardTitle>Schedule</CardTitle>
           </CardHeader>
           <CardContent>
-            <AppointmentForm members={members} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Calendar</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AppointmentCalendar />
+            <AppointmentDashboard members={members} />
           </CardContent>
         </Card>
 

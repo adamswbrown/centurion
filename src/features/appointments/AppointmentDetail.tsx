@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { format } from "date-fns"
 import { AttendanceStatus } from "@prisma/client"
@@ -37,8 +37,27 @@ export function AppointmentDetail({ appointment }: AppointmentDetailProps) {
   const deleteAppointment = useDeleteAppointment()
   const syncAppointment = useSyncAppointment()
   const router = useRouter()
+  const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
 
   const defaultFee = useMemo(() => Number(appointment.fee), [appointment.fee])
+
+  function handleUpdate(payload: {
+    id: number
+    startTime: string
+    endTime: string
+    fee: number
+    notes: string
+    status?: AttendanceStatus
+  }) {
+    setError(null)
+    setMessage(null)
+    updateAppointment.mutate(payload, {
+      onSuccess: () => setMessage("Appointment updated"),
+      onError: (err) =>
+        setError(err instanceof Error ? err.message : "Failed to update appointment"),
+    })
+  }
 
   return (
     <div className="space-y-6">
@@ -62,7 +81,7 @@ export function AppointmentDetail({ appointment }: AppointmentDetailProps) {
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             defaultValue={appointment.status}
             onChange={(event) =>
-              updateAppointment.mutate({
+              handleUpdate({
                 id: appointment.id,
                 startTime: extractTimeString(new Date(appointment.startTime)),
                 endTime: extractTimeString(new Date(appointment.endTime)),
@@ -86,7 +105,7 @@ export function AppointmentDetail({ appointment }: AppointmentDetailProps) {
             type="time"
             defaultValue={extractTimeString(new Date(appointment.startTime))}
             onBlur={(event) =>
-              updateAppointment.mutate({
+              handleUpdate({
                 id: appointment.id,
                 startTime: event.target.value,
                 endTime: extractTimeString(new Date(appointment.endTime)),
@@ -103,7 +122,7 @@ export function AppointmentDetail({ appointment }: AppointmentDetailProps) {
             type="time"
             defaultValue={extractTimeString(new Date(appointment.endTime))}
             onBlur={(event) =>
-              updateAppointment.mutate({
+              handleUpdate({
                 id: appointment.id,
                 startTime: extractTimeString(new Date(appointment.startTime)),
                 endTime: event.target.value,
@@ -121,7 +140,7 @@ export function AppointmentDetail({ appointment }: AppointmentDetailProps) {
             step="0.01"
             defaultValue={defaultFee}
             onBlur={(event) =>
-              updateAppointment.mutate({
+              handleUpdate({
                 id: appointment.id,
                 startTime: extractTimeString(new Date(appointment.startTime)),
                 endTime: extractTimeString(new Date(appointment.endTime)),
@@ -140,7 +159,7 @@ export function AppointmentDetail({ appointment }: AppointmentDetailProps) {
           rows={4}
           defaultValue={appointment.notes ?? ""}
           onBlur={(event) =>
-            updateAppointment.mutate({
+            handleUpdate({
               id: appointment.id,
               startTime: extractTimeString(new Date(appointment.startTime)),
               endTime: extractTimeString(new Date(appointment.endTime)),
@@ -151,10 +170,32 @@ export function AppointmentDetail({ appointment }: AppointmentDetailProps) {
         />
       </div>
 
+      {error && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/10 p-2 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+      {message && (
+        <div className="rounded-md border border-emerald-200 bg-emerald-50 p-2 text-sm text-emerald-700">
+          {message}
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-2">
         <Button
           variant="outline"
-          onClick={() => syncAppointment.mutate(appointment.id)}
+          onClick={() => {
+            setError(null)
+            setMessage(null)
+            syncAppointment.mutate(appointment.id, {
+              onSuccess: (result) =>
+                setMessage(result.message ?? "Calendar sync complete"),
+              onError: (err) =>
+                setError(
+                  err instanceof Error ? err.message : "Calendar sync failed",
+                ),
+            })
+          }}
           disabled={syncAppointment.isPending}
         >
           {appointment.googleEventId ? "Resync Calendar" : "Sync to Calendar"}
@@ -164,6 +205,10 @@ export function AppointmentDetail({ appointment }: AppointmentDetailProps) {
           onClick={() =>
             deleteAppointment.mutate(appointment.id, {
               onSuccess: () => router.push("/appointments"),
+              onError: (err) =>
+                setError(
+                  err instanceof Error ? err.message : "Failed to delete appointment",
+                ),
             })
           }
           disabled={deleteAppointment.isPending}

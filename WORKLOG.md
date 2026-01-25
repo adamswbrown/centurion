@@ -1,8 +1,7 @@
 # Work Log
 
 ## TODO (as of 2026-01-25 13:39 GMT)
-- Wire recurring appointments UI with prefill on selected weekday in calendar view.
-- Add appointment edit flow feedback (toast) and error handling for conflict messaging.
+- Consider adding toast notifications for global feedback (currently inline messages).
 
 ## 2026-01-25 13:30 GMT
 - Initialized work log.
@@ -27,3 +26,7 @@
 
 ## 2026-01-25 14:06 GMT
 - Generated STATE.md snapshot of current project status.
+
+## 2026-01-25 14:09 GMT
+- Wired calendar date selection to prefill appointment form date + repeat weekdays.
+- Added inline success/error feedback for appointment create/update/sync/delete flows.
