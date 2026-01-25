@@ -33,3 +33,7 @@
 
 ## 2026-01-25 15:04 GMT
 - Updated STATE.md with latest appointment calendar wiring and feedback changes.
+
+## 2026-01-25 15:09 GMT
+- Started Phase 4 bootcamps: added CRUD + attendee actions, hooks, and bootcamp pages.
+- Implemented bootcamp calendar (month/week), list view, create form, and detail attendee management.
