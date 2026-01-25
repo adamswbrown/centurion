@@ -1,0 +1,518 @@
+// Centurion Unified Fitness Platform - Database Schema
+// Combines Personal Trainer Planner + CoachFit functionality
+// Production-ready schema with proper indexing, constraints, and relationships
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// AUTHENTICATION & USERS
+// ============================================
+
+model User {
+  id            Int       @id @default(autoincrement())
+  email         String    @unique
+  password      String?   // Nullable for OAuth-only users
+  name          String?
+  image         String?
+  emailVerified Boolean   @default(false)
+  role          Role      @default(CLIENT)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Personal Training Relations
+  appointments       Appointment[]
+  bootcampAttendees  BootcampAttendee[]
+  workouts           Workout[]
+  invoices           Invoice[]
+
+  // Health Coaching Relations
+  cohortMemberships  CohortMembership[]
+  coachCohorts       CoachCohortMembership[]  @relation("CoachCohorts")
+  entries            Entry[]
+  questionnaireResponses WeeklyQuestionnaireResponse[]
+  coachNotesWritten  CoachNote[]              @relation("CoachNotes")
+  coachNotesReceived CoachNote[]              @relation("ClientNotes")
+
+  // HealthKit Relations
+  healthKitWorkouts  HealthKitWorkout[]
+  sleepRecords       SleepRecord[]
+
+  // OAuth Relations
+  accounts      Account[]
+  sessions      Session[]
+
+  @@map("users")
+  @@index([email])
+  @@index([role])
+  @@index([createdAt])
+}
+
+enum Role {
+  ADMIN
+  COACH
+  CLIENT
+}
+
+// NextAuth Models
+model Account {
+  id                Int     @id @default(autoincrement())
+  userId            Int
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+  @@index([userId])
+}
+
+model Session {
+  id           Int      @id @default(autoincrement())
+  sessionToken String   @unique
+  userId       Int
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+  @@index([userId])
+  @@index([sessionToken])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================
+// PERSONAL TRAINING (From Personal Trainer Planner)
+// ============================================
+
+model Appointment {
+  id            Int              @id @default(autoincrement())
+  userId        Int
+  startTime     DateTime
+  endTime       DateTime
+  fee           Decimal          @db.Decimal(10, 2)
+  status        AttendanceStatus @default(NOT_ATTENDED)
+  notes         String?
+  googleEventId String?          // For calendar sync
+  invoiceId     Int?
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoice Invoice? @relation(fields: [invoiceId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("appointments")
+  @@index([userId])
+  @@index([startTime])
+  @@index([userId, startTime])
+  @@index([invoiceId])
+  @@index([status])
+}
+
+enum AttendanceStatus {
+  ATTENDED
+  NOT_ATTENDED
+}
+
+model Bootcamp {
+  id          Int      @id @default(autoincrement())
+  name        String
+  startTime   DateTime
+  endTime     DateTime
+  location    String?
+  capacity    Int?
+  description String?
+
+  attendees  BootcampAttendee[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("bootcamps")
+  @@index([startTime])
+  @@index([name])
+}
+
+model BootcampAttendee {
+  id         Int      @id @default(autoincrement())
+  bootcampId Int
+  userId     Int
+
+  bootcamp   Bootcamp @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([bootcampId, userId])
+  @@map("bootcamp_attendees")
+  @@index([bootcampId])
+  @@index([userId])
+}
+
+model Workout {
+  id          Int           @id @default(autoincrement())
+  userId      Int
+  title       String
+  description String?
+  status      WorkoutStatus @default(NOT_STARTED)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("workouts")
+  @@index([userId])
+  @@index([status])
+}
+
+enum WorkoutStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model Invoice {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  month       DateTime @db.Date
+  totalAmount Decimal  @db.Decimal(10, 2)
+  emailSent   Boolean  @default(false)
+  emailSentAt DateTime?
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("invoices")
+  @@index([userId])
+  @@index([month])
+  @@index([userId, month])
+  @@index([emailSent])
+}
+
+// ============================================
+// HEALTH COACHING (From CoachFit)
+// ============================================
+
+model Cohort {
+  id          Int          @id @default(autoincrement())
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime?
+  status      CohortStatus @default(ACTIVE)
+
+  coaches     CoachCohortMembership[]
+  members     CohortMembership[]
+  bundles     QuestionnaireBundle[]
+  config      CohortCheckInConfig?
+  insights    AdminInsight[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("cohorts")
+  @@index([status])
+  @@index([startDate])
+  @@index([status, startDate])
+  @@index([name])
+}
+
+enum CohortStatus {
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+model CohortMembership {
+  id        Int              @id @default(autoincrement())
+  cohortId  Int
+  userId    Int
+  status    MembershipStatus @default(ACTIVE)
+  joinedAt  DateTime         @default(now())
+  leftAt    DateTime?
+
+  cohort Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([cohortId, userId])
+  @@map("cohort_memberships")
+  @@index([cohortId])
+  @@index([userId])
+  @@index([cohortId, status])
+  @@index([status])
+}
+
+enum MembershipStatus {
+  ACTIVE
+  PAUSED
+  INACTIVE
+}
+
+model CoachCohortMembership {
+  id       Int      @id @default(autoincrement())
+  cohortId Int
+  coachId  Int
+
+  cohort Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  coach  User   @relation("CoachCohorts", fields: [coachId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([cohortId, coachId])
+  @@map("coach_cohort_memberships")
+  @@index([cohortId])
+  @@index([coachId])
+}
+
+model Entry {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  date            DateTime @db.Date
+
+  // Health metrics
+  weight          Float?
+  steps           Int?
+  calories        Int?
+  sleepQuality    Int?     // 1-10 scale
+  perceivedStress Int?     // 1-10 scale
+  notes           String?
+
+  // Custom responses per cohort
+  customResponses Json?
+
+  // Data source tracking
+  dataSources     Json?    // {"weight": "manual", "steps": "healthkit"}
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@map("entries")
+  @@index([userId])
+  @@index([date])
+  @@index([userId, date])
+}
+
+model QuestionnaireBundle {
+  id          Int      @id @default(autoincrement())
+  cohortId    Int
+  weekNumber  Int
+  questions   Json     // SurveyJS format
+  isActive    Boolean  @default(true)
+
+  cohort    Cohort                        @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  responses WeeklyQuestionnaireResponse[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cohortId, weekNumber])
+  @@map("questionnaire_bundles")
+  @@index([cohortId])
+  @@index([weekNumber])
+  @@index([isActive])
+}
+
+model WeeklyQuestionnaireResponse {
+  id         Int            @id @default(autoincrement())
+  userId     Int
+  bundleId   Int
+  weekNumber Int
+  responses  Json           // User's answers
+  status     ResponseStatus @default(IN_PROGRESS)
+
+  user   User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bundle QuestionnaireBundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, bundleId])
+  @@map("weekly_questionnaire_responses")
+  @@index([userId])
+  @@index([bundleId])
+  @@index([weekNumber])
+  @@index([status])
+}
+
+enum ResponseStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+model CohortCheckInConfig {
+  id       Int    @id @default(autoincrement())
+  cohortId Int    @unique
+  prompts  Json   // Custom check-in questions
+
+  cohort Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("cohort_check_in_configs")
+}
+
+model CoachNote {
+  id         Int      @id @default(autoincrement())
+  userId     Int      // Client
+  coachId    Int      // Coach
+  weekNumber Int
+  notes      String
+
+  user  User @relation("ClientNotes", fields: [userId], references: [id], onDelete: Cascade)
+  coach User @relation("CoachNotes", fields: [coachId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("coach_notes")
+  @@index([userId])
+  @@index([coachId])
+  @@index([userId, weekNumber])
+  @@index([coachId, userId])
+}
+
+model AdminInsight {
+  id          Int             @id @default(autoincrement())
+  cohortId    Int?
+  title       String
+  description String
+  priority    InsightPriority @default(MEDIUM)
+  status      InsightStatus   @default(ACTIVE)
+
+  cohort Cohort? @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admin_insights")
+  @@index([cohortId])
+  @@index([status])
+  @@index([priority])
+  @@index([status, priority])
+}
+
+enum InsightPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum InsightStatus {
+  ACTIVE
+  RESOLVED
+  DISMISSED
+}
+
+// ============================================
+// HEALTHKIT INTEGRATION (From CoachFit)
+// ============================================
+
+model HealthKitWorkout {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  workoutType  String
+  startTime    DateTime
+  endTime      DateTime
+  duration     Int      // seconds
+  calories     Float?
+  distance     Float?   // meters
+  heartRate    Json?    // {avg: 150, max: 180}
+  metadata     Json?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("healthkit_workouts")
+  @@index([userId])
+  @@index([startTime])
+  @@index([userId, startTime])
+  @@index([workoutType])
+}
+
+model SleepRecord {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  startTime     DateTime
+  endTime       DateTime
+  totalSleep    Int      // minutes
+  inBedTime     Int      // minutes
+  deepSleep     Int?     // minutes
+  remSleep      Int?     // minutes
+  coreSleep     Int?     // minutes
+  sourceDevice  String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("sleep_records")
+  @@index([userId])
+  @@index([startTime])
+  @@index([userId, startTime])
+}
+
+// ============================================
+// SYSTEM & ADMIN
+// ============================================
+
+model SystemSettings {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value Json
+
+  updatedAt DateTime @updatedAt
+
+  @@map("system_settings")
+  @@index([key])
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?     // Actor (null if system)
+  action    String   // CREATE_COHORT, DELETE_USER, etc.
+  target    String?  // Resource affected
+  metadata  Json?    // Additional context
+
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+}
