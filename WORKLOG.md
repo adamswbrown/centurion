@@ -30,3 +30,6 @@
 ## 2026-01-25 14:09 GMT
 - Wired calendar date selection to prefill appointment form date + repeat weekdays.
 - Added inline success/error feedback for appointment create/update/sync/delete flows.
+
+## 2026-01-25 15:04 GMT
+- Updated STATE.md with latest appointment calendar wiring and feedback changes.
