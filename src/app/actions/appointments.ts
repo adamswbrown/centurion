@@ -190,7 +190,7 @@ export async function createAppointment(
         })),
       )
 
-      const updatePromises: Promise<unknown>[] = []
+      const updatePromises = []
       let successCount = 0
       let failedCount = 0
 
@@ -303,7 +303,7 @@ export async function updateAppointment(input: UpdateAppointmentInput) {
     },
   })
 
-  let syncStatus = { success: true as const, message: undefined as string | undefined }
+  let syncStatus: { success: boolean; message?: string } = { success: true }
 
   try {
     const calendarEvent: CalendarEvent = {
@@ -352,7 +352,7 @@ export async function deleteAppointment(id: number) {
     where: { id },
   })
 
-  let syncStatus = { success: true as const, message: undefined as string | undefined }
+  let syncStatus: { success: boolean; message?: string } = { success: true }
 
   if (appointment.googleEventId) {
     try {
@@ -448,8 +448,4 @@ export async function syncAppointmentToGoogleCalendar(id: number) {
       message: error instanceof Error ? error.message : "Failed to sync with Google Calendar",
     }
   }
-}
-
-export function toTimeInputValue(date: Date) {
-  return extractTimeString(date)
 }

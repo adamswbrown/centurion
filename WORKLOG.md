@@ -37,3 +37,9 @@
 ## 2026-01-25 15:09 GMT
 - Started Phase 4 bootcamps: added CRUD + attendee actions, hooks, and bootcamp pages.
 - Implemented bootcamp calendar (month/week), list view, create form, and detail attendee management.
+## 2026-01-25 16:20 GMT
+- Completed Phase 4 polish: added capacity warnings in bootcamp detail UI.
+- Created client registration flow with actions, hooks, and UI at `/client/bootcamps`.
+- Clients can now browse upcoming bootcamps and self-register/unregister.
+- Fixed TypeScript build errors (server action types, session.user.id conversions).
+- Phase 4 (Bootcamps) fully complete.

@@ -146,38 +146,51 @@ export function BootcampDetail({ bootcamp, members }: BootcampDetailProps) {
       </div>
 
       <div className="space-y-3">
-        <Label htmlFor="memberSelect">Add attendee</Label>
-        <div className="flex gap-2">
-          <select
-            id="memberSelect"
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            defaultValue=""
-            onChange={(event) => {
-              const memberId = Number(event.target.value)
-              if (!memberId) return
-              addAttendee.mutate(
-                { bootcampId: bootcamp.id, memberId },
-                {
-                  onSuccess: () => setMessage("Attendee added"),
-                  onError: (err) =>
-                    setError(
-                      err instanceof Error ? err.message : "Failed to add attendee",
-                    ),
-                },
-              )
-              event.currentTarget.value = ""
-            }}
-          >
-            <option value="">Select member</option>
-            {members
-              .filter((member) => !attendeeIds.has(member.id))
-              .map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.name || member.email}
-                </option>
-              ))}
-          </select>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="memberSelect">Add attendee</Label>
+          {bootcamp.capacity && (
+            <span className={`text-sm ${bootcamp.attendees.length >= bootcamp.capacity ? 'text-destructive font-medium' : bootcamp.attendees.length >= bootcamp.capacity * 0.9 ? 'text-orange-600' : 'text-muted-foreground'}`}>
+              {bootcamp.attendees.length}/{bootcamp.capacity} spots filled
+            </span>
+          )}
         </div>
+        {bootcamp.capacity && bootcamp.attendees.length >= bootcamp.capacity ? (
+          <div className="rounded-md border border-orange-200 bg-orange-50 p-3 text-sm text-orange-900">
+            ⚠️ This bootcamp is at capacity. Remove an attendee before adding more.
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <select
+              id="memberSelect"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              defaultValue=""
+              onChange={(event) => {
+                const memberId = Number(event.target.value)
+                if (!memberId) return
+                addAttendee.mutate(
+                  { bootcampId: bootcamp.id, memberId },
+                  {
+                    onSuccess: () => setMessage("Attendee added"),
+                    onError: (err) =>
+                      setError(
+                        err instanceof Error ? err.message : "Failed to add attendee",
+                      ),
+                  },
+                )
+                event.currentTarget.value = ""
+              }}
+            >
+              <option value="">Select member</option>
+              {members
+                .filter((member) => !attendeeIds.has(member.id))
+                .map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.name || member.email}
+                  </option>
+                ))}
+            </select>
+          </div>
+        )}
       </div>
 
       <div className="space-y-2">

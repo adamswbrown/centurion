@@ -1,10 +1,10 @@
 # Centurion State
 
-Last updated: 2026-01-25 15:09 GMT
+Last updated: 2026-01-25 16:20 GMT
 
 ## Project Summary
 - Unified fitness platform combining Personal Trainer Planner (appointments, bootcamps, invoicing) and CoachFit (cohorts, health data).
-- Current focus: Phase 4 per unified-platform-spec = Bootcamp/Group Classes (Phase 3 appointments completed).
+- **Phase 4 (Bootcamps) complete**. Ready for Phase 5: Cohort System.
 
 ## What’s Implemented
 - Member management aligned to spec naming (members, not clients): list, detail, create/edit/delete.
@@ -18,10 +18,12 @@ Last updated: 2026-01-25 15:09 GMT
   - Calendar selection pre-fills appointment date and repeat weekdays.
   - Detail/edit view at `/appointments/[id]` with status updates, inline edits, sync/delete actions.
   - Inline success/error feedback for create/update/sync/delete.
-- Bootcamp system (Phase 4 in progress):
+- Bootcamp system (Phase 4 ✅):
   - CRUD actions and attendee management with capacity checks.
   - Bootcamp hooks and pages.
   - Bootcamp calendar (month/week), list view, create form, and detail attendee management.
+  - Capacity warnings in coach UI (at-capacity alerts, spot count indicators).
+  - Client registration flow: `/client/bootcamps` page with browse/register/unregister functionality.
 - Google Calendar integration module using service account credentials.
 
 ## Key Files
@@ -38,15 +40,17 @@ Last updated: 2026-01-25 15:09 GMT
   - `src/features/appointments/AppointmentCalendar.tsx`
   - `src/features/appointments/AppointmentCard.tsx`
   - `src/features/appointments/AppointmentDetail.tsx`
-- Bootcamp actions: `src/app/actions/bootcamps.ts`
-- Bootcamp hooks: `src/hooks/useBootcamps.ts`
+- Bootcamp actions: `src/app/actions/bootcamps.ts`, `src/app/actions/client-bootcamps.ts`
+- Bootcamp hooks: `src/hooks/useBootcamps.ts`, `src/hooks/useClientBootcamps.ts`
 - Bootcamp UI:
-  - `src/app/bootcamps/page.tsx`
-  - `src/app/bootcamps/[id]/page.tsx`
+  - `src/app/bootcamps/page.tsx` (coach)
+  - `src/app/bootcamps/[id]/page.tsx` (coach detail)
+  - `src/app/client/bootcamps/page.tsx` (client registration)
   - `src/features/bootcamps/BootcampForm.tsx`
   - `src/features/bootcamps/BootcampList.tsx`
   - `src/features/bootcamps/BootcampCalendar.tsx`
-  - `src/features/bootcamps/BootcampDetail.tsx`
+  - `src/features/bootcamps/BootcampDetail.tsx` (with capacity warnings)
+  - `src/features/bootcamps/BootcampRegistration.tsx` (client view)
 - Calendar utilities: `src/lib/calendar.ts`
 - Google Calendar: `src/lib/google-calendar.ts`
 - Work log: `WORKLOG.md`
@@ -62,7 +66,7 @@ Last updated: 2026-01-25 15:09 GMT
 
 ## Open TODOs
 - Consider adding global toast notifications for feedback (currently inline messages).
-- Phase 4 polish: add attendee registration flow for clients + bootcamp capacity warnings in UI.
+- Begin Phase 5: Cohort System (cohort CRUD, member management, coach assignment).
 
 ## How to Run
 - `npm run dev`
