@@ -154,3 +154,6 @@
 
 ## 2026-01-26 11:26 GMT
 - (Codex) Implemented Phase 1 admin user management routes (/admin/users, /admin/users/[id]) with search and detail editing.
+
+## 2026-01-26 11:54 GMT
+- (Codex) Added placeholder /reports and /settings pages to address gap audit 404s.
