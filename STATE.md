@@ -1,11 +1,11 @@
 # Centurion State
 
-Last updated: 2026-01-26 09:59 GMT
+Last updated: 2026-01-26 11:35 GMT
 
 ## Project Summary
 - Unified fitness platform combining Personal Trainer Planner (appointments, bootcamps, invoicing) and CoachFit (cohorts, health data).
-- **Phase 6 (Invoicing & Payments) complete**. Ready for Phase 7: Check-In System.
-- Interval timer PWA (standalone `/timer`) implementation in progress.
+- **Phase 7 (Daily Check-In System) and Phase 8 (Weekly Questionnaires) complete**. Ready for Phase 9: Health Data Tracking.
+- Interval timer PWA (standalone `/timer`) implementation complete.
 
 ## What’s Implemented
 - Member management aligned to spec naming (members, not clients): list, detail, create/edit/delete.
@@ -34,6 +34,26 @@ Last updated: 2026-01-26 09:59 GMT
   - Cohort detail page with inline editing for name, description, dates.
   - Coach assignment UI with add/remove functionality.
   - Member management UI with status changes and timestamps.
+- Daily Check-In System (Phase 7 ✅):
+  - Entry actions: getEntries, getEntryByDate, upsertEntry (following CoachFit patterns).
+  - Check-in config actions: getCheckInConfig, updateCheckInConfig (cohort-specific prompts).
+  - Check-in stats: getCheckInStats (streak calculation, compliance tracking).
+  - React Query hooks for entries with cache invalidation.
+  - CheckInForm component with weight, steps, calories, sleep quality, perceived stress, notes.
+  - CheckInHistory component with table view of past entries.
+  - Member check-in page at `/client/health` with form and history.
+  - Upsert pattern for one entry per user per day (userId_date unique constraint).
+- Weekly Questionnaires (Phase 8 ✅):
+  - Questionnaire bundle actions: getQuestionnaireBundle, getQuestionnaireBundles, createQuestionnaireBundle, updateQuestionnaireBundle.
+  - Response actions: getQuestionnaireResponse, upsertQuestionnaireResponse, getWeeklyResponses.
+  - Week-based access control (current week calculation from cohort startDate).
+  - Status locking: IN_PROGRESS → COMPLETED (cannot edit after submission).
+  - Week locking: cannot access future weeks, cannot edit past weeks.
+  - React Query hooks for questionnaires with cache invalidation.
+  - QuestionnaireViewer component for members (placeholder for SurveyJS integration).
+  - QuestionnaireResponseList component for coaches to view all responses.
+  - Member questionnaire page at `/client/questionnaires/[cohortId]/[weekNumber]`.
+  - Note: Full SurveyJS integration pending - current implementation shows structure.
 - Invoicing & Payments (Phase 6 ✅):
   - Extended Invoice model with payment tracking (paymentStatus, stripePaymentUrl, paidAt).
   - PaymentStatus enum (UNPAID, PAID, OVERDUE, CANCELLED).
@@ -56,6 +76,10 @@ Last updated: 2026-01-26 09:59 GMT
 - Member actions: `src/app/actions/members.ts`
 - Appointment actions: `src/app/actions/appointments.ts`
 - Appointment hooks: `src/hooks/useAppointments.ts`
+- Entry actions: `src/app/actions/entries.ts`
+- Entry hooks: `src/hooks/useEntries.ts`
+- Questionnaire actions: `src/app/actions/questionnaires.ts`
+- Questionnaire hooks: `src/hooks/useQuestionnaires.ts`
 - Appointment UI:
   - `src/app/appointments/page.tsx`
   - `src/app/appointments/[id]/page.tsx`
@@ -95,6 +119,14 @@ Last updated: 2026-01-26 09:59 GMT
   - `src/features/invoices/GenerateInvoiceDialog.tsx`
   - `src/features/invoices/InvoiceDetail.tsx` (with payment link management)
   - `src/features/invoices/RevenueChart.tsx` (monthly revenue visualization)
+- Entry UI:
+  - `src/app/client/health/page.tsx` (member check-in page)
+  - `src/features/entries/CheckInForm.tsx` (daily check-in form)
+  - `src/features/entries/CheckInHistory.tsx` (past entries table)
+- Questionnaire UI:
+  - `src/app/client/questionnaires/[cohortId]/[weekNumber]/page.tsx` (member questionnaire page)
+  - `src/features/questionnaires/QuestionnaireViewer.tsx` (questionnaire viewer with locking)
+  - `src/features/questionnaires/QuestionnaireResponseList.tsx` (coach response view)
 - Stripe integration: `src/lib/stripe.ts`
 - Stripe webhook: `src/app/api/webhooks/stripe/route.ts`
 - Calendar utilities: `src/lib/calendar.ts`
@@ -142,6 +174,10 @@ Last updated: 2026-01-26 09:59 GMT
 - CohortMembership tracks member status (ACTIVE/PAUSED/INACTIVE) with `joinedAt`/`leftAt` timestamps.
 - Invoice model with `paymentStatus` (UNPAID/PAID/OVERDUE/CANCELLED), `stripePaymentUrl`, `paidAt` timestamp.
 - Invoices auto-generate from ATTENDED appointments, linking appointments via `invoiceId`.
+- Entry model with `userId_date` unique constraint (one entry per user per day), JSON fields for `customResponses` and `dataSources`.
+- QuestionnaireBundle model with `cohortId_weekNumber` unique constraint, `questions` JSON field for SurveyJS format.
+- WeeklyQuestionnaireResponse model with `userId_bundleId` unique constraint, `responses` JSON, `status` enum (IN_PROGRESS/COMPLETED).
+- CohortCheckInConfig model with `cohortId` unique, `prompts` JSON field for custom check-in prompts.
 
 ## Environment / Dependencies
 - `google-auth-library` + `googleapis` for Calendar sync (lockfile updated).
@@ -152,8 +188,9 @@ Last updated: 2026-01-26 09:59 GMT
 
 ## Open TODOs
 - Consider adding global toast notifications for feedback (currently inline messages).
-- Begin Phase 7: Daily Check-In System (cohort check-ins with configured prompts).
-- Timer PWA: add interval editor UI + preset management; optional notification support.
+- Add SurveyJS integration for full questionnaire functionality (survey-core, survey-react-ui packages).
+- Begin Phase 9: Health Data Tracking (HealthKit integration, metrics tracking).
+- Add coach analytics views for member check-in data and questionnaire responses.
 
 ## How to Run
 - `npm run dev`

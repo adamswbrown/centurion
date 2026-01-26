@@ -13,7 +13,6 @@ function formatSeconds(ms: number) {
   return Math.max(Math.round(ms / 1000), 1)
 }
 
-export function TimerEditor() {
 export function TimerEditor({
   presets,
   currentPresetId,

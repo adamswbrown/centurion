@@ -7,12 +7,9 @@ import {
   Calendar,
   Users,
   Dumbbell,
-  FileText,
   CreditCard,
   Heart,
   LayoutDashboard,
-  Settings,
-  UserCog,
   Timer,
 } from "lucide-react"
 import type { Role } from "@prisma/client"
@@ -24,15 +21,12 @@ interface SidebarProps {
 const navigation = {
   ADMIN: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Users", href: "/admin/users", icon: UserCog },
     { name: "Members", href: "/members", icon: Users },
     { name: "Appointments", href: "/appointments", icon: Calendar },
     { name: "Bootcamps", href: "/bootcamps", icon: Dumbbell },
     { name: "Cohorts", href: "/cohorts", icon: Heart },
-    { name: "Invoices", href: "/invoices", icon: CreditCard },
-    { name: "Reports", href: "/reports", icon: FileText },
+    { name: "Billing", href: "/billing", icon: CreditCard },
     { name: "Timer", href: "/timer", icon: Timer },
-    { name: "Settings", href: "/settings", icon: Settings },
   ],
   COACH: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -40,9 +34,8 @@ const navigation = {
     { name: "Appointments", href: "/appointments", icon: Calendar },
     { name: "Bootcamps", href: "/bootcamps", icon: Dumbbell },
     { name: "Cohorts", href: "/cohorts", icon: Heart },
-    { name: "Invoices", href: "/invoices", icon: CreditCard },
+    { name: "Invoices", href: "/invoices/me", icon: CreditCard },
     { name: "Timer", href: "/timer", icon: Timer },
-    { name: "Settings", href: "/settings", icon: Settings },
   ],
   CLIENT: [
     { name: "Dashboard", href: "/client/dashboard", icon: LayoutDashboard },
@@ -51,7 +44,6 @@ const navigation = {
     { name: "My Cohorts", href: "/client/cohorts", icon: Heart },
     { name: "Health Data", href: "/client/health", icon: Heart },
     { name: "Invoices", href: "/client/invoices", icon: CreditCard },
-    { name: "Settings", href: "/client/settings", icon: Settings },
   ],
 }
 

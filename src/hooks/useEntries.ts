@@ -12,6 +12,8 @@ import {
   type UpsertEntryInput,
 } from "@/app/actions/entries"
 
+export type { UpsertEntryInput }
+
 export function useEntries(params?: {
   userId?: number
   from?: Date

@@ -1,0 +1,485 @@
+/**
+ * Default Questionnaire Templates
+ *
+ * Pre-built SurveyJS JSON templates for weekly questionnaires
+ * Based on CoachFit Six Week Transformation Check-Ins format
+ *
+ * These templates are used to create QuestionnaireBundle records for each week
+ * when setting up a new cohort.
+ */
+
+export const DEFAULT_TEMPLATES = {
+  week1: {
+    title: "Week 1 Check-In",
+    description: "You've officially made it through your first week, congratulations!",
+    pages: [
+      {
+        name: "week1",
+        elements: [
+          {
+            type: "html",
+            name: "intro",
+            html: "<p><strong>Hi Folks,</strong></p><p>You've officially made it through your first week, congratulations!</p><p>It's time for your Sunday check-in! This is a crucial step in ensuring you're on track to achieve your fat loss goals and helps me provide the best support possible.</p><p>Please complete the following questions honestly and in as much detail as you can. I will review your responses and send you personalized feedback.</p>",
+          },
+          {
+            type: "comment",
+            name: "wins",
+            title: "What went well this week?",
+            description: "(e.g., strong workouts, improved sleep, managing cravings, feeling more energetic)",
+            isRequired: true,
+            rows: 3,
+          },
+          {
+            type: "comment",
+            name: "challenges",
+            title: "What was the biggest challenge you faced this week?",
+            description: "(e.g., social events, poor sleep, high stress, unexpected cravings)",
+            isRequired: true,
+            rows: 3,
+          },
+          {
+            type: "text",
+            name: "days_trained",
+            title: "How many days this week did you train in the studio?",
+            inputType: "number",
+            min: 0,
+            max: 7,
+            isRequired: true,
+          },
+          {
+            type: "text",
+            name: "days_hit_steps",
+            title: "How many days this week did you hit your daily step count target?",
+            inputType: "number",
+            min: 0,
+            max: 7,
+            isRequired: true,
+          },
+          {
+            type: "text",
+            name: "days_on_calories",
+            title: "How many days this week were you within 200 calories of your daily target?",
+            description: "(Be honest, I have the data anyway!)",
+            inputType: "number",
+            min: 0,
+            max: 7,
+            isRequired: true,
+          },
+          {
+            type: "comment",
+            name: "nutrition_help",
+            title: "What is something you could use help with in terms of nutrition?",
+            description: "(e.g., meal prep ideas, navigating restaurant menus, managing late-night snacking)",
+            isRequired: true,
+            rows: 3,
+          },
+          {
+            type: "comment",
+            name: "behavior_goal",
+            title: "What specific, positive behaviour goal would you like to set for next week's check-in?",
+            description: "(Examples: Getting up 15 minutes earlier, preparing lunch the night before 5 days this week, drinking 2L of water daily, tracking every single meal, doing a 10-minute stretch routine 3 times)",
+            isRequired: true,
+            rows: 3,
+          },
+        ],
+      },
+    ],
+  },
+  week2: {
+    title: "Week 2 Check-In",
+    description: "You've officially made it through your first two weeks, congratulations!",
+    pages: [
+      {
+        name: "week2",
+        elements: [
+          {
+            type: "html",
+            name: "intro",
+            html: "<p><strong>Hi Folks,</strong></p><p>You've officially made it through your first two weeks, congratulations!</p><p>It's time for your Sunday check-in! This is a crucial step in ensuring you're on track to achieve your fat loss goals and helps me provide the best support possible.</p><p>Please complete the following questions honestly and in as much detail as you can. I will review your responses and send you personalized feedback.</p>",
+          },
+          {
+            type: "comment",
+            name: "wins",
+            title: "What went well this week?",
+            description: "(e.g., strong workouts, improved sleep, managing cravings, feeling more energetic)",
+            isRequired: true,
+            rows: 3,
+          },
+          {
+            type: "comment",
+            name: "challenges",
+            title: "What was the biggest challenge you faced this week?",
+            description: "(e.g., social events, poor sleep, high stress, unexpected cravings)",
+            isRequired: true,
+            rows: 3,
+          },
+          {
+            type: "text",
+            name: "days_trained",
+            title: "How many days this week did you train in the studio?",
+            inputType: "number",
+            min: 0,
+            max: 7,
+            isRequired: true,
+          },
+          {
+            type: "text",
+            name: "days_hit_steps",
+            title: "How many days this week did you hit your daily step count target?",
+            inputType: "number",
+            min: 0,
+            max: 7,
+            isRequired: true,
+          },
+          {
+            type: "text",
+            name: "days_on_calories",
+            title: "How many days this week were you within 200 calories of your daily target?",
+            description: "(Be honest, I have the data anyway!)",
+            inputType: "number",
+            min: 0,
+            max: 7,
+            isRequired: true,
+          },
+          {
+            type: "comment",
+            name: "nutrition_help",
+            title: "What is something you could use help with in terms of nutrition?",
+            description: "(e.g., meal prep ideas, navigating restaurant menus, managing late-night snacking)",
+            isRequired: true,
+            rows: 3,
+          },
+          {
+            type: "comment",
+            name: "behavior_goal_review",
+            title: "Last week you set a behaviour goal, what was it and how did it go?",
+            isRequired: true,
+            rows: 3,
+          },
+        ],
+      },
+    ],
+  },
+  week3: {
+    title: "Week 3 Check-In",
+    description: "As Jon Bon Jovi would say wooooahhh we're halfway there!",
+    pages: [
+      {
+        name: "week3",
+        elements: [
+          {
+            type: "html",
+            name: "intro",
+            html: "<p><strong>Hi Folks,</strong></p><p>As Jon Bon Jovi would say wooooahhh we're halfway there!</p><p>It's time for your Sunday check-in! This is a crucial step in ensuring you're on track to achieve your fat loss goals and helps me provide the best support possible.</p><p>Please complete the following questions honestly and in as much detail as you can. I will review your responses and send you personalized feedback.</p>",
+          },
+          {
+            type: "comment",
+            name: "wins",
+            title: "What went well this week?",
+            description: "(e.g., strong workouts, improved sleep, managing cravings, feeling more energetic)",
+            isRequired: true,
+            rows: 3,
+          },
+          {
+            type: "comment",
+            name: "challenges",
+            title: "What was the biggest challenge you faced this week?",
+            description: "(e.g., social events, poor sleep, high stress, unexpected cravings)",
+            isRequired: true,
+            rows: 3,
+          },
+          {
+            type: "text",
+            name: "days_trained",
+            title: "How many days this week did you train in the studio?",
+            inputType: "number",
+            min: 0,
+            max: 7,
+            isRequired: true,
+          },
+          {
+            type: "text",
+            name: "days_hit_steps",
+            title: "How many days this week did you hit your daily step count target?",
+            inputType: "number",
+            min: 0,
+            max: 7,
+            isRequired: true,
+          },
+          {
+            type: "text",
+            name: "days_on_calories",
+            title: "How many days this week were you within 200 calories of your daily target?",
+            description: "(Be honest, I have the data anyway!)",
+            inputType: "number",
+            min: 0,
+            max: 7,
+            isRequired: true,
+          },
+          {
+            type: "comment",
+            name: "nutrition_help",
+            title: "What is something you could use help with in terms of nutrition?",
+            description: "(e.g., meal prep ideas, navigating restaurant menus, managing late-night snacking)",
+            isRequired: true,
+            rows: 3,
+          },
+          {
+            type: "comment",
+            name: "behavior_goal_review",
+            title: "Week 1 you set a behaviour goal, what was it and how did it go?",
+            isRequired: true,
+            rows: 3,
+          },
+        ],
+      },
+    ],
+  },
+  week4: {
+    title: "Week 4 Check-In",
+    description: "You've officially made it through your first four weeks, congratulations!! Only two weeks left!!",
+    pages: [
+      {
+        name: "week4",
+        elements: [
+          {
+            type: "html",
+            name: "intro",
+            html: "<p><strong>Hi Folks,</strong></p><p>You've officially made it through your first four weeks, congratulations!!</p><p>Only two weeks left!!</p><p>It's time for your Sunday check-in! This is a crucial step in ensuring you're on track to achieve your fat loss goals and helps me provide the best support possible.</p><p>Please complete the following questions honestly and in as much detail as you can. I will review your responses and send you personalized feedback.</p>",
+          },
+          {
+            type: "comment",
+            name: "wins",
+            title: "What went well this week?",
+            description: "(e.g., strong workouts, improved sleep, managing cravings, feeling more energetic)",
+            isRequired: true,
+            rows: 3,
+          },
+          {
+            type: "comment",
+            name: "challenges",
+            title: "What was the biggest challenge you faced this week?",
+            description: "(e.g., social events, poor sleep, high stress, unexpected cravings)",
+            isRequired: true,
+            rows: 3,
+          },
+          {
+            type: "text",
+            name: "days_trained",
+            title: "How many days this week did you train in the studio?",
+            inputType: "number",
+            min: 0,
+            max: 7,
+            isRequired: true,
+          },
+          {
+            type: "text",
+            name: "days_hit_steps",
+            title: "How many days this week did you hit your daily step count target?",
+            inputType: "number",
+            min: 0,
+            max: 7,
+            isRequired: true,
+          },
+          {
+            type: "text",
+            name: "days_on_calories",
+            title: "How many days this week were you within 200 calories of your daily target?",
+            description: "(Be honest, I have the data anyway!)",
+            inputType: "number",
+            min: 0,
+            max: 7,
+            isRequired: true,
+          },
+          {
+            type: "comment",
+            name: "nutrition_help",
+            title: "What is something you could use help with in terms of nutrition?",
+            description: "(e.g., meal prep ideas, navigating restaurant menus, managing late-night snacking)",
+            isRequired: true,
+            rows: 3,
+          },
+          {
+            type: "comment",
+            name: "monthly_reflection",
+            title: "What are you the most proud of over the last 4 weeks?",
+            description: "Diet consistency, exercise etc.",
+            isRequired: true,
+            rows: 3,
+          },
+        ],
+      },
+    ],
+  },
+  week5: {
+    title: "Week 5 Check-In",
+    description: "Final week - let's finish strong!",
+    pages: [
+      {
+        name: "week5",
+        elements: [
+          {
+            type: "html",
+            name: "intro",
+            html: "<p><strong>Hi Folks,</strong></p><p>Final week - let's finish strong!</p><p>It's time for your Sunday check-in! This is a crucial step in ensuring you're on track to achieve your fat loss goals and helps me provide the best support possible.</p><p>Please complete the following questions honestly and in as much detail as you can. I will review your responses and send you personalized feedback.</p>",
+          },
+          {
+            type: "comment",
+            name: "wins",
+            title: "What went well this week?",
+            description: "(e.g., strong workouts, improved sleep, managing cravings, feeling more energetic)",
+            isRequired: true,
+            rows: 3,
+          },
+          {
+            type: "comment",
+            name: "challenges",
+            title: "What was the biggest challenge you faced this week?",
+            description: "(e.g., social events, poor sleep, high stress, unexpected cravings)",
+            isRequired: true,
+            rows: 3,
+          },
+          {
+            type: "text",
+            name: "days_trained",
+            title: "How many days this week did you train in the studio?",
+            inputType: "number",
+            min: 0,
+            max: 7,
+            isRequired: true,
+          },
+          {
+            type: "text",
+            name: "days_hit_steps",
+            title: "How many days this week did you hit your daily step count target?",
+            inputType: "number",
+            min: 0,
+            max: 7,
+            isRequired: true,
+          },
+          {
+            type: "text",
+            name: "days_on_calories",
+            title: "How many days this week were you within 200 calories of your daily target?",
+            description: "(Be honest, I have the data anyway!)",
+            inputType: "number",
+            min: 0,
+            max: 7,
+            isRequired: true,
+          },
+          {
+            type: "comment",
+            name: "nutrition_help",
+            title: "What is something you could use help with in terms of nutrition?",
+            description: "(e.g., meal prep ideas, navigating restaurant menus, managing late-night snacking)",
+            isRequired: true,
+            rows: 3,
+          },
+          {
+            type: "comment",
+            name: "behavior_goal_review",
+            title: "Week 1 you set a behaviour goal, what was it and how did it go?",
+            isRequired: true,
+            rows: 3,
+          },
+        ],
+      },
+    ],
+  },
+  week6: {
+    title: "Week 6 Check-In",
+    description: "Final check-in - you made it!",
+    pages: [
+      {
+        name: "week6",
+        elements: [
+          {
+            type: "html",
+            name: "intro",
+            html: "<p><strong>Hi Folks,</strong></p><p>Final check-in - you made it!</p><p>It's time for your final Sunday check-in! This is a crucial step in ensuring you're on track to achieve your fat loss goals and helps me provide the best support possible.</p><p>Please complete the following questions honestly and in as much detail as you can. I will review your responses and send you personalized feedback.</p>",
+          },
+          {
+            type: "comment",
+            name: "wins",
+            title: "What went well this week?",
+            description: "(e.g., strong workouts, improved sleep, managing cravings, feeling more energetic)",
+            isRequired: true,
+            rows: 3,
+          },
+          {
+            type: "comment",
+            name: "challenges",
+            title: "What was the biggest challenge you faced this week?",
+            description: "(e.g., social events, poor sleep, high stress, unexpected cravings)",
+            isRequired: true,
+            rows: 3,
+          },
+          {
+            type: "text",
+            name: "days_trained",
+            title: "How many days this week did you train in the studio?",
+            inputType: "number",
+            min: 0,
+            max: 7,
+            isRequired: true,
+          },
+          {
+            type: "text",
+            name: "days_hit_steps",
+            title: "How many days this week did you hit your daily step count target?",
+            inputType: "number",
+            min: 0,
+            max: 7,
+            isRequired: true,
+          },
+          {
+            type: "text",
+            name: "days_on_calories",
+            title: "How many days this week were you within 200 calories of your daily target?",
+            description: "(Be honest, I have the data anyway!)",
+            inputType: "number",
+            min: 0,
+            max: 7,
+            isRequired: true,
+          },
+          {
+            type: "comment",
+            name: "program_reflection",
+            title: "What are you the most proud of over the entire 6-week program?",
+            description: "Think about your overall journey, wins, and transformations",
+            isRequired: true,
+            rows: 4,
+          },
+          {
+            type: "comment",
+            name: "next_steps",
+            title: "What are your goals moving forward?",
+            description: "How will you continue your progress after this program?",
+            isRequired: true,
+            rows: 3,
+          },
+        ],
+      },
+    ],
+  },
+}
+
+export type TemplateKey = keyof typeof DEFAULT_TEMPLATES
+
+/**
+ * Get template for a specific week
+ */
+export function getTemplateForWeek(weekNumber: number) {
+  const key = `week${weekNumber}` as TemplateKey
+  return DEFAULT_TEMPLATES[key] || null
+}
+
+/**
+ * Get all available week numbers
+ */
+export function getAvailableWeeks(): number[] {
+  return Object.keys(DEFAULT_TEMPLATES)
+    .map((key) => parseInt(key.replace("week", "")))
+    .filter((num) => !isNaN(num))
+    .sort((a, b) => a - b)
+}

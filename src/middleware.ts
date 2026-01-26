@@ -14,13 +14,13 @@ export default auth((req) => {
   )
 
   // Admin-only routes
-  const adminRoutes = ["/admin"]
+  const adminRoutes = ["/admin", "/billing"]
   const isAdminRoute = adminRoutes.some((route) =>
     nextUrl.pathname.startsWith(route)
   )
 
   // Coach routes (accessible by ADMIN and COACH)
-  const coachRoutes = ["/dashboard", "/members", "/appointments", "/bootcamps", "/invoices"]
+  const coachRoutes = ["/dashboard", "/members", "/appointments", "/bootcamps", "/cohorts", "/invoices"]
   const isCoachRoute = coachRoutes.some((route) =>
     nextUrl.pathname.startsWith(route)
   )

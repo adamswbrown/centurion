@@ -110,3 +110,27 @@
 
 ## 2026-01-26 10:14 GMT
 - (Codex) Added placeholder client pages for /client/health and /client/settings to prevent 404s.
+
+## 2026-01-26 11:30 GMT
+- Implemented Phase 7 & 8: Daily Check-In System and Weekly Questionnaires (following CoachFit patterns):
+  - Created server actions for entries (getEntries, getEntryByDate, upsertEntry, getCheckInConfig, updateCheckInConfig, getCheckInStats).
+  - Created server actions for questionnaires (getQuestionnaireBundle, getQuestionnaireBundles, createQuestionnaireBundle, updateQuestionnaireBundle, getQuestionnaireResponse, upsertQuestionnaireResponse, getWeeklyResponses).
+  - Implemented React Query hooks for entries and questionnaires with proper cache invalidation.
+  - Created UI components: CheckInForm, CheckInHistory for daily check-ins.
+  - Created UI components: QuestionnaireViewer, QuestionnaireResponseList for weekly questionnaires.
+  - Updated /client/health page with check-in form and history.
+  - Created /client/questionnaires/[cohortId]/[weekNumber] page for member questionnaire completion.
+  - Fixed TypeScript build errors: session.user.id type conversions, Prisma relation names, unique constraint ordering.
+  - Note: Full SurveyJS integration pending - current questionnaire components show placeholder structure.
+- Phase 7 (Daily Check-In System) and Phase 8 (Weekly Questionnaires) core functionality complete.
+
+## 2026-01-26 12:00 GMT
+- Comprehensive testing validation and fixes:
+  - Fixed middleware: Added /cohorts to coach routes, /billing to admin routes for proper access control.
+  - Fixed navigation: Removed broken links (/admin/users, /reports, /settings) from Sidebar and MobileNav.
+  - Updated admin navigation: "Invoices" → "Billing", coaches use "/invoices/me".
+  - Removed unused icon imports (FileText, Settings, UserCog) from navigation components.
+  - Created comprehensive test data seed script (testing/seed-test-data.ts) with 7 users, 3 cohorts, 14 days check-ins, questionnaires, appointments, bootcamps, invoices.
+  - Created testing documentation: TEST_PLAN.md (comprehensive), QUICK_TEST.md (smoke test), TESTING_INSTRUCTIONS.md (user guide), README.md.
+  - Verified TypeScript build passes after all changes.
+- Testing infrastructure complete and ready for UI validation.

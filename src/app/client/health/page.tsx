@@ -1,7 +1,9 @@
 import { AppLayout } from "@/components/layouts/AppLayout"
 import { auth } from "@/auth"
 import { requireAuth } from "@/lib/auth"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CheckInForm } from "@/features/entries/CheckInForm"
+import { CheckInHistory } from "@/features/entries/CheckInHistory"
+import { useCheckInStats } from "@/hooks/useEntries"
 
 export default async function ClientHealthPage() {
   await requireAuth()
@@ -11,22 +13,17 @@ export default async function ClientHealthPage() {
 
   return (
     <AppLayout session={session}>
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Health Data</h1>
+          <h1 className="text-3xl font-bold">Daily Check-In</h1>
           <p className="text-muted-foreground">
-            Health and check-in features are coming soon.
+            Track your weight, steps, calories, sleep, and stress levels.
           </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Coming Soon</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            We’re preparing your health dashboard. Check back after Phase 7.
-          </CardContent>
-        </Card>
+        <CheckInForm />
+
+        <CheckInHistory limit={30} />
       </div>
     </AppLayout>
   )
