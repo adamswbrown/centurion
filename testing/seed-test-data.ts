@@ -39,25 +39,25 @@ async function main() {
   console.log("👤 Creating users...")
   const password = await hash("password123", 12)
 
-  const admin = await prisma.user.create({
-    data: {
-      email: "admin@centurion.test",
-      name: "Admin User",
-      password,
-      role: Role.ADMIN,
-      emailVerified: new Date(),
-    },
-  })
+    const admin = await prisma.user.create({
+      data: {
+        email: "admin@centurion.test",
+        name: "Admin User",
+        password,
+        role: Role.ADMIN,
+        emailVerified: true,
+      },
+    })
 
-  const coach1 = await prisma.user.create({
-    data: {
-      email: "coach@centurion.test",
-      name: "Sarah Coach",
-      password,
-      role: Role.COACH,
-      emailVerified: new Date(),
-    },
-  })
+    const coach1 = await prisma.user.create({
+      data: {
+        email: "coach@centurion.test",
+        name: "Sarah Coach",
+        password,
+        role: Role.COACH,
+        emailVerified: true,
+      },
+    })
 
   const coach2 = await prisma.user.create({
     data: {
@@ -65,7 +65,7 @@ async function main() {
       name: "Mike Coach",
       password,
       role: Role.COACH,
-      emailVerified: new Date(),
+        emailVerified: true,
     },
   })
 
@@ -76,7 +76,7 @@ async function main() {
         name: "Alice Client",
         password,
         role: Role.CLIENT,
-        emailVerified: new Date(),
+          emailVerified: true,
       },
     }),
     prisma.user.create({
@@ -85,7 +85,7 @@ async function main() {
         name: "Bob Client",
         password,
         role: Role.CLIENT,
-        emailVerified: new Date(),
+          emailVerified: true,
       },
     }),
     prisma.user.create({
@@ -94,7 +94,7 @@ async function main() {
         name: "Charlie Client",
         password,
         role: Role.CLIENT,
-        emailVerified: new Date(),
+          emailVerified: true,
       },
     }),
     prisma.user.create({
@@ -103,7 +103,7 @@ async function main() {
         name: "Diana Client",
         password,
         role: Role.CLIENT,
-        emailVerified: new Date(),
+          emailVerified: true,
       },
     }),
   ])
