@@ -72,3 +72,13 @@
   - Fixed TypeScript build errors: Decimal to number conversions, discriminated union handling, Stripe API version update.
   - Regenerated Prisma client with new schema.
 - Phase 6 (Invoicing & Payments) fully complete.
+
+## 2026-01-26 08:32 GMT
+- Plan recorded for standalone interval timer PWA rebuild (see steps below).
+- Plan: 1) Map interval-timer behaviors to required features. 2) Define /timer PWA route + manifest + SW + local persistence. 3) Implement timer engine + editor UI + presets + offline. 4) Update WORKLOG/STATE with progress.
+
+## 2026-01-26 08:33 GMT
+- Added plan file: `plans/interval-timer-pwa.md`.
+
+## 2026-01-26 08:36 GMT
+- Updated interval timer PWA plan with sleep/background limits, wake lock, mute toggle, and mitigation notes.
