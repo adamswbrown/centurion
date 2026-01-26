@@ -8,6 +8,7 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Centurion - Unified Fitness Platform',
   description: 'Comprehensive fitness platform combining personal training and health coaching',
+  manifest: "/manifest.json",
 }
 
 export default function RootLayout({

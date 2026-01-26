@@ -1,10 +1,11 @@
 # Centurion State
 
-Last updated: 2026-01-26 06:15 GMT
+Last updated: 2026-01-26 08:51 GMT
 
 ## Project Summary
 - Unified fitness platform combining Personal Trainer Planner (appointments, bootcamps, invoicing) and CoachFit (cohorts, health data).
 - **Phase 6 (Invoicing & Payments) complete**. Ready for Phase 7: Check-In System.
+- Interval timer PWA (standalone `/timer`) implementation in progress.
 
 ## What’s Implemented
 - Member management aligned to spec naming (members, not clients): list, detail, create/edit/delete.
@@ -44,6 +45,10 @@ Last updated: 2026-01-26 06:15 GMT
   - Stripe webhook endpoint at `/api/webhooks/stripe` for payment event handling.
   - Billing pages at `/billing` and `/billing/[id]` (admin-only access).
 - Google Calendar integration module using service account credentials.
+- Interval timer PWA (standalone):
+  - `/timer` route with timer engine, presets, and UI shell.
+  - Wake Lock toggle, mute toggle, and limitations guidance.
+  - Service worker + manifest for installability.
 
 ## Key Files
 - Spec: `unified-platform-spec.md`
@@ -94,6 +99,17 @@ Last updated: 2026-01-26 06:15 GMT
 - Calendar utilities: `src/lib/calendar.ts`
 - Google Calendar: `src/lib/google-calendar.ts`
 - Work log: `WORKLOG.md`
+- Timer PWA:
+  - `src/app/timer/page.tsx`
+  - `src/app/timer/TimerSwRegister.tsx`
+  - `src/app/timer/limitations.tsx`
+  - `src/features/timer/TimerShell.tsx`
+  - `src/features/timer/useIntervalTimer.ts`
+  - `src/features/timer/presets.ts`
+  - `src/features/timer/types.ts`
+  - `public/manifest.json`
+  - `public/timer-sw.js`
+  - `public/timer-icon-192.png`, `public/timer-icon-512.png`
 
 ## Data Model Notes
 - Prisma Appointment model uses `startTime`, `endTime`, `fee`, `status`, optional `googleEventId`, `invoiceId`.
@@ -114,6 +130,7 @@ Last updated: 2026-01-26 06:15 GMT
 ## Open TODOs
 - Consider adding global toast notifications for feedback (currently inline messages).
 - Begin Phase 7: Daily Check-In System (cohort check-ins with configured prompts).
+- Timer PWA: add interval editor UI + preset management; optional notification support.
 
 ## How to Run
 - `npm run dev`

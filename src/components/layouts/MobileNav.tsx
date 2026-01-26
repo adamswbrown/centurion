@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   Settings,
   UserCog,
+  Timer,
   X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -34,6 +35,7 @@ const navigation = {
     { name: "Cohorts", href: "/cohorts", icon: Heart },
     { name: "Invoices", href: "/invoices", icon: CreditCard },
     { name: "Reports", href: "/reports", icon: FileText },
+    { name: "Timer", href: "/timer", icon: Timer },
     { name: "Settings", href: "/settings", icon: Settings },
   ],
   COACH: [
@@ -43,6 +45,7 @@ const navigation = {
     { name: "Bootcamps", href: "/bootcamps", icon: Dumbbell },
     { name: "Cohorts", href: "/cohorts", icon: Heart },
     { name: "Invoices", href: "/invoices", icon: CreditCard },
+    { name: "Timer", href: "/timer", icon: Timer },
     { name: "Settings", href: "/settings", icon: Settings },
   ],
   CLIENT: [
