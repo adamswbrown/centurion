@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { DataSourceBadge } from "@/components/ui/DataSourceBadge"
 
 interface CheckInHistoryProps {
   userId?: number
@@ -51,6 +52,7 @@ export function CheckInHistory({ userId, limit = 30 }: CheckInHistoryProps) {
               <TableHead className="text-right">Sleep</TableHead>
               <TableHead className="text-right">Stress</TableHead>
               <TableHead>Notes</TableHead>
+              <TableHead>Source</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -80,6 +82,13 @@ export function CheckInHistory({ userId, limit = 30 }: CheckInHistoryProps) {
                   ) : (
                     "—"
                   )}
+                </TableCell>
+                <TableCell>
+                  <DataSourceBadge
+                    dataSources={entry.dataSources as string[] | Record<string, string> | null}
+                    size="sm"
+                    showLabel={false}
+                  />
                 </TableCell>
               </TableRow>
             ))}

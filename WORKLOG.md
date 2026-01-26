@@ -1,4 +1,61 @@
+## 2026-01-26 17:02 GMT - Batch 1: Copy and Adapt Code from PTP/CoachFit
 
+Executed Batch 1 to close gaps by copying 95%+ ready code from PTP and CoachFit source codebases.
+
+### Task 1: Resend Email System (from CoachFit)
+- Created `src/lib/email.ts` with Resend integration:
+  - Lazy initialization to avoid build errors when API key missing
+  - Test user email suppression (logs to console instead)
+  - Graceful degradation when RESEND_API_KEY not configured
+  - `sendTransactionalEmail()` for raw email sending
+  - `sendSystemEmail()` for template-based emails with fallbacks
+- Created `src/lib/email-templates.ts` with:
+  - 14 template keys covering: user management, invitations, appointments, invoicing, health coaching
+  - Token whitelist for XSS protection (18 tokens: userName, appointmentDate, invoiceAmount, etc.)
+  - HTML escaping for body content, raw for subjects
+  - `renderEmailTemplate()` function with hardcoded defaults (no database required)
+  - Centurion-specific adaptations: changed "CoachFit" to "Centurion", added appointment/invoice templates
+- Installed `resend` package
+
+### Task 2: Test Framework (from PTP)
+- Created `vitest.config.ts` with:
+  - jsdom environment for React testing
+  - Path alias (@) pointing to ./src
+  - Exclusions for CoachFit, personal-trainer-planner, e2e directories
+- Created `vitest.setup.ts` importing @testing-library/jest-dom
+- Created `playwright.config.ts` for E2E testing:
+  - 4 browser projects (chromium, webkit, mobile Chrome/Safari)
+  - CI/local environment detection
+  - HTML and list reporters
+- Created `e2e/example.spec.ts` sample E2E test
+- Created `src/lib/calendar.test.ts` with 11 unit tests covering:
+  - formatTime24/formatTime12 functions
+  - getRepeatingDates for recurring appointments
+  - combineDateAndTime date/time merging
+  - getPrismaDateFilter date range generation
+- Added npm scripts: test, test:watch, test:ui, test:e2e, test:e2e:ui
+- Installed dependencies: @vitejs/plugin-react, @testing-library/react, @testing-library/jest-dom, jsdom
+- Verified: All 11 unit tests pass
+
+### Task 3: Data Source Badges (from CoachFit)
+- Created `src/components/ui/DataSourceBadge.tsx`:
+  - Supports both array format (["healthkit"]) and object format ({"weight": "manual"})
+  - Badge types: HealthKit (purple), Google Fit (blue), Strava (orange), Manual (gray)
+  - Configurable size (sm/md) and label visibility
+  - Mini SVG icons for each source type
+- Integrated into CheckInHistory component:
+  - Added Source column header
+  - Added DataSourceBadge to each entry row
+  - Shows icons only (showLabel=false) for compact display
+
+### Task 4: Recurring Appointments Logic (from PTP)
+- **Already exists**: `getRepeatingDates()` function already present in `src/lib/calendar.ts`
+- No action needed - Centurion already has this functionality
+
+### Build Verified
+- All 31 routes compile successfully
+- All 11 unit tests pass
+- TypeScript types validated
 
 ## [In Progress]
 - HealthKit integration planning
