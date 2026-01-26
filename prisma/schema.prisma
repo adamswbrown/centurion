@@ -42,6 +42,8 @@ model User {
   questionnaireResponses WeeklyQuestionnaireResponse[]
   coachNotesWritten  CoachNote[]              @relation("CoachNotes")
   coachNotesReceived CoachNote[]              @relation("ClientNotes")
+  weeklyResponsesAsClient  WeeklyCoachResponse[] @relation("ClientWeeklyResponses")
+  weeklyResponsesAsCoach   WeeklyCoachResponse[] @relation("CoachWeeklyResponses")
 
   // HealthKit Relations
   healthKitWorkouts  HealthKitWorkout[]
@@ -529,4 +531,29 @@ model AuditLog {
   @@index([action])
   @@index([createdAt])
   @@index([userId, createdAt])
+}
+
+// ============================================
+// WEEKLY REVIEW QUEUE (From CoachFit)
+// ============================================
+
+model WeeklyCoachResponse {
+  id        Int      @id @default(autoincrement())
+  coachId   Int
+  clientId  Int
+  weekStart DateTime @db.Date
+  loomUrl   String?  // Optional video feedback URL
+  note      String?  // Coach's weekly note/feedback
+
+  coach  User @relation("CoachWeeklyResponses", fields: [coachId], references: [id], onDelete: Cascade)
+  client User @relation("ClientWeeklyResponses", fields: [clientId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([coachId, clientId, weekStart])
+  @@map("weekly_coach_responses")
+  @@index([coachId, clientId])
+  @@index([weekStart])
+  @@index([clientId])
 }

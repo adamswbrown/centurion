@@ -1,33 +1,32 @@
 import { AppLayout } from "@/components/layouts/AppLayout"
 import { auth } from "@/auth"
-import { requireAdmin } from "@/lib/auth"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ReportsDashboard } from "@/features/reports/ReportsDashboard"
 
 export default async function ReportsPage() {
-  await requireAdmin()
+  // Allow both COACH and ADMIN roles (with different data visibility)
   const session = await auth()
 
-  if (!session) return null
+  if (!session?.user) {
+    return null
+  }
+
+  const role = session.user.role
+  if (role !== "ADMIN" && role !== "COACH") {
+    return (
+      <AppLayout session={session}>
+        <div className="space-y-4">
+          <h1 className="text-3xl font-bold">Access Denied</h1>
+          <p className="text-muted-foreground">
+            You do not have permission to view reports.
+          </p>
+        </div>
+      </AppLayout>
+    )
+  }
 
   return (
     <AppLayout session={session}>
-      <div className="space-y-4">
-        <div>
-          <h1 className="text-3xl font-bold">Reports</h1>
-          <p className="text-muted-foreground">
-            Reporting dashboards are coming soon.
-          </p>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Coming Soon</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            Reports will be delivered as part of the Analytics phase.
-          </CardContent>
-        </Card>
-      </div>
+      <ReportsDashboard userRole={role} />
     </AppLayout>
   )
 }

@@ -2,16 +2,32 @@
 - User management/admin flows (CRUD, bulk, delete, audit logging)
 - Admin user management UI (/admin/users, /admin/users/[id]) with search, filtering, navigation, and full accessibility (ARIA labels, keyboard navigation)
 - Combined calendar + credits system (backend, API, UI)
-- Daily check-in system (CoachFit baseline): CRUD, compliance, streaks, UI, stats display
+  - Daily check-in system (CoachFit baseline): CRUD, compliance, streaks, UI, stats display
+    - CheckInStats UI integrated in client dashboard: streak, compliance %, total check-ins shown above check-in form
 - Cohort analytics: Backend and UI for compliance, streaks, participation (admin/coach dashboard)
 - Coach analytics dashboard: Attention score algorithm, member prioritization, check-in history views
 - SurveyJS integration: Dynamic questionnaire rendering with open-source v2.5.6
 - Invoice, Payment, and Revenue models with financial reporting
 - Revenue aggregation/reporting (monthly, UK tax year, paid invoices)
 - Settings pages: Admin system settings (/admin/settings) and user account settings (/settings) with full CRUD
+- **Reports Dashboard** (Phase 11):
+  - Multi-domain reports: Members, Cohorts, Revenue (admin), Compliance
+  - Dashboard overview with growth metrics and trend indicators
+  - Role-based access: Admin sees all data, Coach sees cohort-filtered data
+  - Export capabilities: CSV and JSON for all report types
+  - Recharts visualizations: Area charts, pie charts, bar charts
+  - UI at `/reports` with tabbed navigation
+- **Coach Notes & Review Queue** (Phase 12):
+  - WeeklyCoachResponse model for storing coach feedback per client per week
+  - Review queue dashboard at `/coach/review-queue`
+  - Week navigation with previous/next/current
+  - Priority filtering (red/amber/green) based on attention scores
+  - Cohort filtering for multi-cohort coaches
+  - Expandable review panels with weekly stats and feedback form
+  - Loom URL and note input with save functionality
+  - Email draft generation with copy-to-clipboard
 
 ### Features Next Up
-- Reports dashboard
 - HealthKit integration
 - Email system (Resend)
 ## Project Summary
@@ -155,6 +171,23 @@
   - `src/features/questionnaires/QuestionnaireResponseList.tsx` (coach response view)
 - Stripe integration: `src/lib/stripe.ts`
 - Stripe webhook: `src/app/api/webhooks/stripe/route.ts`
+- Reports actions: `src/app/actions/reports.ts`
+- Reports hooks: `src/hooks/useReports.ts`
+- Reports UI:
+  - `src/app/reports/page.tsx` (reports dashboard)
+  - `src/features/reports/ReportsDashboard.tsx` (tabbed interface)
+  - `src/features/reports/OverviewCards.tsx` (summary metrics)
+  - `src/features/reports/MemberEngagementChart.tsx` (check-in trends)
+  - `src/features/reports/CohortAnalytics.tsx` (cohort performance)
+  - `src/features/reports/RevenueAnalytics.tsx` (revenue charts)
+  - `src/features/reports/ComplianceReport.tsx` (questionnaire completion)
+  - `src/features/reports/ExportButton.tsx` (CSV/JSON export)
+- Review Queue actions: `src/app/actions/review-queue.ts`
+- Review Queue hooks: `src/hooks/useReviewQueue.ts`
+- Review Queue UI:
+  - `src/app/coach/review-queue/page.tsx` (review queue page)
+  - `src/features/review-queue/ReviewQueueDashboard.tsx` (main dashboard)
+- Email draft utility: `src/lib/email-draft.ts`
 - Calendar utilities: `src/lib/calendar.ts`
 - Google Calendar: `src/lib/google-calendar.ts`
 - Work log: `WORKLOG.md`
@@ -217,8 +250,9 @@
 ## Open TODOs
 - Consider adding global toast notifications for feedback (currently inline messages).
 - Begin Phase 9: Health Data Tracking (HealthKit integration, metrics tracking).
-- Implement Reports dashboard with analytics visualizations.
 - Add email system integration (Resend).
+- Add cron job for weekly review queue reminder notifications.
+- Consider adding print/PDF export for reports.
 
 ## How to Run
 - `npm run dev`

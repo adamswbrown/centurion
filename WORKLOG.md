@@ -1,8 +1,54 @@
 
 
 ## [In Progress]
-- Reports dashboard implementation
 - HealthKit integration planning
+
+## 2026-01-26 17:00 GMT - Reports Dashboard & Review Queue Implementation
+### Reports Dashboard (Task 1)
+- Created comprehensive reports server actions (`src/app/actions/reports.ts`) with multi-domain analytics:
+  - Dashboard overview with growth metrics
+  - Member engagement reports (check-ins, activity trends, status distribution)
+  - Cohort analytics (performance, engagement rates)
+  - Revenue reports (monthly breakdown, top clients, invoice status)
+  - Compliance reports (questionnaire completion rates)
+  - Export functionality (CSV and JSON formats)
+- Created React Query hooks (`src/hooks/useReports.ts`) with 5-minute stale time
+- Built UI components (`src/features/reports/`):
+  - OverviewCards: Summary metrics with growth indicators
+  - MemberEngagementChart: Check-in trends with Recharts visualization
+  - CohortAnalytics: Cohort performance table and engagement chart
+  - RevenueAnalytics: Monthly revenue chart, invoice status, top clients
+  - ComplianceReport: Questionnaire completion by week and cohort
+  - ExportButton: CSV/JSON download for individual reports
+  - ReportsDashboard: Tabbed interface with role-based access
+- Updated `/reports` page with full dashboard implementation
+- Role-based access: Admin sees all data, Coach sees cohort-filtered data
+
+### Coach Notes & Review Queue (Task 2)
+- Added WeeklyCoachResponse model to Prisma schema with unique constraint
+- Created review queue server actions (`src/app/actions/review-queue.ts`):
+  - getWeeklySummaries: Client list with weekly stats and attention scores
+  - getWeeklyResponse/saveWeeklyResponse: Coach feedback CRUD
+  - getReviewQueueSummary: Summary counts by priority
+  - getCoachCohorts: Cohort filter options
+- Created email draft utility (`src/lib/email-draft.ts`) for weekly feedback
+- Created React Query hooks (`src/hooks/useReviewQueue.ts`)
+- Built ReviewQueueDashboard (`src/features/review-queue/ReviewQueueDashboard.tsx`):
+  - Week navigation (previous/next/current)
+  - Cohort and priority filters
+  - Client table with attention score badges
+  - Expandable review panel with stats and feedback form
+  - Loom URL and note input with save functionality
+  - Email draft copy button
+- Created `/coach/review-queue` page with requireCoach() protection
+- Added Tabs component (`src/components/ui/tabs.tsx`) using Radix UI
+
+### Dependencies Added
+- @radix-ui/react-tabs for tab navigation
+
+### Build Verified
+- All 31 routes compile successfully
+- TypeScript types validated
 
 ## 2026-01-26 16:10 GMT
 - Completed admin user management accessibility polish:
@@ -27,7 +73,8 @@
 - Daily check-in system (CoachFit baseline):
   - Confirmed Entry model, CRUD actions, and UI match CoachFit/PTP baseline
   - Implemented CheckInStats component for streak/compliance display
-  - Added CheckInStats to client health page above form/history
+  - Integrated CheckInStats UI into client dashboard above check-in form, fetching stats from /api/clients/[id]/weekly-summary
+  - Users now see streak, compliance %, and total check-ins at a glance
 - Cohort analytics:
   - Backend action for check-in compliance, streaks, participation (src/app/actions/cohort-analytics.ts)
   - CohortAnalytics UI component integrated in cohort detail view for admin/coach (src/features/cohorts/CohortAnalytics.tsx)
