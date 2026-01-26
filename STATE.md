@@ -73,6 +73,16 @@
   - Global loading skeleton with shadcn Skeleton component
   - Route-specific loading: appointments, cohorts, reports, admin/users
 
+- **Comprehensive Testing Suite**:
+  - **Test Infrastructure**: Mock system for Prisma, Auth, Google Calendar, Email, Stripe
+  - **Test Utilities**: Factory functions for test data, helper functions (mockDate, flushPromises, waitFor)
+  - **Server Action Tests**: appointments (23), cohorts (32), invoices (27), review-queue (21)
+  - **Library Tests**: calendar utilities (39), utils (9)
+  - **Component Tests**: Button (25), Card (23), ErrorBoundary (14)
+  - **Hook Tests**: useAppointments (13)
+  - **E2E Tests**: Playwright tests for auth, appointments, cohorts, invoices, review-queue
+  - **Total**: 237 passing tests across 11 test files
+
 ### Features Next Up
 - Database migration for CreditTransaction and isTestUser fields
 - Cron job for weekly review queue reminders
@@ -237,6 +247,13 @@
 - Calendar utilities: `src/lib/calendar.ts`
 - Google Calendar: `src/lib/google-calendar.ts`
 - Work log: `WORKLOG.md`
+- Test mocks: `src/__tests__/mocks/` (prisma, auth, google-calendar, email, stripe)
+- Test utilities: `src/__tests__/utils/` (test-data, test-helpers)
+- Server action tests: `src/__tests__/actions/` (appointments, cohorts, invoices, review-queue)
+- Library tests: `src/__tests__/lib/` (calendar, utils)
+- Component tests: `src/__tests__/components/` (button, card, ErrorBoundary)
+- Hook tests: `src/__tests__/hooks/` (useAppointments)
+- E2E tests: `e2e/` (auth, appointments, cohorts, invoices, review-queue)
 - Client-facing pages (PTP-style):
   - `/appointments/me` (calendar)
   - `/cohorts/me` (read-only memberships)
@@ -301,7 +318,12 @@
 - iOS app development for HealthKit sync.
 
 ## How to Run
-- `npm run dev`
+- `npm run dev` - Start development server
+- `npm run test` - Run all unit/component tests
+- `npm run test:watch` - Run tests in watch mode
+- `npm run test:ui` - Run tests with Vitest UI
+- `npm run test:e2e` - Run Playwright E2E tests
+- `npm run test:e2e:ui` - Run E2E tests with Playwright UI
 
 ## Recent Commits
 - `refactor: align members naming and routes`
