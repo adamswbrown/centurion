@@ -97,3 +97,6 @@
 
 ## 2026-01-26 09:34 GMT
 - Testing-only: ran local Postgres migration `init` against centurion_dev and generated Prisma Client. (No code changes.)
+
+## 2026-01-26 09:36 GMT
+- Added missing /client/dashboard page to resolve login redirect 404s for client users.
