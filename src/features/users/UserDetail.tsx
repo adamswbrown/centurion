@@ -22,6 +22,7 @@ interface UserDetailProps {
     name: string | null
     email: string
     role: string
+    credits: number
     createdAt: Date
     appointments: Array<{ id: number; startTime: Date; endTime: Date }>
     cohortMemberships: Array<{ id: number; cohort: { id: number; name: string } }>
@@ -35,6 +36,7 @@ export function UserDetail({ user }: UserDetailProps) {
   const [email, setEmail] = useState(user.email)
   const [role, setRole] = useState(user.role)
   const [password, setPassword] = useState("")
+  const [credits, setCredits] = useState<number>(user.credits ?? 0)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -48,6 +50,7 @@ export function UserDetail({ user }: UserDetailProps) {
         email,
         role: role as "ADMIN" | "COACH" | "CLIENT",
         password: password || undefined,
+        credits,
       })
       setPassword("")
       setMessage("User updated")
@@ -93,6 +96,15 @@ export function UserDetail({ user }: UserDetailProps) {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Credits</Label>
+            <Input
+              type="number"
+              min={0}
+              value={credits}
+              onChange={(e) => setCredits(Number(e.target.value))}
             />
           </div>
           <div className="space-y-2">

@@ -9,20 +9,34 @@ export async function getAvailableBootcamps() {
   const session = await auth()
   if (!session?.user?.id) throw new Error("Unauthorized")
 
+  const userId = Number(session.user.id)
+  if (isNaN(userId)) throw new Error("Invalid user ID")
+
   const now = new Date()
-  return prisma.bootcamp.findMany({
-    where: {
-      startTime: { gte: now },
-    },
-    include: {
-      attendees: {
-        select: {
-          user: { select: { id: true, name: true, email: true } },
+  const [bootcamps, user] = await prisma.$transaction([
+    prisma.bootcamp.findMany({
+      where: {
+        startTime: { gte: now },
+      },
+      include: {
+        attendees: {
+          select: {
+            user: { select: { id: true, name: true, email: true } },
+          },
         },
       },
-    },
-    orderBy: { startTime: "asc" },
-  })
+      orderBy: { startTime: "asc" },
+    }),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { credits: true },
+    }),
+  ])
+
+  return {
+    bootcamps,
+    credits: user?.credits ?? 0,
+  }
 }
 
 export async function registerForBootcamp(bootcampId: number) {
@@ -33,27 +47,44 @@ export async function registerForBootcamp(bootcampId: number) {
   const userId = Number(session.user.id)
   if (isNaN(userId)) throw new Error("Invalid user ID")
 
-  const bootcamp = await prisma.bootcamp.findUnique({
-    where: { id: bootcampId },
-    include: { attendees: true },
+  return prisma.$transaction(async (tx) => {
+    const bootcamp = await tx.bootcamp.findUnique({
+      where: { id: bootcampId },
+      include: { attendees: true },
+    })
+
+    if (!bootcamp) throw new Error("Bootcamp not found")
+    if (bootcamp.capacity && bootcamp.attendees.length >= bootcamp.capacity) {
+      throw new Error("Bootcamp is full")
+    }
+
+    const existing = bootcamp.attendees.find((a) => a.userId === userId)
+    if (existing) throw new Error("Already registered")
+
+    const user = await tx.user.findUnique({
+      where: { id: userId },
+      select: { credits: true },
+    })
+
+    if (!user || user.credits <= 0) {
+      throw new Error("No credits remaining")
+    }
+
+    await tx.bootcampAttendee.create({
+      data: {
+        bootcampId,
+        userId,
+      },
+    })
+
+    const updatedUser = await tx.user.update({
+      where: { id: userId },
+      data: { credits: { decrement: 1 } },
+      select: { credits: true },
+    })
+
+    return { success: true, credits: updatedUser.credits }
   })
-
-  if (!bootcamp) throw new Error("Bootcamp not found")
-  if (bootcamp.capacity && bootcamp.attendees.length >= bootcamp.capacity) {
-    throw new Error("Bootcamp is full")
-  }
-
-  const existing = bootcamp.attendees.find((a) => a.userId === userId)
-  if (existing) throw new Error("Already registered")
-
-  await prisma.bootcampAttendee.create({
-    data: {
-      bootcampId,
-      userId,
-    },
-  })
-
-  return { success: true }
 }
 
 export async function unregisterFromBootcamp(bootcampId: number) {
@@ -64,14 +95,22 @@ export async function unregisterFromBootcamp(bootcampId: number) {
   const userId = Number(session.user.id)
   if (isNaN(userId)) throw new Error("Invalid user ID")
 
-  await prisma.bootcampAttendee.delete({
-    where: {
-      bootcampId_userId: {
-        bootcampId,
-        userId,
+  return prisma.$transaction(async (tx) => {
+    await tx.bootcampAttendee.delete({
+      where: {
+        bootcampId_userId: {
+          bootcampId,
+          userId,
+        },
       },
-    },
-  })
+    })
 
-  return { success: true }
+    const updatedUser = await tx.user.update({
+      where: { id: userId },
+      data: { credits: { increment: 1 } },
+      select: { credits: true },
+    })
+
+    return { success: true, credits: updatedUser.credits }
+  })
 }

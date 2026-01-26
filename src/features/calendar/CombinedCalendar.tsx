@@ -6,14 +6,14 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { DateFilter, generateCalendarMonth, getPrismaDateFilter } from "@/lib/calendar"
+import { useAppointments } from "@/hooks/useAppointments"
 import { useBootcamps } from "@/hooks/useBootcamps"
-import Link from "next/link"
 
 const viewOptions = ["month", "week"] as const
 
 type ViewMode = (typeof viewOptions)[number]
 
-export function BootcampCalendar() {
+export function CombinedCalendar() {
   const [view, setView] = useState<ViewMode>("month")
   const [cursor, setCursor] = useState(() => new Date())
 
@@ -26,23 +26,36 @@ export function BootcampCalendar() {
     return getPrismaDateFilter(cursor.getFullYear(), cursor.getMonth())
   }, [cursor, view])
 
+  const { data: appointments } = useAppointments({
+    from: dateFilter.gte,
+    to: dateFilter.lt,
+  })
   const { data: bootcamps } = useBootcamps({
     from: dateFilter.gte,
     to: dateFilter.lt,
   })
+
+  const appointmentList = appointments ?? []
   const bootcampList = bootcamps ?? []
 
   const monthDays = useMemo(() => generateCalendarMonth(dateFilter), [dateFilter])
 
-  const bootcampsByDay = useMemo(() => {
-    const map = new Map<string, typeof bootcampList>()
+  const eventsByDay = useMemo(() => {
+    const map = new Map<string, { appointments: typeof appointmentList; bootcamps: typeof bootcampList }>()
+    appointmentList.forEach((appointment) => {
+      const dayKey = format(new Date(appointment.startTime), "yyyy-MM-dd")
+      const entry = map.get(dayKey) || { appointments: [], bootcamps: [] }
+      entry.appointments.push(appointment)
+      map.set(dayKey, entry)
+    })
     bootcampList.forEach((bootcamp) => {
       const dayKey = format(new Date(bootcamp.startTime), "yyyy-MM-dd")
-      const existing = map.get(dayKey) ?? []
-      map.set(dayKey, [...existing, bootcamp])
+      const entry = map.get(dayKey) || { appointments: [], bootcamps: [] }
+      entry.bootcamps.push(bootcamp)
+      map.set(dayKey, entry)
     })
     return map
-  }, [bootcampList])
+  }, [appointmentList, bootcampList])
 
   const startWeek = startOfWeek(cursor)
   const weekDays = Array.from({ length: 7 }, (_, index) => addDays(startWeek, index))
@@ -68,7 +81,7 @@ export function BootcampCalendar() {
               : `Week of ${format(startWeek, "MMM dd")}`}
           </h2>
           <p className="text-sm text-muted-foreground">
-            {bootcampList.length} bootcamp(s)
+            {appointmentList.length} appointments · {bootcampList.length} bootcamps
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -99,12 +112,21 @@ export function BootcampCalendar() {
         </div>
       </div>
 
+      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-blue-500" /> Appointments
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-orange-500" /> Bootcamps
+        </div>
+      </div>
+
       {view === "month" ? (
         <div className="grid grid-cols-7 gap-2">
           {monthDays.map((day) => {
             const dayDate = new Date(day.year, day.month, day.day)
             const dayKey = format(dayDate, "yyyy-MM-dd")
-            const items = bootcampsByDay.get(dayKey) ?? []
+            const events = eventsByDay.get(dayKey) || { appointments: [], bootcamps: [] }
             const isToday = isSameDay(dayDate, new Date())
 
             return (
@@ -119,25 +141,26 @@ export function BootcampCalendar() {
                   <span className="text-xs font-medium">
                     {format(dayDate, "EEE dd")}
                   </span>
-                  {items.length > 0 && (
+                  {(events.appointments.length + events.bootcamps.length) > 0 && (
                     <Badge variant="secondary" className="text-[10px]">
-                      {items.length}
+                      {events.appointments.length + events.bootcamps.length}
                     </Badge>
                   )}
                 </div>
                 <div className="mt-2 space-y-1">
-                  {items.slice(0, 3).map((bootcamp) => (
-                    <Link
-                      key={bootcamp.id}
-                      href={`/bootcamps/${bootcamp.id}`}
-                      className="block rounded-md border bg-background px-2 py-1 text-xs hover:bg-muted"
-                    >
-                      {bootcamp.name}
-                    </Link>
+                  {events.appointments.slice(0, 2).map((appointment) => (
+                    <div key={`apt-${appointment.id}`} className="rounded-md border border-blue-400/40 bg-blue-500/10 px-2 py-1 text-xs">
+                      {format(new Date(appointment.startTime), "h:mm a")}
+                    </div>
                   ))}
-                  {items.length > 3 && (
+                  {events.bootcamps.slice(0, 2).map((bootcamp) => (
+                    <div key={`bootcamp-${bootcamp.id}`} className="rounded-md border border-orange-400/40 bg-orange-500/10 px-2 py-1 text-xs">
+                      {bootcamp.name}
+                    </div>
+                  ))}
+                  {(events.appointments.length + events.bootcamps.length) > 4 && (
                     <p className="text-[10px] text-muted-foreground">
-                      +{items.length - 3} more
+                      +{events.appointments.length + events.bootcamps.length - 4} more
                     </p>
                   )}
                 </div>
@@ -149,32 +172,32 @@ export function BootcampCalendar() {
         <div className="grid gap-3 md:grid-cols-7">
           {weekDays.map((day) => {
             const dayKey = format(day, "yyyy-MM-dd")
-            const items = bootcampsByDay.get(dayKey) ?? []
+            const events = eventsByDay.get(dayKey) || { appointments: [], bootcamps: [] }
             return (
               <div key={dayKey} className="rounded-md border p-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium">
                     {format(day, "EEE dd")}
                   </span>
-                  {items.length > 0 && (
+                  {(events.appointments.length + events.bootcamps.length) > 0 && (
                     <Badge variant="secondary" className="text-[10px]">
-                      {items.length}
+                      {events.appointments.length + events.bootcamps.length}
                     </Badge>
                   )}
                 </div>
                 <div className="mt-2 space-y-1">
-                  {items.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">No bootcamps</p>
-                  ) : (
-                    items.map((bootcamp) => (
-                      <Link
-                        key={bootcamp.id}
-                        href={`/bootcamps/${bootcamp.id}`}
-                        className="block rounded-md border bg-background px-2 py-1 text-xs hover:bg-muted"
-                      >
-                        {bootcamp.name}
-                      </Link>
-                    ))
+                  {events.appointments.map((appointment) => (
+                    <div key={`apt-${appointment.id}`} className="rounded-md border border-blue-400/40 bg-blue-500/10 px-2 py-1 text-xs">
+                      {format(new Date(appointment.startTime), "h:mm a")}
+                    </div>
+                  ))}
+                  {events.bootcamps.map((bootcamp) => (
+                    <div key={`bootcamp-${bootcamp.id}`} className="rounded-md border border-orange-400/40 bg-orange-500/10 px-2 py-1 text-xs">
+                      {bootcamp.name}
+                    </div>
+                  ))}
+                  {events.appointments.length + events.bootcamps.length === 0 && (
+                    <p className="text-xs text-muted-foreground">No events</p>
                   )}
                 </div>
               </div>

@@ -34,6 +34,9 @@ export function CreateUserDialog() {
         email: String(formData.get("email")),
         role: String(formData.get("role")) as "ADMIN" | "COACH" | "CLIENT",
         password: String(formData.get("password") || "") || undefined,
+        credits: formData.get("credits")
+          ? Number(formData.get("credits"))
+          : undefined,
       })
       setOpen(false)
       router.refresh()
@@ -81,6 +84,10 @@ export function CreateUserDialog() {
           <div>
             <Label htmlFor="password">Password (optional)</Label>
             <Input id="password" name="password" type="password" minLength={8} />
+          </div>
+          <div>
+            <Label htmlFor="credits">Credits</Label>
+            <Input id="credits" name="credits" type="number" min={0} />
           </div>
           {error && (
             <div className="rounded-md border border-destructive/40 bg-destructive/10 p-2 text-sm text-destructive">

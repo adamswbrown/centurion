@@ -1,7 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
+import { Model } from "survey-core"
 import { Button } from "@/components/ui/button"
+import { SurveyContainer } from "@/components/questionnaires/SurveyContainer"
 import { useQuestionnaireResponse, useUpsertQuestionnaireResponse } from "@/hooks/useQuestionnaires"
 import { format } from "date-fns"
 
@@ -14,6 +16,7 @@ export function QuestionnaireViewer({ cohortId, weekNumber }: QuestionnaireViewe
   const { data, isLoading } = useQuestionnaireResponse(cohortId, weekNumber)
   const { mutate: upsertResponse, isPending } = useUpsertQuestionnaireResponse()
   const [responses, setResponses] = useState<any>({})
+  const [hasChanges, setHasChanges] = useState(false)
 
   if (isLoading) {
     return (
@@ -38,14 +41,27 @@ export function QuestionnaireViewer({ cohortId, weekNumber }: QuestionnaireViewe
   const isLocked = response?.status === "COMPLETED" || weekNumber < currentWeek
   const isNotAvailableYet = weekNumber > currentWeek
 
-  const handleSubmit = () => {
+  // Parse SurveyJS JSON schema from questions field
+  const surveyJson = typeof bundle.questions === "string"
+    ? JSON.parse(bundle.questions)
+    : bundle.questions
+
+  // Handle survey completion
+  const handleComplete = useCallback((sender: Model) => {
+    const surveyData = sender.data
     upsertResponse({
       bundleId: bundle.id,
       weekNumber,
-      responses,
+      responses: surveyData,
       status: "COMPLETED",
     })
-  }
+  }, [bundle.id, weekNumber, upsertResponse])
+
+  // Handle value changes for auto-save
+  const handleValueChanged = useCallback((sender: Model) => {
+    setResponses(sender.data)
+    setHasChanges(true)
+  }, [])
 
   const handleSave = () => {
     upsertResponse({
@@ -54,6 +70,7 @@ export function QuestionnaireViewer({ cohortId, weekNumber }: QuestionnaireViewe
       responses,
       status: "IN_PROGRESS",
     })
+    setHasChanges(false)
   }
 
   if (isNotAvailableYet) {
@@ -88,32 +105,18 @@ export function QuestionnaireViewer({ cohortId, weekNumber }: QuestionnaireViewe
         </div>
       )}
 
-      <div className="mb-6">
-        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded">
-          <p className="text-sm font-medium">SurveyJS Integration Required</p>
-          <p className="text-sm">
-            To enable full questionnaire functionality, install survey-core and survey-react-ui packages.
-            This placeholder shows the questionnaire structure.
-          </p>
-        </div>
-      </div>
+      <SurveyContainer
+        surveyJson={surveyJson}
+        initialData={response?.responses as Record<string, any> | undefined}
+        readOnly={isLocked}
+        onComplete={handleComplete}
+        onValueChanged={handleValueChanged}
+      />
 
-      {response && (
-        <div className="mb-6">
-          <h3 className="font-medium mb-2">Previous Responses:</h3>
-          <pre className="bg-muted p-4 rounded text-sm overflow-auto">
-            {JSON.stringify(response.responses, null, 2)}
-          </pre>
-        </div>
-      )}
-
-      {!isLocked && (
-        <div className="flex gap-2">
+      {!isLocked && hasChanges && (
+        <div className="mt-4 flex gap-2">
           <Button onClick={handleSave} variant="outline" disabled={isPending}>
-            Save Progress
-          </Button>
-          <Button onClick={handleSubmit} disabled={isPending}>
-            {isPending ? "Submitting..." : "Submit Questionnaire"}
+            {isPending ? "Saving..." : "Save Progress"}
           </Button>
         </div>
       )}

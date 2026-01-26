@@ -31,7 +31,7 @@ export function BootcampRegistration({ session }: BootcampRegistrationProps) {
 
   if (isLoading) return <div>Loading bootcamps...</div>
 
-  if (!bootcamps || bootcamps.length === 0) {
+  if (!bootcamps || bootcamps.bootcamps.length === 0) {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">No upcoming bootcamps available</p>
@@ -52,8 +52,12 @@ export function BootcampRegistration({ session }: BootcampRegistrationProps) {
         </div>
       )}
 
+      <div className="text-sm text-muted-foreground">
+        Credits remaining: <span className="font-medium">{bootcamps.credits}</span>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {bootcamps.map((bootcamp) => {
+        {bootcamps.bootcamps.map((bootcamp) => {
           const userId = Number(session.user.id)
           const isRegistered = bootcamp.attendees.some(
             (a) => a.user.id === userId,
@@ -114,7 +118,12 @@ export function BootcampRegistration({ session }: BootcampRegistrationProps) {
                       setError(null)
                       setMessage(null)
                       unregister.mutate(bootcamp.id, {
-                        onSuccess: () => setMessage("Unregistered successfully"),
+                        onSuccess: (result) =>
+                          setMessage(
+                            result?.credits !== undefined
+                              ? `Unregistered. Credits remaining: ${result.credits}`
+                              : "Unregistered successfully",
+                          ),
                         onError: (err) =>
                           setError(
                             err instanceof Error
@@ -134,7 +143,12 @@ export function BootcampRegistration({ session }: BootcampRegistrationProps) {
                       setError(null)
                       setMessage(null)
                       register.mutate(bootcamp.id, {
-                        onSuccess: () => setMessage("Registered successfully!"),
+                        onSuccess: (result) =>
+                          setMessage(
+                            result?.credits !== undefined
+                              ? `Registered. Credits remaining: ${result.credits}`
+                              : "Registered successfully!",
+                          ),
                         onError: (err) =>
                           setError(
                             err instanceof Error

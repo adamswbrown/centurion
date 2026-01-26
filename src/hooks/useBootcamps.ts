@@ -11,10 +11,10 @@ import {
   updateBootcamp,
 } from "@/app/actions/bootcamps"
 
-export function useBootcamps() {
+export function useBootcamps(params?: { from?: Date; to?: Date }) {
   return useQuery({
-    queryKey: ["bootcamps"],
-    queryFn: () => getBootcamps(),
+    queryKey: ["bootcamps", params?.from?.toISOString(), params?.to?.toISOString()],
+    queryFn: () => getBootcamps(params),
   })
 }
 

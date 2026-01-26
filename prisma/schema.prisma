@@ -23,6 +23,7 @@ model User {
   image         String?
   emailVerified Boolean   @default(false)
   role          Role      @default(CLIENT)
+  credits       Int       @default(0)
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -52,6 +53,7 @@ model User {
   @@map("users")
   @@index([email])
   @@index([role])
+  @@index([credits])
   @@index([createdAt])
 }
 

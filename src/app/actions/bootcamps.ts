@@ -28,10 +28,18 @@ function ensureValidRange(start: Date, end: Date) {
   }
 }
 
-export async function getBootcamps() {
+export async function getBootcamps(params?: { from?: Date; to?: Date }) {
   await requireCoach()
 
   return prisma.bootcamp.findMany({
+    where: {
+      ...(params?.from && params?.to
+        ? {
+            startTime: { gte: params.from },
+            endTime: { lte: params.to },
+          }
+        : {}),
+    },
     include: {
       attendees: {
         include: { user: { select: { id: true, name: true, email: true } } },

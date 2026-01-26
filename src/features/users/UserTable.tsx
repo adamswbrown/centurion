@@ -19,6 +19,7 @@ interface UserTableProps {
     email: string
     role: string
     createdAt: Date
+    credits: number
     _count: {
       appointments: number
       cohortMemberships: number
@@ -42,6 +43,7 @@ export function UserTable({ users }: UserTableProps) {
           <TableHead>Joined</TableHead>
           <TableHead>Appointments</TableHead>
           <TableHead>Cohorts</TableHead>
+          <TableHead>Credits</TableHead>
           <TableHead>Invoices</TableHead>
         </TableRow>
       </TableHeader>
@@ -60,6 +62,7 @@ export function UserTable({ users }: UserTableProps) {
             <TableCell>{format(new Date(user.createdAt), "MMM dd, yyyy")}</TableCell>
             <TableCell>{user._count.appointments}</TableCell>
             <TableCell>{user._count.cohortMemberships}</TableCell>
+            <TableCell>{user.credits}</TableCell>
             <TableCell>{user._count.invoices}</TableCell>
           </TableRow>
         ))}

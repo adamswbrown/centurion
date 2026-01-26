@@ -11,6 +11,7 @@ const createUserSchema = z.object({
   email: z.string().email("Valid email required"),
   role: z.enum(["ADMIN", "COACH", "CLIENT"]).default("CLIENT"),
   password: z.string().min(8).optional(),
+  credits: z.number().int().min(0).optional(),
 })
 
 const updateUserSchema = z.object({
@@ -19,6 +20,7 @@ const updateUserSchema = z.object({
   email: z.string().email().optional(),
   role: z.enum(["ADMIN", "COACH", "CLIENT"]).optional(),
   password: z.string().min(8).optional(),
+  credits: z.number().int().min(0).optional(),
 })
 
 export async function getAdminUsers(params?: { query?: string }) {
@@ -48,6 +50,7 @@ export async function getAdminUsers(params?: { query?: string }) {
           invoices: true,
         },
       },
+      credits: true,
     },
     orderBy: { createdAt: "desc" },
   })
@@ -97,6 +100,7 @@ export async function createAdminUser(input: z.infer<typeof createUserSchema>) {
       role: role as Role,
       password: hashed,
       emailVerified: false,
+      credits: result.data.credits ?? 0,
     },
   })
 }
@@ -109,7 +113,7 @@ export async function updateAdminUser(input: z.infer<typeof updateUserSchema>) {
     throw new Error(result.error.errors[0].message)
   }
 
-  const { id, name, email, role, password } = result.data
+  const { id, name, email, role, password, credits } = result.data
   const hashed = password ? await bcrypt.hash(password, 10) : undefined
 
   return prisma.user.update({
@@ -119,6 +123,7 @@ export async function updateAdminUser(input: z.infer<typeof updateUserSchema>) {
       ...(email !== undefined ? { email } : {}),
       ...(role !== undefined ? { role: role as Role } : {}),
       ...(hashed !== undefined ? { password: hashed } : {}),
+      ...(credits !== undefined ? { credits } : {}),
     },
   })
 }
