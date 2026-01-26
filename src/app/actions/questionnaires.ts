@@ -349,3 +349,141 @@ export async function getAllQuestionnaires() {
     orderBy: [{ cohortId: "asc" }, { weekNumber: "asc" }],
   })
 }
+
+// Admin function to get all questionnaire bundles
+export async function getAllQuestionnaireBundlesAdmin() {
+  const session = await auth()
+  if (!session?.user) {
+    throw new Error("Unauthorized")
+  }
+
+  // Only admins can view all bundles
+  if (session.user.role !== "ADMIN") {
+    throw new Error("Forbidden: only admins can view all questionnaire bundles")
+  }
+
+  return prisma.questionnaireBundle.findMany({
+    include: {
+      cohort: {
+        select: {
+          id: true,
+          name: true,
+          startDate: true,
+        },
+      },
+      _count: {
+        select: {
+          responses: true,
+        },
+      },
+    },
+    orderBy: [{ cohortId: "asc" }, { weekNumber: "asc" }],
+  })
+}
+
+export async function deleteQuestionnaireBundle(cohortId: number, weekNumber: number) {
+  const session = await auth()
+  if (!session?.user) {
+    throw new Error("Unauthorized")
+  }
+
+  // Only admins can delete bundles
+  if (session.user.role !== "ADMIN") {
+    throw new Error("Forbidden: only admins can delete questionnaire bundles")
+  }
+
+  // Check if bundle exists
+  const bundle = await prisma.questionnaireBundle.findUnique({
+    where: {
+      cohortId_weekNumber: {
+        cohortId,
+        weekNumber,
+      },
+    },
+    include: {
+      _count: {
+        select: {
+          responses: true,
+        },
+      },
+    },
+  })
+
+  if (!bundle) {
+    throw new Error("Questionnaire bundle not found")
+  }
+
+  // Warn if there are responses
+  if (bundle._count.responses > 0) {
+    throw new Error(
+      `Cannot delete: ${bundle._count.responses} response(s) exist for this questionnaire. Delete responses first.`
+    )
+  }
+
+  await prisma.questionnaireBundle.delete({
+    where: {
+      cohortId_weekNumber: {
+        cohortId,
+        weekNumber,
+      },
+    },
+  })
+
+  return { success: true }
+}
+
+// Get or create questionnaire bundle for a cohort/week
+export async function getOrCreateQuestionnaireBundle(cohortId: number, weekNumber: number) {
+  const session = await auth()
+  if (!session?.user) {
+    throw new Error("Unauthorized")
+  }
+
+  // Only admins can create bundles
+  if (session.user.role !== "ADMIN") {
+    throw new Error("Forbidden: only admins can manage questionnaire bundles")
+  }
+
+  // Try to find existing
+  let bundle = await prisma.questionnaireBundle.findUnique({
+    where: {
+      cohortId_weekNumber: {
+        cohortId,
+        weekNumber,
+      },
+    },
+    include: {
+      cohort: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  })
+
+  // If not found, create with default template
+  if (!bundle) {
+    const { DEFAULT_TEMPLATES } = await import("@/lib/default-questionnaire-templates")
+    const weekKey = `week${weekNumber}` as keyof typeof DEFAULT_TEMPLATES
+    const defaultQuestions = DEFAULT_TEMPLATES[weekKey] || DEFAULT_TEMPLATES.week1
+
+    bundle = await prisma.questionnaireBundle.create({
+      data: {
+        cohortId,
+        weekNumber,
+        questions: defaultQuestions,
+      },
+      include: {
+        cohort: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    })
+  }
+
+  return bundle
+}

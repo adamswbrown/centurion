@@ -379,3 +379,87 @@ export async function getAllCoaches() {
     orderBy: { name: "asc" },
   })
 }
+
+// ============================================
+// CHECK-IN CONFIG
+// ============================================
+
+import {
+  MANDATORY_PROMPTS,
+  OPTIONAL_PROMPTS,
+} from "@/lib/check-in-prompts"
+
+const checkInConfigSchema = z.object({
+  enabledPrompts: z.array(z.string()).optional(),
+  customPrompt1: z.string().max(100).optional().nullable(),
+  customPrompt1Type: z.enum(["scale", "text", "number"]).optional().nullable(),
+})
+
+export type CheckInConfig = z.infer<typeof checkInConfigSchema>
+
+export async function getCheckInConfig(cohortId: number) {
+  await requireCoach()
+
+  const config = await prisma.cohortCheckInConfig.findUnique({
+    where: { cohortId },
+  })
+
+  if (!config) {
+    // Return default config
+    return {
+      enabledPrompts: [...MANDATORY_PROMPTS, ...OPTIONAL_PROMPTS],
+      customPrompt1: null,
+      customPrompt1Type: null,
+    }
+  }
+
+  // Parse the JSON prompts field
+  const prompts = config.prompts as CheckInConfig | null
+
+  // Ensure mandatory prompts are always included
+  const enabledPrompts = Array.from(
+    new Set([
+      ...MANDATORY_PROMPTS,
+      ...(prompts?.enabledPrompts || OPTIONAL_PROMPTS),
+    ])
+  )
+
+  return {
+    enabledPrompts,
+    customPrompt1: prompts?.customPrompt1 || null,
+    customPrompt1Type: prompts?.customPrompt1Type || null,
+  }
+}
+
+export async function updateCheckInConfig(cohortId: number, config: CheckInConfig) {
+  await requireCoach()
+
+  const result = checkInConfigSchema.safeParse(config)
+  if (!result.success) {
+    throw new Error(result.error.errors[0].message)
+  }
+
+  const { enabledPrompts, customPrompt1, customPrompt1Type } = result.data
+
+  // Ensure mandatory prompts are always included
+  const finalEnabledPrompts = Array.from(
+    new Set([
+      ...MANDATORY_PROMPTS,
+      ...(enabledPrompts || []).filter((p) => !MANDATORY_PROMPTS.includes(p)),
+    ])
+  )
+
+  const prompts: CheckInConfig = {
+    enabledPrompts: finalEnabledPrompts,
+    customPrompt1: customPrompt1 ?? null,
+    customPrompt1Type: customPrompt1Type ?? null,
+  }
+
+  const updated = await prisma.cohortCheckInConfig.upsert({
+    where: { cohortId },
+    update: { prompts },
+    create: { cohortId, prompts },
+  })
+
+  return updated
+}

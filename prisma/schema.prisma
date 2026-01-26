@@ -48,6 +48,8 @@ model User {
   // HealthKit Relations
   healthKitWorkouts  HealthKitWorkout[]
   sleepRecords       SleepRecord[]
+  pairingCodesAsUser PairingCode[]       @relation("PairingCodeUser")
+  pairingCodesCreated PairingCode[]      @relation("PairingCodeCreator")
 
   // OAuth Relations
   accounts      Account[]
@@ -500,6 +502,29 @@ model SleepRecord {
   @@index([userId])
   @@index([startTime])
   @@index([userId, startTime])
+}
+
+// ============================================
+// HEALTHKIT PAIRING
+// ============================================
+
+model PairingCode {
+  id        Int       @id @default(autoincrement())
+  code      String    @unique
+  userId    Int       // The client this code is for
+  createdBy Int       // Coach/admin who created the code
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  user      User @relation("PairingCodeUser", fields: [userId], references: [id], onDelete: Cascade)
+  creator   User @relation("PairingCodeCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("pairing_codes")
+  @@index([code])
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 // ============================================

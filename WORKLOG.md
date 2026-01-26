@@ -1,3 +1,84 @@
+## 2026-01-26 - Batch 2: Moderate Adaptation from CoachFit
+
+Executed Batch 2 to adapt 70-80% ready code from CoachFit, requiring moderate modifications.
+
+### Task 1: Questionnaire Builder UI
+- Created `src/components/admin/EmailEditor.tsx`:
+  - TipTap rich text editor with toolbar (bold, italic, underline, headings, lists, alignment, links)
+  - Token insertion for template variables
+  - Configurable minimum height
+- Installed TipTap packages: @tiptap/react, @tiptap/starter-kit, @tiptap/extension-link, @tiptap/extension-text-align, @tiptap/extension-underline
+- Created `src/features/questionnaires/QuestionnaireBuilder.tsx`:
+  - Visual question builder with week selection
+  - Add/remove/reorder questions (up/down buttons)
+  - Question types: Long text (comment), Number (with min/max), HTML intro
+  - Required field toggles
+  - Rich text editing for question titles and descriptions
+- Created admin pages:
+  - `/admin/questionnaires/page.tsx` - List all bundles grouped by cohort
+  - `/admin/questionnaires/new/page.tsx` - Create new bundle with builder
+  - `/admin/questionnaires/[id]/page.tsx` - Edit existing bundle
+- Added server actions to `src/app/actions/questionnaires.ts`:
+  - `getAllQuestionnaireBundlesAdmin()` - Admin-only list all bundles
+  - `deleteQuestionnaireBundle()` - Delete bundle (blocks if responses exist)
+  - `getOrCreateQuestionnaireBundle()` - Get or create with default template
+- Created supporting components:
+  - `QuestionnaireList.tsx` - Bundle list with edit/delete actions
+  - `NewQuestionnaireForm.tsx` - Create form with cohort/week selection
+  - `EditQuestionnaireForm.tsx` - Edit form with week navigation
+
+### Task 2: Custom Check-In Config UI
+- Created `src/lib/check-in-prompts.ts`:
+  - Constants: MANDATORY_PROMPTS, OPTIONAL_PROMPTS, ALL_CHECK_IN_PROMPTS
+  - 4 mandatory prompts (weight, steps, calories, perceivedStress)
+  - 2 optional prompts (sleepQuality, notes)
+- Added server actions to `src/app/actions/cohorts.ts`:
+  - `getCheckInConfig(cohortId)` - Get config with defaults
+  - `updateCheckInConfig(cohortId, config)` - Upsert config with validation
+  - `CheckInConfig` type for config structure
+- Created `src/features/cohorts/CheckInConfigEditor.tsx`:
+  - Toggle checkboxes for each prompt (mandatory prompts locked)
+  - Custom prompt input with label and response type (scale/number/text)
+  - Save with inline success/error feedback
+- Integrated into CohortDetail component:
+  - Added CheckInConfigEditor below cohort analytics
+  - Check-in settings appear on every cohort detail page
+
+### Task 3: HealthKit API Routes
+- Added PairingCode model to `prisma/schema.prisma`:
+  - Fields: code (unique), userId (client), createdBy (coach/admin), expiresAt, usedAt
+  - Relations to User for both client and creator
+- Created `src/lib/validations/healthkit.ts`:
+  - Zod schemas for workouts, sleep, steps, and pairing
+  - Type exports for all input types
+- Created `src/lib/healthkit/pairing.ts`:
+  - `generatePairingCode()` - 6-char alphanumeric code (excludes ambiguous chars)
+  - `createPairingCode()` - Create code for client with 24h expiry
+  - `regeneratePairingCode()` - Invalidate old codes and create new
+  - `validateAndUsePairingCode()` - Validate, mark used, return client info
+  - `getActivePairingCodes()` - List unexpired, unused codes
+  - `cleanupExpiredCodes()` - Maintenance function
+- Created API routes:
+  - `/api/healthkit/pair/route.ts` - iOS pairing endpoint with CORS
+  - `/api/healthkit/workouts/route.ts` - Workout ingestion with deduplication
+  - `/api/healthkit/sleep/route.ts` - Sleep record ingestion
+  - `/api/healthkit/steps/route.ts` - Step count to Entry model
+  - `/api/admin/healthkit/generate-code/route.ts` - Admin code generation
+- Created UI components:
+  - `src/features/healthkit/PairingCodeGenerator.tsx` - Generate codes for clients
+  - `src/features/healthkit/HealthDataExplorer.tsx` - View client HealthKit data
+  - `src/features/healthkit/HealthKitAdminDashboard.tsx` - Admin overview with stats
+- Created admin page `/admin/healthkit/page.tsx`:
+  - Stats: paired clients, active codes, total workouts, sleep records
+  - Pairing code generator with copy functionality
+  - Active codes list with expiry times
+  - Recent workouts and sleep records lists
+
+### Build Verification
+- `npm run build` passes successfully
+- All new routes compile and generate correctly
+- Note: Database migration needed for PairingCode model
+
 ## 2026-01-26 17:02 GMT - Batch 1: Copy and Adapt Code from PTP/CoachFit
 
 Executed Batch 1 to close gaps by copying 95%+ ready code from PTP and CoachFit source codebases.

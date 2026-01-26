@@ -27,8 +27,31 @@
   - Loom URL and note input with save functionality
   - Email draft generation with copy-to-clipboard
 
+- **Questionnaire Builder Admin UI** (Batch 2):
+  - Admin questionnaire management at `/admin/questionnaires`
+  - Create/edit questionnaire bundles with visual builder
+  - Drag/drop question reordering (up/down buttons)
+  - Question types: Long text, Number, HTML intro
+  - Required field toggles, min/max validation for numbers
+  - Rich text editing with TipTap editor
+  - Week-based navigation for multi-week questionnaires
+- **Custom Check-In Config UI** (Batch 2):
+  - Check-in settings editor integrated into cohort detail page
+  - Toggle mandatory/optional prompts per cohort
+  - Custom prompt support with configurable response types (scale/number/text)
+  - Settings persisted in CohortCheckInConfig model
+- **HealthKit API Routes** (Batch 2):
+  - Pairing code system for iOS app connection
+  - `/api/healthkit/pair` - iOS device pairing endpoint
+  - `/api/healthkit/workouts` - Workout data ingestion
+  - `/api/healthkit/sleep` - Sleep record ingestion
+  - `/api/healthkit/steps` - Step count ingestion (updates Entry model)
+  - Admin HealthKit dashboard at `/admin/healthkit`
+  - Pairing code generator and management UI
+  - HealthKit data explorer component
+  - PairingCode model added to schema
+
 ### Features Next Up
-- HealthKit integration
 - Email system (Resend)
 ## Project Summary
 - Unified fitness platform combining Personal Trainer Planner (appointments, bootcamps, invoicing) and CoachFit (cohorts, health data).
@@ -249,10 +272,11 @@
 
 ## Open TODOs
 - Consider adding global toast notifications for feedback (currently inline messages).
-- Begin Phase 9: Health Data Tracking (HealthKit integration, metrics tracking).
+- Run database migration for PairingCode model (`npx prisma migrate dev`).
 - Add email system integration (Resend).
 - Add cron job for weekly review queue reminder notifications.
 - Consider adding print/PDF export for reports.
+- iOS app development for HealthKit sync.
 
 ## How to Run
 - `npm run dev`
