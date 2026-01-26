@@ -58,3 +58,17 @@
   - Installed shadcn alert-dialog component.
   - Created useMembers hook for member selection.
 - Phase 5 (Cohort System) fully complete.
+
+## 2026-01-26 06:15 GMT
+- Implemented Phase 6 Invoicing & Payments (following PTP patterns with Stripe integration):
+  - Extended Prisma Invoice model with payment tracking fields (paymentStatus, stripePaymentUrl, paidAt).
+  - Added PaymentStatus enum (UNPAID, PAID, OVERDUE, CANCELLED).
+  - Installed Stripe SDK and created stripe.ts library with payment link creation and webhook verification.
+  - Created invoice server actions: getInvoices, getInvoiceById, generateInvoice, createManualInvoice, createStripePaymentLink, updateInvoicePaymentStatus, deleteInvoice, getRevenueStats.
+  - Built React Query hooks for invoices with proper cache invalidation.
+  - Implemented UI components: InvoiceList (with status filtering), GenerateInvoiceDialog, InvoiceDetail (with inline status updates and payment link management), RevenueChart (monthly revenue visualization with Recharts).
+  - Created billing pages at `/billing` and `/billing/[id]` with admin-only access.
+  - Created Stripe webhook endpoint at `/api/webhooks/stripe` to handle payment events.
+  - Fixed TypeScript build errors: Decimal to number conversions, discriminated union handling, Stripe API version update.
+  - Regenerated Prisma client with new schema.
+- Phase 6 (Invoicing & Payments) fully complete.
