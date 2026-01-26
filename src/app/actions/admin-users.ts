@@ -110,7 +110,7 @@ export async function createAdminUser(input: z.infer<typeof createUserSchema>) {
   const session = await requireAdmin()
   await logAuditEvent({
     action: "CREATE_USER",
-    actorId: session.id,
+    actorId: Number.parseInt(session.id, 10),
     targetId: user.id,
     targetType: "User",
     details: { name, email, role },
@@ -143,7 +143,7 @@ export async function updateAdminUser(input: z.infer<typeof updateUserSchema>) {
   const session = await requireAdmin()
   await logAuditEvent({
     action: "UPDATE_USER",
-    actorId: session.id,
+    actorId: Number.parseInt(session.id, 10),
     targetId: user.id,
     targetType: "User",
     details: { id, name, email, role, credits },
@@ -158,7 +158,7 @@ export async function deleteAdminUser(id: number) {
   const session = await requireAdmin()
   await logAuditEvent({
     action: "DELETE_USER",
-    actorId: session.id,
+    actorId: Number.parseInt(session.id, 10),
     targetId: user.id,
     targetType: "User",
     details: { id, email: user.email, name: user.name, role: user.role },
@@ -170,13 +170,14 @@ export async function bulkAdminUserAction({ ids, action, value }: { ids: number[
   await requireAdmin()
   let result = null
   const session = await requireAdmin()
+  const actorId = Number.parseInt(session.id, 10)
   if (action === "delete") {
     const users = await prisma.user.findMany({ where: { id: { in: ids } } })
     await prisma.user.deleteMany({ where: { id: { in: ids } } })
     for (const user of users) {
       await logAuditEvent({
         action: "BULK_DELETE_USER",
-        actorId: session.id,
+        actorId,
         targetId: user.id,
         targetType: "User",
         details: { id: user.id, email: user.email, name: user.name, role: user.role },
@@ -184,11 +185,11 @@ export async function bulkAdminUserAction({ ids, action, value }: { ids: number[
     }
     result = { deleted: ids.length }
   } else if (action === "role" && value) {
-    await prisma.user.updateMany({ where: { id: { in: ids } }, data: { role: value } })
+    await prisma.user.updateMany({ where: { id: { in: ids } }, data: { role: value as Role } })
     for (const id of ids) {
       await logAuditEvent({
         action: "BULK_UPDATE_ROLE",
-        actorId: session.id,
+        actorId,
         targetId: id,
         targetType: "User",
         details: { id, newRole: value },

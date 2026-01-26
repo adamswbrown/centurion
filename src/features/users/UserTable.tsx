@@ -102,11 +102,11 @@ export function UserTable({ users }: UserTableProps) {
                 <option value="COACH">COACH</option>
                 <option value="CLIENT">CLIENT</option>
               </select>
-              <Button size="sm" onClick={handleBulkRoleChange} loading={loading}>Apply</Button>
+              <Button size="sm" onClick={handleBulkRoleChange} disabled={loading}>Apply</Button>
             </>
           )}
           {bulkAction === "delete" && (
-            <Button size="sm" variant="destructive" onClick={handleBulkDelete} loading={loading}>Confirm Delete</Button>
+            <Button size="sm" variant="destructive" onClick={handleBulkDelete} disabled={loading}>Confirm Delete</Button>
           )}
           <Button size="sm" variant="ghost" onClick={() => setBulkAction("")}>Cancel</Button>
           {error && <span className="text-destructive text-sm ml-2">{error}</span>}

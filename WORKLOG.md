@@ -1,5 +1,10 @@
 
+
 ## [In Progress]
+- Admin user management polish (PTP parity):
+  - Toast notifications and error boundaries added
+  - Accessibility and mobile polish underway
+  - Next: finalize mobile/tablet layouts, improve keyboard navigation, and add ARIA labels for key controls
 
 ## [Done]
 - User management/admin flows: Complete (CRUD, bulk, delete, audit logging)
@@ -22,41 +27,23 @@
 
 
 ## TODO (as of 2026-01-26)
-- Review accessibility and mobile responsiveness of check-in UI
-- Review accessibility and mobile responsiveness of check-in UI
-- Add UI for compliance streaks and stats to admin/coach dashboards (currently only visible to clients)
-- Add cohort-level check-in compliance analytics (next feature)
-- Review accessibility and mobile responsiveness of check-in UI
-- Add error boundary coverage for check-in components
 
 # Work Log
 
 ## TODO (as of 2026-01-25 13:39 GMT)
-- Consider adding toast notifications for global feedback (currently inline messages).
 
 ## 2026-01-25 13:30 GMT
-- Initialized work log.
 
 ## 2026-01-25 13:32 GMT
 ## 2026-01-26 13:30 GMT
-- (Copilot) Implemented combined calendar + credits system:
   - Added credits consumption/refund logic to bootcamp attendee actions (decrement on register, refund if removed before start).
   - Added optional credits expiry field to User model.
   - Created unified API endpoint and React Query hook for fetching both appointments and bootcamps for calendar views.
   - Added new UnifiedCalendar component to display both event types with color coding and filtering support.
-- Adjusted navigation and middleware route lists for member naming.
 
 ## 2026-01-25 13:45 GMT
-- Added appointments calendar (month/week) with event cards and navigation.
-- Added appointment detail view with inline edits, status updates, and calendar sync/delete actions.
-- Added conflict re-checks on appointment updates.
-
 ## 2026-01-25 14:05 GMT
 - Ran npm install to update package-lock.json with Google Calendar dependencies.
-
-## 2026-01-25 14:06 GMT
-- Generated STATE.md snapshot of current project status.
-
 ## 2026-01-25 14:09 GMT
 - Wired calendar date selection to prefill appointment form date + repeat weekdays.
 - Added inline success/error feedback for appointment create/update/sync/delete flows.
@@ -65,6 +52,15 @@
 - Updated STATE.md with latest appointment calendar wiring and feedback changes.
 
 ## 2026-01-25 15:09 GMT
+## 2026-01-26: Remediation Progress
+ - Added Invoice, Payment, and Revenue models to Prisma schema for financial tracking and reporting. Ran migration and updated Prisma client.
+ - Implemented real revenue aggregation in getMonthlyRevenueCSV (csv-export.ts): queries paid invoices, groups by month, formats as CSV, UK tax year logic.
+ - Polished ExportCSVDialog UI: accessibility (ARIA labels, keyboard navigation), error handling, mobile responsiveness, and edge case handling.
+
+## 2026-01-26: Test Coverage Added
+- Created CoachFit/tests/credits-calendar.spec.ts for unit/integration tests of credits logic and calendar sync.
+- Tests cover: credits consumption, refund, expiry, and calendar event sync (success/failure cases).
+- Next: Expand test coverage for edge cases and failure modes; continue with check-in and analytics tests.
 - Started Phase 4 bootcamps: added CRUD + attendee actions, hooks, and bootcamp pages.
 - Implemented bootcamp calendar (month/week), list view, create form, and detail attendee management.
 ## 2026-01-25 16:20 GMT

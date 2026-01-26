@@ -7,6 +7,6 @@ export async function GET(req: Request) {
   if (!user) return new Response("Unauthorized", { status: 401 })
   const { from, to } = Object.fromEntries(new URL(req.url).searchParams)
   if (!from || !to) return new Response("Missing date range", { status: 400 })
-  const events = await getUnifiedEvents({ userId: user.id, from: new Date(from), to: new Date(to) })
+  const events = await getUnifiedEvents({ userId: Number.parseInt(user.id, 10), from: new Date(from), to: new Date(to) })
   return Response.json(events)
 }

@@ -11,6 +11,7 @@ import {
   Heart,
   LayoutDashboard,
   Timer,
+  UserCog,
 } from "lucide-react"
 import type { Role } from "@prisma/client"
 
@@ -22,6 +23,7 @@ const navigation = {
   ADMIN: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Members", href: "/members", icon: Users },
+    { name: "Users", href: "/admin/users", icon: UserCog },
     { name: "Appointments", href: "/appointments", icon: Calendar },
     { name: "Calendar", href: "/calendar", icon: Calendar },
     { name: "Bootcamps", href: "/bootcamps", icon: Dumbbell },

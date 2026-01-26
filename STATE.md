@@ -1,9 +1,13 @@
 ### Features Complete
-- User management/admin flows (CRUD, bulk, delete, audit logging)
-- Combined calendar + credits system (backend, API, UI)
-- Daily check-in system (CoachFit baseline): CRUD, compliance, streaks, UI, stats display
-
-
+### Features Complete
+ - User management/admin flows (CRUD, bulk, delete, audit logging)
+ - Combined calendar + credits system (backend, API, UI)
+ - Daily check-in system (CoachFit baseline): CRUD, compliance, streaks, UI, stats display
+ - Cohort analytics: Backend and UI for compliance, streaks, participation (admin/coach dashboard)
+ - Admin user management polish (PTP parity): Toast notification support, error boundary coverage added; accessibility/mobile polish underway
+ - Added Invoice, Payment, and Revenue models to Prisma schema (financial reporting foundation)
+ - Real revenue aggregation/reporting in csv-export.ts (monthly, UK tax year, paid invoices)
+ - ExportCSVDialog UI polished for accessibility, error handling, mobile responsiveness, edge cases
 ### Features Complete
 - User management/admin flows (CRUD, bulk, delete, audit logging)
 - Combined calendar + credits system (backend, API, UI)
@@ -11,22 +15,16 @@
 - Cohort analytics: Backend and UI for compliance, streaks, participation (admin/coach dashboard)
 
 
-- Admin UI polish: Toast notification support and error boundary coverage added (global feedback, resilience)
+- Admin user management polish (PTP parity): Toast notification support, error boundary coverage added; accessibility/mobile polish underway
+
+### Features Next Up
+### Features Next Up
+- Admin UI polish
+- Settings
 
 ### Features Next Up
 - Admin UI polish
 - Reports
-- Settings
-
-### Features Next Up
-- Cohort analytics (CoachFit baseline)
-- Admin UI polish
-- Reports
-- Settings
-# Centurion State
-
-Last updated: 2026-01-26 11:35 GMT
-
 ## Project Summary
 - Unified fitness platform combining Personal Trainer Planner (appointments, bootcamps, invoicing) and CoachFit (cohorts, health data).
 - **Phase 7 (Daily Check-In System) and Phase 8 (Weekly Questionnaires) complete**. Ready for Phase 9: Health Data Tracking.

@@ -13,13 +13,15 @@ export async function logAuditEvent({
   targetType?: string
   details?: any
 }) {
+  // Map to schema fields: actorId -> userId, targetId/targetType -> target, details -> metadata
+  const target = targetType && targetId ? `${targetType}:${targetId}` : undefined
+
   await prisma.auditLog.create({
     data: {
       action,
-      actorId,
-      targetId,
-      targetType,
-      details: details ? JSON.stringify(details) : undefined,
+      userId: actorId,
+      target,
+      metadata: details || undefined,
     },
   })
 }
