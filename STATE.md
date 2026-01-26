@@ -51,8 +51,31 @@
   - HealthKit data explorer component
   - PairingCode model added to schema
 
+- **Email System Integration** (Batch 3):
+  - Email notifications integrated into all major server actions
+  - Appointments: Confirmation on create, cancellation on delete
+  - Invoices: Notification on send, confirmation on payment
+  - Cohorts: Invitation email when member added
+  - Review Queue: Coach note received notification to clients
+  - Supports test user email suppression, graceful degradation without API key
+- **Navigation Updates** (Batch 3):
+  - Fixed 5 missing navigation links in Sidebar and MobileNav
+  - Admin: Questionnaires, HealthKit, Settings, Reports
+  - Coach: Review Queue, Reports
+- **Credit Management System** (Batch 3):
+  - CreditTransaction model for transaction history
+  - Server actions: allocateCredits, getCreditsHistory, getCreditsSummary
+  - UI components: CreditAllocationForm, CreditBalanceWidget, CreditHistoryTable
+  - Integrated into user detail page (/admin/users/[id])
+  - Supports add/deduct with reason tracking and expiry dates
+- **Error and Loading States** (Batch 3):
+  - Global error boundary with retry and dashboard links
+  - Global loading skeleton with shadcn Skeleton component
+  - Route-specific loading: appointments, cohorts, reports, admin/users
+
 ### Features Next Up
-- Email system (Resend)
+- Database migration for CreditTransaction and isTestUser fields
+- Cron job for weekly review queue reminders
 ## Project Summary
 - Unified fitness platform combining Personal Trainer Planner (appointments, bootcamps, invoicing) and CoachFit (cohorts, health data).
 - **Phase 7 (Daily Check-In System) and Phase 8 (Weekly Questionnaires) complete**. Ready for Phase 9: Health Data Tracking.
@@ -272,8 +295,7 @@
 
 ## Open TODOs
 - Consider adding global toast notifications for feedback (currently inline messages).
-- Run database migration for PairingCode model (`npx prisma migrate dev`).
-- Add email system integration (Resend).
+- Run database migration for CreditTransaction and isTestUser fields (`npx prisma migrate dev`).
 - Add cron job for weekly review queue reminder notifications.
 - Consider adding print/PDF export for reports.
 - iOS app development for HealthKit sync.

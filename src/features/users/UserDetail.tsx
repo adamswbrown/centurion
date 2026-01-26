@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { updateAdminUser } from "@/app/actions/admin-users"
+import { getCreditsHistory } from "@/app/actions/credits"
 import {
   Table,
   TableBody,
@@ -15,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { CreditAllocationForm, CreditBalanceWidget, CreditHistoryTable } from "@/features/credits"
 
 interface UserDetailProps {
   user: {
@@ -31,6 +33,18 @@ interface UserDetailProps {
   }
 }
 
+interface CreditTransaction {
+  id: number
+  amount: number
+  reason: string
+  createdAt: Date
+  expiresAt: Date | null
+  createdBy: {
+    name: string | null
+    email: string
+  }
+}
+
 export function UserDetail({ user }: UserDetailProps) {
   const [name, setName] = useState(user.name || "")
   const [email, setEmail] = useState(user.email)
@@ -39,6 +53,30 @@ export function UserDetail({ user }: UserDetailProps) {
   const [credits, setCredits] = useState<number>(user.credits ?? 0)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [creditHistory, setCreditHistory] = useState<CreditTransaction[]>([])
+  const [loadingHistory, setLoadingHistory] = useState(false)
+
+  // Load credit history on mount
+  useEffect(() => {
+    async function loadHistory() {
+      setLoadingHistory(true)
+      try {
+        const history = await getCreditsHistory(user.id)
+        setCreditHistory(history)
+      } catch (err) {
+        console.error("Failed to load credit history:", err)
+      } finally {
+        setLoadingHistory(false)
+      }
+    }
+    loadHistory()
+  }, [user.id])
+
+  function handleCreditUpdate(newBalance: number) {
+    setCredits(newBalance)
+    // Refresh credit history
+    getCreditsHistory(user.id).then(setCreditHistory).catch(console.error)
+  }
 
   async function handleSave() {
     setMessage(null)
@@ -127,6 +165,24 @@ export function UserDetail({ user }: UserDetailProps) {
             {error}
           </div>
         )}
+      </div>
+
+      {/* Credit Management Section */}
+      <div className="space-y-4">
+        <CreditAllocationForm
+          userId={user.id}
+          currentBalance={credits}
+          onSuccess={handleCreditUpdate}
+        />
+
+        <div className="rounded-md border p-4">
+          <h3 className="font-semibold mb-4">Credit History</h3>
+          {loadingHistory ? (
+            <div className="text-center py-4 text-muted-foreground">Loading...</div>
+          ) : (
+            <CreditHistoryTable transactions={creditHistory} />
+          )}
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

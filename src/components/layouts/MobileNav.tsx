@@ -13,6 +13,11 @@ import {
   Timer,
   X,
   UserCog,
+  FileText,
+  Activity,
+  Settings,
+  BarChart,
+  ClipboardList,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { Role } from "@prisma/client"
@@ -33,6 +38,10 @@ const navigation = {
     { name: "Bootcamps", href: "/bootcamps", icon: Dumbbell },
     { name: "Cohorts", href: "/cohorts", icon: Heart },
     { name: "Billing", href: "/billing", icon: CreditCard },
+    { name: "Reports", href: "/reports", icon: BarChart },
+    { name: "Questionnaires", href: "/admin/questionnaires", icon: FileText },
+    { name: "HealthKit", href: "/admin/healthkit", icon: Activity },
+    { name: "Settings", href: "/admin/settings", icon: Settings },
     { name: "Timer", href: "/timer", icon: Timer },
   ],
   COACH: [
@@ -42,6 +51,8 @@ const navigation = {
     { name: "Calendar", href: "/calendar", icon: Calendar },
     { name: "Bootcamps", href: "/bootcamps", icon: Dumbbell },
     { name: "Cohorts", href: "/cohorts", icon: Heart },
+    { name: "Review Queue", href: "/coach/review-queue", icon: ClipboardList },
+    { name: "Reports", href: "/reports", icon: BarChart },
     { name: "Invoices", href: "/invoices/me", icon: CreditCard },
     { name: "Timer", href: "/timer", icon: Timer },
   ],

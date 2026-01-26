@@ -8,6 +8,8 @@ import { startOfWeek, endOfWeek, subDays, format, addDays, subWeeks } from "date
 import { MembershipStatus } from "@prisma/client"
 import type { MemberAttentionScore } from "./coach-analytics"
 import { calculateAttentionScore } from "./coach-analytics"
+import { sendSystemEmail } from "@/lib/email"
+import { EMAIL_TEMPLATE_KEYS } from "@/lib/email-templates"
 
 /**
  * Review Queue Server Actions
@@ -378,6 +380,30 @@ export async function saveWeeklyResponse(input: {
       note: note || null,
     },
   })
+
+  // Send email notification to client
+  const client = await prisma.user.findUnique({
+    where: { id: clientId },
+    select: { name: true, email: true, isTestUser: true },
+  })
+
+  const coach = await prisma.user.findUnique({
+    where: { id: coachId },
+    select: { name: true },
+  })
+
+  if (client?.email && (loomUrl || note)) {
+    await sendSystemEmail({
+      templateKey: EMAIL_TEMPLATE_KEYS.COACH_NOTE_RECEIVED,
+      to: client.email,
+      variables: {
+        userName: client.name || "Member",
+        coachName: coach?.name || "Your Coach",
+        loginUrl: `${process.env.NEXT_PUBLIC_APP_URL || ""}/client/dashboard`,
+      },
+      isTestUser: client.isTestUser ?? false,
+    })
+  }
 
   return response
 }

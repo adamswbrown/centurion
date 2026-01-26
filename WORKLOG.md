@@ -1,3 +1,74 @@
+## 2026-01-26 - Batch 3: Fix Critical Integration Gaps
+
+Executed Batch 3 to fix critical integration gaps in Centurion platform.
+
+### Task 1: Integrate Email System
+- Integrated email notifications into server actions (previously 0% usage):
+  - **Appointments** (`src/app/actions/appointments.ts`):
+    - Added `sendSystemEmail` call after creating appointment (APPOINTMENT_CONFIRMATION)
+    - Added `sendSystemEmail` call after deleting appointment (APPOINTMENT_CANCELLED)
+    - Fetches member info to populate email variables (name, date, time)
+  - **Invoices** (`src/app/actions/invoices.ts`):
+    - Added `sendSystemEmail` after generating invoice (INVOICE_SENT)
+    - Added `sendSystemEmail` when payment status updated to PAID (INVOICE_PAID)
+    - Includes invoice amount, month, and payment URL
+  - **Cohorts** (`src/app/actions/cohorts.ts`):
+    - Added `sendSystemEmail` when adding member to cohort (COHORT_INVITE)
+    - Includes cohort name and coach name
+  - **Review Queue** (`src/app/actions/review-queue.ts`):
+    - Added `sendSystemEmail` after coach saves feedback (COACH_NOTE_RECEIVED)
+    - Only sends if there's actual feedback content (loomUrl or note)
+- All emails respect `isTestUser` flag to suppress for test accounts
+- Graceful degradation when RESEND_API_KEY not configured
+
+### Task 2: Fix Navigation (5 Missing Pages)
+- Updated `src/components/layouts/Sidebar.tsx`:
+  - Added new icons: FileText, Activity, Settings, BarChart, ClipboardList
+  - ADMIN: Added Questionnaires (/admin/questionnaires), HealthKit (/admin/healthkit), Settings (/admin/settings), Reports (/reports)
+  - COACH: Added Review Queue (/coach/review-queue), Reports (/reports)
+- Updated `src/components/layouts/MobileNav.tsx` with identical navigation changes
+
+### Task 3: Build Credit Management UI
+- **Schema Updates** (`prisma/schema.prisma`):
+  - Added `CreditTransaction` model for credit history tracking
+  - Fields: userId, amount (positive=add, negative=deduct), reason, expiresAt, createdById
+  - Added `isTestUser` field to User model (for email suppression)
+  - Added relations: `creditTransactionsReceived`, `creditTransactionsCreated`
+- **Server Actions** (`src/app/actions/credits.ts`):
+  - `allocateCredits()` - Add or deduct credits with audit logging
+  - `getCreditsHistory()` - Get transaction history for a user
+  - `getCreditsSummary()` - Get balance and recent transactions
+  - Prevents negative balance on deduction
+- **UI Components** (`src/features/credits/`):
+  - `CreditAllocationForm.tsx` - Form to add/deduct credits with reason
+  - `CreditBalanceWidget.tsx` - Badge display of credit balance
+  - `CreditHistoryTable.tsx` - Table of credit transactions
+- **Integration**:
+  - Updated `src/features/users/UserDetail.tsx` to include credit management section
+  - Shows allocation form, current balance, and transaction history
+
+### Task 4: Add Error and Loading States
+- **Created Skeleton component** (`src/components/ui/skeleton.tsx`):
+  - Shadcn-style animated loading placeholder
+- **Global Error Boundary** (`src/app/error.tsx`):
+  - Friendly error display with AlertCircle icon
+  - "Try Again" and "Go to Dashboard" buttons
+  - Error digest display for debugging
+- **Global Loading State** (`src/app/loading.tsx`):
+  - Header, stats cards, and table skeleton layout
+- **Route-Specific Loading States**:
+  - `src/app/appointments/loading.tsx` - Appointment list skeleton
+  - `src/app/cohorts/loading.tsx` - Cohort cards grid skeleton
+  - `src/app/reports/loading.tsx` - Reports with chart skeleton
+  - `src/app/admin/users/loading.tsx` - User table skeleton
+
+### Build Verification
+- Prisma client regenerated with new schema
+- `npm run build` passes successfully (39 routes)
+- All TypeScript types validated
+
+---
+
 ## 2026-01-26 - Batch 2: Moderate Adaptation from CoachFit
 
 Executed Batch 2 to adapt 70-80% ready code from CoachFit, requiring moderate modifications.

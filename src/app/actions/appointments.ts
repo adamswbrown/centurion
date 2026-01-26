@@ -17,6 +17,9 @@ import {
   getRepeatingDates,
   getWeekday,
 } from "@/lib/calendar"
+import { sendSystemEmail } from "@/lib/email"
+import { EMAIL_TEMPLATE_KEYS } from "@/lib/email-templates"
+import { format } from "date-fns"
 
 const createAppointmentSchema = z.object({
   memberId: z.number().int().positive(),
@@ -240,6 +243,29 @@ export async function createAppointment(
     }
   }
 
+  // Send confirmation email for the first appointment
+  if (appointments.length > 0) {
+    const member = await prisma.user.findUnique({
+      where: { id: memberId },
+      select: { name: true, email: true, isTestUser: true },
+    })
+
+    if (member?.email) {
+      const firstAppointment = appointments[0]
+      await sendSystemEmail({
+        templateKey: EMAIL_TEMPLATE_KEYS.APPOINTMENT_CONFIRMATION,
+        to: member.email,
+        variables: {
+          userName: member.name || "Member",
+          appointmentDate: format(firstAppointment.startTime, "EEEE, MMMM do, yyyy"),
+          appointmentTime: format(firstAppointment.startTime, "h:mm a"),
+          appointmentLocation: "Training Facility", // Default location
+        },
+        isTestUser: member.isTestUser ?? false,
+      })
+    }
+  }
+
   return { appointments, syncStatus }
 }
 
@@ -341,12 +367,18 @@ export async function deleteAppointment(id: number) {
 
   const appointment = await prisma.appointment.findUnique({
     where: { id },
-    select: { googleEventId: true },
+    select: { googleEventId: true, userId: true, startTime: true },
   })
 
   if (!appointment) {
     throw new Error("Appointment not found")
   }
+
+  // Fetch member info for email notification before deleting
+  const member = await prisma.user.findUnique({
+    where: { id: appointment.userId },
+    select: { name: true, email: true, isTestUser: true },
+  })
 
   await prisma.appointment.delete({
     where: { id },
@@ -364,6 +396,20 @@ export async function deleteAppointment(id: number) {
         message: "Failed to delete from Google Calendar. Appointment was removed from the system.",
       }
     }
+  }
+
+  // Send cancellation email
+  if (member?.email) {
+    await sendSystemEmail({
+      templateKey: EMAIL_TEMPLATE_KEYS.APPOINTMENT_CANCELLED,
+      to: member.email,
+      variables: {
+        userName: member.name || "Member",
+        appointmentDate: format(appointment.startTime, "EEEE, MMMM do, yyyy"),
+        appointmentTime: format(appointment.startTime, "h:mm a"),
+      },
+      isTestUser: member.isTestUser ?? false,
+    })
   }
 
   return { success: true, syncStatus }

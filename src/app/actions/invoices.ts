@@ -5,7 +5,9 @@ import { Prisma, PaymentStatus, AttendanceStatus } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { requireAdmin } from "@/lib/auth"
 import { createPaymentLink } from "@/lib/stripe"
-import { startOfMonth, endOfMonth } from "date-fns"
+import { startOfMonth, endOfMonth, format } from "date-fns"
+import { sendSystemEmail } from "@/lib/email"
+import { EMAIL_TEMPLATE_KEYS } from "@/lib/email-templates"
 
 const generateInvoiceSchema = z.object({
   userId: z.number().int().positive(),
@@ -185,6 +187,27 @@ export async function generateInvoice(input: GenerateInvoiceInput) {
     return newInvoice
   })
 
+  // Fetch user info and send invoice email
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { name: true, email: true, isTestUser: true },
+  })
+
+  if (user?.email) {
+    const monthYear = format(monthDate, "MMMM yyyy")
+    await sendSystemEmail({
+      templateKey: EMAIL_TEMPLATE_KEYS.INVOICE_SENT,
+      to: user.email,
+      variables: {
+        userName: user.name || "Member",
+        invoiceMonth: monthYear,
+        invoiceAmount: `$${Number(totalAmount).toFixed(2)}`,
+        paymentUrl: `${process.env.NEXT_PUBLIC_APP_URL || ""}/client/invoices`,
+      },
+      isTestUser: user.isTestUser ?? false,
+    })
+  }
+
   return invoice
 }
 
@@ -293,7 +316,27 @@ export async function updateInvoicePaymentStatus(
   const updated = await prisma.invoice.update({
     where: { id },
     data,
+    include: {
+      user: {
+        select: { name: true, email: true, isTestUser: true },
+      },
+    },
   })
+
+  // Send payment confirmation email when invoice is marked as paid
+  if (status === PaymentStatus.PAID && updated.user?.email) {
+    const monthYear = format(updated.month, "MMMM yyyy")
+    await sendSystemEmail({
+      templateKey: EMAIL_TEMPLATE_KEYS.INVOICE_PAID,
+      to: updated.user.email,
+      variables: {
+        userName: updated.user.name || "Member",
+        invoiceMonth: monthYear,
+        invoiceAmount: `$${Number(updated.totalAmount).toFixed(2)}`,
+      },
+      isTestUser: updated.user.isTestUser ?? false,
+    })
+  }
 
   return updated
 }

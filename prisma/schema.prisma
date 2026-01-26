@@ -25,6 +25,7 @@ model User {
   role          Role      @default(CLIENT)
   credits       Int       @default(0)
   creditsExpiry DateTime? // Optional: when credits expire
+  isTestUser    Boolean   @default(false) // Suppress emails for test users
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -50,6 +51,10 @@ model User {
   sleepRecords       SleepRecord[]
   pairingCodesAsUser PairingCode[]       @relation("PairingCodeUser")
   pairingCodesCreated PairingCode[]      @relation("PairingCodeCreator")
+
+  // Credit Management Relations
+  creditTransactionsReceived CreditTransaction[] @relation("CreditTransactionsReceived")
+  creditTransactionsCreated  CreditTransaction[] @relation("CreditTransactionsCreated")
 
   // OAuth Relations
   accounts      Account[]
@@ -525,6 +530,30 @@ model PairingCode {
   @@index([code])
   @@index([userId])
   @@index([expiresAt])
+}
+
+// ============================================
+// CREDIT MANAGEMENT
+// ============================================
+
+model CreditTransaction {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  amount      Int       // Positive for allocation, negative for deduction
+  reason      String
+  expiresAt   DateTime?
+  createdById Int
+
+  user      User @relation("CreditTransactionsReceived", fields: [userId], references: [id], onDelete: Cascade)
+  createdBy User @relation("CreditTransactionsCreated", fields: [createdById], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("credit_transactions")
+  @@index([userId])
+  @@index([createdById])
+  @@index([createdAt])
+  @@index([userId, createdAt])
 }
 
 // ============================================

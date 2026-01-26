@@ -4,6 +4,8 @@ import { z } from "zod"
 import { CohortStatus, MembershipStatus } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { requireAdmin, requireCoach } from "@/lib/auth"
+import { sendSystemEmail } from "@/lib/email"
+import { EMAIL_TEMPLATE_KEYS } from "@/lib/email-templates"
 
 const createCohortSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -237,7 +239,7 @@ export async function deleteCohort(id: number) {
 }
 
 export async function addMemberToCohort(cohortId: number, userId: number) {
-  await requireAdmin()
+  const session = await requireAdmin()
 
   const cohort = await prisma.cohort.findUnique({
     where: { id: cohortId },
@@ -263,6 +265,31 @@ export async function addMemberToCohort(cohortId: number, userId: number) {
       joinedAt: new Date(),
     },
   })
+
+  // Send cohort invite email
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { name: true, email: true, isTestUser: true },
+  })
+
+  const coach = await prisma.user.findUnique({
+    where: { id: Number(session.id) },
+    select: { name: true },
+  })
+
+  if (user?.email) {
+    await sendSystemEmail({
+      templateKey: EMAIL_TEMPLATE_KEYS.COHORT_INVITE,
+      to: user.email,
+      variables: {
+        userName: user.name || "Member",
+        cohortName: cohort.name,
+        coachName: coach?.name || "Your Coach",
+        loginUrl: `${process.env.NEXT_PUBLIC_APP_URL || ""}/client/cohorts`,
+      },
+      isTestUser: user.isTestUser ?? false,
+    })
+  }
 
   return membership
 }
