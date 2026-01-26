@@ -134,3 +134,20 @@
   - Created testing documentation: TEST_PLAN.md (comprehensive), QUICK_TEST.md (smoke test), TESTING_INSTRUCTIONS.md (user guide), README.md.
   - Verified TypeScript build passes after all changes.
 - Testing infrastructure complete and ready for UI validation.
+
+## 2026-01-26 12:30 GMT
+- Implemented CoachFit baseline questionnaire templates:
+  - Ported all 6 weeks of production questionnaire templates from CoachFit to Centurion.
+  - Created src/lib/default-questionnaire-templates.ts with complete SurveyJS JSON templates.
+  - Each week includes: wins, challenges, training days, steps compliance, calorie adherence, nutrition help, behavior goals.
+  - Week 1 focuses on goal setting, weeks 2-6 include behavior goal review, week 4 has monthly reflection, week 6 has program completion questions.
+  - Added utility functions: getTemplateForWeek(weekNumber) and getAvailableWeeks().
+  - Updated seed script (testing/seed-test-data.ts) to import and use proper baseline templates instead of placeholders.
+  - Updated questionnaire responses in seed data to match actual CoachFit template structure with realistic client responses.
+  - Fixed TypeScript return type inference issue in getTemplateForWeek function.
+  - Verified build passes with all template changes.
+- CoachFit baseline questionnaires fully implemented and integrated into test data.
+
+## 2026-01-26 11:16 GMT
+- (Codex) Updated testing/VALIDATION_SUMMARY.md to reflect the consolidated implementation scope (PTP + CoachFit baselines).
+- (Codex) Preparing implementation plan for platform gaps per updated scope.
