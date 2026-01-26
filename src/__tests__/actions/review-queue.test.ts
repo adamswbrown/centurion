@@ -355,7 +355,7 @@ describe("Review Queue Server Actions", () => {
       })
 
       expect(sentEmails).toHaveLength(1)
-      expect(sentEmails[0].templateKey).toBe("coach-note-received")
+      expect(sentEmails[0].templateKey).toBe("coach_note_received")
       expect(sentEmails[0].to).toBe("client@test.com")
     })
 

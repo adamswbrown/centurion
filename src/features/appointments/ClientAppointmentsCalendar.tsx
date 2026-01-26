@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import Link from "next/link"
 import { addDays, endOfWeek, format, isSameDay, startOfWeek } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -127,12 +128,13 @@ export function ClientAppointmentsCalendar() {
                 </div>
                 <div className="mt-2 space-y-1">
                   {items.slice(0, 3).map((appointment) => (
-                    <div
+                    <Link
                       key={appointment.id}
-                      className="rounded-md border bg-background px-2 py-1 text-xs"
+                      href={`/appointments/me/${appointment.id}`}
+                      className="block rounded-md border bg-background px-2 py-1 text-xs hover:bg-muted transition-colors"
                     >
                       {format(new Date(appointment.startTime), "h:mm a")}
-                    </div>
+                    </Link>
                   ))}
                   {items.length > 3 && (
                     <p className="text-[10px] text-muted-foreground">
@@ -166,12 +168,13 @@ export function ClientAppointmentsCalendar() {
                     <p className="text-xs text-muted-foreground">No appointments</p>
                   ) : (
                     items.map((appointment) => (
-                      <div
+                      <Link
                         key={appointment.id}
-                        className="rounded-md border bg-background px-2 py-1 text-xs"
+                        href={`/appointments/me/${appointment.id}`}
+                        className="block rounded-md border bg-background px-2 py-1 text-xs hover:bg-muted transition-colors"
                       >
                         {format(new Date(appointment.startTime), "h:mm a")}
-                      </div>
+                      </Link>
                     ))
                   )}
                 </div>

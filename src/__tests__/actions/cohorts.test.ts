@@ -366,7 +366,7 @@ describe("Cohorts Server Actions", () => {
       await addMemberToCohort(1, 10)
 
       expect(sentEmails).toHaveLength(1)
-      expect(sentEmails[0].templateKey).toBe("cohort-invite")
+      expect(sentEmails[0].templateKey).toBe("cohort_invite")
       expect(sentEmails[0].to).toBe("member@test.com")
     })
   })

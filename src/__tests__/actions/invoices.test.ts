@@ -239,7 +239,7 @@ describe("Invoices Server Actions", () => {
       await generateInvoice({ userId: 10, month: "2024-01" })
 
       expect(sentEmails).toHaveLength(1)
-      expect(sentEmails[0].templateKey).toBe("invoice-sent")
+      expect(sentEmails[0].templateKey).toBe("invoice_sent")
     })
 
     it("should validate required fields", async () => {
@@ -403,7 +403,7 @@ describe("Invoices Server Actions", () => {
       await updateInvoicePaymentStatus(1, PaymentStatus.PAID)
 
       expect(sentEmails).toHaveLength(1)
-      expect(sentEmails[0].templateKey).toBe("invoice-paid")
+      expect(sentEmails[0].templateKey).toBe("invoice_paid")
     })
 
     it("should not set paidAt when status is not PAID", async () => {

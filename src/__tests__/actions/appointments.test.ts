@@ -265,7 +265,7 @@ describe("Appointments Server Actions", () => {
 
       expect(sentEmails).toHaveLength(1)
       expect(sentEmails[0].to).toBe("member@test.com")
-      expect(sentEmails[0].templateKey).toBe("appointment-confirmation")
+      expect(sentEmails[0].templateKey).toBe("appointment_confirmation")
     })
   })
 
@@ -462,7 +462,7 @@ describe("Appointments Server Actions", () => {
       await deleteAppointment(1)
 
       expect(sentEmails).toHaveLength(1)
-      expect(sentEmails[0].templateKey).toBe("appointment-cancelled")
+      expect(sentEmails[0].templateKey).toBe("appointment_cancelled")
     })
   })
 
