@@ -11,6 +11,7 @@ export function UserSearchForm() {
 
   return (
     <form
+      role="search"
       className="flex flex-wrap gap-2"
       onSubmit={(event) => {
         event.preventDefault()
@@ -21,12 +22,12 @@ export function UserSearchForm() {
         router.push(url)
       }}
     >
-      <Input name="q" placeholder="Search users" defaultValue={current} />
-      <Button type="submit" variant="outline">
+      <Input name="q" type="search" placeholder="Search users" defaultValue={current} aria-label="Search users by name or email" />
+      <Button type="submit" variant="outline" aria-label="Search">
         Search
       </Button>
       {current && (
-        <Button type="button" variant="ghost" onClick={() => router.push("/admin/users")}>
+        <Button type="button" variant="ghost" onClick={() => router.push("/admin/users")} aria-label="Clear search">
           Clear
         </Button>
       )}

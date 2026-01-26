@@ -24,7 +24,7 @@ export function DeleteUserButton({ userId, onDeleted }: { userId: number; onDele
 
   return (
     <>
-      <Button variant="destructive" onClick={() => setOpen(true)} size="sm">
+      <Button variant="destructive" onClick={() => setOpen(true)} size="sm" aria-label="Delete user">
         Delete
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
@@ -39,11 +39,11 @@ export function DeleteUserButton({ userId, onDeleted }: { userId: number; onDele
             <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={loading}>
+            <Button variant="destructive" onClick={handleDelete} disabled={loading} aria-busy={loading}>
               {loading ? "Deleting..." : "Confirm Delete"}
             </Button>
           </div>
-          {error && <div className="text-destructive text-sm mt-2">{error}</div>}
+          {error && <div role="alert" aria-live="assertive" className="text-destructive text-sm mt-2">{error}</div>}
         </DialogContent>
       </Dialog>
     </>

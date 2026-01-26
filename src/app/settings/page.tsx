@@ -1,32 +1,29 @@
 import { AppLayout } from "@/components/layouts/AppLayout"
 import { auth } from "@/auth"
 import { requireAuth } from "@/lib/auth"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { getUserSettings } from "@/app/actions/settings"
+import { UserSettingsForm } from "@/features/settings/UserSettingsForm"
 
 export default async function SettingsPage() {
-  await requireAuth()
-  const session = await auth()
+  const session = await requireAuth()
+  const authSession = await auth()
 
-  if (!session) return null
+  if (!authSession) return null
+
+  const userId = Number.parseInt(session.id, 10)
+  const userSettings = await getUserSettings(userId)
 
   return (
-    <AppLayout session={session}>
-      <div className="space-y-4">
+    <AppLayout session={authSession}>
+      <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Settings</h1>
+          <h1 className="text-3xl font-bold">Account Settings</h1>
           <p className="text-muted-foreground">
-            Account settings will be available soon.
+            Manage your profile and account preferences
           </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Coming Soon</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            Settings will launch alongside platform polish updates.
-          </CardContent>
-        </Card>
+        <UserSettingsForm initialValues={userSettings} />
       </div>
     </AppLayout>
   )

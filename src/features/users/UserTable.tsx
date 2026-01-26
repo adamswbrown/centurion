@@ -97,7 +97,7 @@ export function UserTable({ users }: UserTableProps) {
           <Button size="sm" variant="outline" onClick={() => setBulkAction("role")} disabled={loading}>Change Role</Button>
           {bulkAction === "role" && (
             <>
-              <select className="ml-2 rounded border px-2 py-1 text-sm" value={bulkRole} onChange={e => setBulkRole(e.target.value)}>
+              <select className="ml-2 rounded border px-2 py-1 text-sm" aria-label="Select role for bulk update" value={bulkRole} onChange={e => setBulkRole(e.target.value)}>
                 <option value="ADMIN">ADMIN</option>
                 <option value="COACH">COACH</option>
                 <option value="CLIENT">CLIENT</option>
@@ -109,14 +109,14 @@ export function UserTable({ users }: UserTableProps) {
             <Button size="sm" variant="destructive" onClick={handleBulkDelete} disabled={loading}>Confirm Delete</Button>
           )}
           <Button size="sm" variant="ghost" onClick={() => setBulkAction("")}>Cancel</Button>
-          {error && <span className="text-destructive text-sm ml-2">{error}</span>}
+          {error && <span role="alert" aria-live="assertive" className="text-destructive text-sm ml-2">{error}</span>}
         </div>
       )}
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>
-              <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} />
+              <input type="checkbox" aria-label="Select all users" checked={allSelected} onChange={toggleSelectAll} />
             </TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Email</TableHead>
@@ -135,6 +135,7 @@ export function UserTable({ users }: UserTableProps) {
               <TableCell>
                 <input
                   type="checkbox"
+                  aria-label={`Select ${user.email}`}
                   checked={selected.includes(user.id)}
                   onChange={() => toggleSelect(user.id)}
                 />
