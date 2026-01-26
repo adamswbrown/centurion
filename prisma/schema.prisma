@@ -24,6 +24,7 @@ model User {
   emailVerified Boolean   @default(false)
   role          Role      @default(CLIENT)
   credits       Int       @default(0)
+  creditsExpiry DateTime? // Optional: when credits expire
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

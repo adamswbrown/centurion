@@ -6,6 +6,8 @@ import { requireAdmin } from "@/lib/auth"
 import bcrypt from "bcryptjs"
 import type { Role } from "@prisma/client"
 
+import { logAuditEvent } from "@/lib/audit-log"
+
 const createUserSchema = z.object({
   name: z.string().min(2, "Name is required"),
   email: z.string().email("Valid email required"),
@@ -93,7 +95,7 @@ export async function createAdminUser(input: z.infer<typeof createUserSchema>) {
 
   const hashed = password ? await bcrypt.hash(password, 10) : null
 
-  return prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       name,
       email,
@@ -103,6 +105,17 @@ export async function createAdminUser(input: z.infer<typeof createUserSchema>) {
       credits: result.data.credits ?? 0,
     },
   })
+
+  // Audit log
+  const session = await requireAdmin()
+  await logAuditEvent({
+    action: "CREATE_USER",
+    actorId: session.id,
+    targetId: user.id,
+    targetType: "User",
+    details: { name, email, role },
+  })
+  return user
 }
 
 export async function updateAdminUser(input: z.infer<typeof updateUserSchema>) {
@@ -116,7 +129,7 @@ export async function updateAdminUser(input: z.infer<typeof updateUserSchema>) {
   const { id, name, email, role, password, credits } = result.data
   const hashed = password ? await bcrypt.hash(password, 10) : undefined
 
-  return prisma.user.update({
+  const user = await prisma.user.update({
     where: { id },
     data: {
       ...(name !== undefined ? { name } : {}),
@@ -126,4 +139,62 @@ export async function updateAdminUser(input: z.infer<typeof updateUserSchema>) {
       ...(credits !== undefined ? { credits } : {}),
     },
   })
+  // Audit log
+  const session = await requireAdmin()
+  await logAuditEvent({
+    action: "UPDATE_USER",
+    actorId: session.id,
+    targetId: user.id,
+    targetType: "User",
+    details: { id, name, email, role, credits },
+  })
+  return user
+}
+
+export async function deleteAdminUser(id: number) {
+  await requireAdmin()
+  const user = await prisma.user.delete({ where: { id } })
+  // Audit log
+  const session = await requireAdmin()
+  await logAuditEvent({
+    action: "DELETE_USER",
+    actorId: session.id,
+    targetId: user.id,
+    targetType: "User",
+    details: { id, email: user.email, name: user.name, role: user.role },
+  })
+  return user
+}
+
+export async function bulkAdminUserAction({ ids, action, value }: { ids: number[]; action: "delete" | "role"; value?: string }) {
+  await requireAdmin()
+  let result = null
+  const session = await requireAdmin()
+  if (action === "delete") {
+    const users = await prisma.user.findMany({ where: { id: { in: ids } } })
+    await prisma.user.deleteMany({ where: { id: { in: ids } } })
+    for (const user of users) {
+      await logAuditEvent({
+        action: "BULK_DELETE_USER",
+        actorId: session.id,
+        targetId: user.id,
+        targetType: "User",
+        details: { id: user.id, email: user.email, name: user.name, role: user.role },
+      })
+    }
+    result = { deleted: ids.length }
+  } else if (action === "role" && value) {
+    await prisma.user.updateMany({ where: { id: { in: ids } }, data: { role: value } })
+    for (const id of ids) {
+      await logAuditEvent({
+        action: "BULK_UPDATE_ROLE",
+        actorId: session.id,
+        targetId: id,
+        targetType: "User",
+        details: { id, newRole: value },
+      })
+    }
+    result = { updated: ids.length }
+  }
+  return result
 }

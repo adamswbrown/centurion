@@ -1,3 +1,34 @@
+
+## [In Progress]
+
+## [Done]
+- User management/admin flows: Complete (CRUD, bulk, delete, audit logging)
+- Combined calendar + credits system: Complete (backend, API, UI)
+- Daily check-in system (CoachFit baseline):
+  - Confirmed Entry model, CRUD actions, and UI match CoachFit/PTP baseline
+  - Implemented CheckInStats component for streak/compliance display
+  - Added CheckInStats to client health page above form/history
+- Cohort analytics:
+  - Backend action for check-in compliance, streaks, participation (src/app/actions/cohort-analytics.ts)
+  - CohortAnalytics UI component integrated in cohort detail view for admin/coach (src/features/cohorts/CohortAnalytics.tsx)
+
+## [Done]
+- User management/admin flows: Complete (CRUD, bulk, delete, audit logging)
+- Combined calendar + credits system: Complete (backend, API, UI)
+- Daily check-in system (CoachFit baseline):
+  - Confirmed Entry model, CRUD actions, and UI match CoachFit/PTP baseline
+  - Implemented CheckInStats component for streak/compliance display
+  - Added CheckInStats to client health page above form/history
+
+
+## TODO (as of 2026-01-26)
+- Review accessibility and mobile responsiveness of check-in UI
+- Review accessibility and mobile responsiveness of check-in UI
+- Add UI for compliance streaks and stats to admin/coach dashboards (currently only visible to clients)
+- Add cohort-level check-in compliance analytics (next feature)
+- Review accessibility and mobile responsiveness of check-in UI
+- Add error boundary coverage for check-in components
+
 # Work Log
 
 ## TODO (as of 2026-01-25 13:39 GMT)
@@ -7,14 +38,13 @@
 - Initialized work log.
 
 ## 2026-01-25 13:32 GMT
-- Renamed member-facing UI/components from client terminology and aligned routes to `/members`.
-- Updated member actions API naming (get/create/update/delete member) and wired UI to new exports.
+## 2026-01-26 13:30 GMT
+- (Copilot) Implemented combined calendar + credits system:
+  - Added credits consumption/refund logic to bootcamp attendee actions (decrement on register, refund if removed before start).
+  - Added optional credits expiry field to User model.
+  - Created unified API endpoint and React Query hook for fetching both appointments and bootcamps for calendar views.
+  - Added new UnifiedCalendar component to display both event types with color coding and filtering support.
 - Adjusted navigation and middleware route lists for member naming.
-
-## 2026-01-25 13:39 GMT
-- Added appointment backbone (actions, hooks, calendar utils) following personal-trainer-planner patterns.
-- Introduced Google Calendar integration module and React Query provider.
-- Added initial appointments UI (create form + list page) and supporting UI textarea component.
 
 ## 2026-01-25 13:45 GMT
 - Added appointments calendar (month/week) with event cards and navigation.
@@ -155,5 +185,10 @@
 ## 2026-01-26 11:26 GMT
 - (Codex) Implemented Phase 1 admin user management routes (/admin/users, /admin/users/[id]) with search and detail editing.
 
-## 2026-01-26 11:54 GMT
-- (Codex) Added placeholder /reports and /settings pages to address gap audit 404s.
+
+## 2026-01-26 13:00 GMT
+- (Copilot) Implemented admin user deletion (single and bulk), bulk actions (delete, role change), and auto-logging:
+  - Added deleteAdminUser and bulkAdminUserAction server actions with audit logging for all admin user management actions.
+  - Updated UserTable UI to support row selection, bulk delete, and bulk role change with confirmation and feedback.
+  - Added DeleteUserButton component for single user deletion with confirmation dialog.
+  - All admin user management actions now log to the AuditLog model for traceability.

@@ -141,6 +141,14 @@ export async function addBootcampAttendee(input: z.infer<typeof attendeeSchema>)
     throw new Error("Bootcamp is at capacity")
   }
 
+  // Check credits
+  const user = await prisma.user.findUnique({ where: { id: memberId } })
+  if (!user) throw new Error("User not found")
+  if ((user.credits ?? 0) < 1) throw new Error("Insufficient credits to register for bootcamp")
+
+  // Consume credit
+  await prisma.user.update({ where: { id: memberId }, data: { credits: { decrement: 1 } } })
+
   return prisma.bootcampAttendee.create({
     data: {
       bootcampId,
@@ -159,7 +167,40 @@ export async function removeBootcampAttendee(input: z.infer<typeof attendeeSchem
 
   const { bootcampId, memberId } = result.data
 
+  // Refund credit if bootcamp not started yet
+  const bootcamp = await prisma.bootcamp.findUnique({ where: { id: bootcampId } })
+  if (bootcamp && new Date(bootcamp.startTime) > new Date()) {
+    await prisma.user.update({ where: { id: memberId }, data: { credits: { increment: 1 } } })
+  }
+
   return prisma.bootcampAttendee.delete({
     where: { bootcampId_userId: { bootcampId, userId: memberId } },
   })
+}
+
+// Unified event fetcher for calendar (appointments + bootcamps)
+export async function getUnifiedEvents({ userId, from, to }: { userId: number, from: Date, to: Date }) {
+  // Appointments
+  const appointments = await prisma.appointment.findMany({
+    where: {
+      userId,
+      startTime: { gte: from },
+      endTime: { lte: to },
+    },
+  })
+  // Bootcamps (as attendee)
+  const bootcamps = await prisma.bootcampAttendee.findMany({
+    where: {
+      userId,
+      bootcamp: {
+        startTime: { gte: from },
+        endTime: { lte: to },
+      },
+    },
+    include: { bootcamp: true },
+  })
+  return {
+    appointments,
+    bootcamps: bootcamps.map((b) => b.bootcamp),
+  }
 }

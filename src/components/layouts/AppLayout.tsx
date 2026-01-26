@@ -5,6 +5,7 @@ import { Sidebar } from "./Sidebar"
 import { Header } from "./Header"
 import { MobileNav } from "./MobileNav"
 import type { Session } from "next-auth"
+import { ToastProvider } from "@/components/providers/ToastProvider"
 
 interface AppLayoutProps {
   session: Session
@@ -27,9 +28,11 @@ export function AppLayout({ session, children }: AppLayoutProps) {
           session={session}
           onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
         />
-        <main className="flex-1 overflow-y-auto bg-muted/50 p-4">
-          {children}
-        </main>
+        <ToastProvider>
+          <main className="flex-1 overflow-y-auto bg-muted/50 p-4">
+            {children}
+          </main>
+        </ToastProvider>
       </div>
     </div>
   )

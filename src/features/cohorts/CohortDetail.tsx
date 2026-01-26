@@ -27,6 +27,7 @@ import {
 } from "@/hooks/useCohorts"
 import { CoachAssignment } from "./CoachAssignment"
 import { MemberManagement } from "./MemberManagement"
+import { CohortAnalytics } from "./CohortAnalytics"
 import { CohortStatus } from "@prisma/client"
 
 interface CohortDetailProps {
@@ -261,6 +262,8 @@ export function CohortDetail({ cohort }: CohortDetailProps) {
           </div>
         </CardContent>
       </Card>
+
+      <CohortAnalytics cohortId={cohort.id} />
 
       <div className="grid gap-6 md:grid-cols-2">
         <CoachAssignment cohortId={cohort.id} currentCoaches={cohort.coaches} />

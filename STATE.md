@@ -1,3 +1,28 @@
+### Features Complete
+- User management/admin flows (CRUD, bulk, delete, audit logging)
+- Combined calendar + credits system (backend, API, UI)
+- Daily check-in system (CoachFit baseline): CRUD, compliance, streaks, UI, stats display
+
+
+### Features Complete
+- User management/admin flows (CRUD, bulk, delete, audit logging)
+- Combined calendar + credits system (backend, API, UI)
+- Daily check-in system (CoachFit baseline): CRUD, compliance, streaks, UI, stats display
+- Cohort analytics: Backend and UI for compliance, streaks, participation (admin/coach dashboard)
+
+
+- Admin UI polish: Toast notification support and error boundary coverage added (global feedback, resilience)
+
+### Features Next Up
+- Admin UI polish
+- Reports
+- Settings
+
+### Features Next Up
+- Cohort analytics (CoachFit baseline)
+- Admin UI polish
+- Reports
+- Settings
 # Centurion State
 
 Last updated: 2026-01-26 11:35 GMT
@@ -9,6 +34,7 @@ Last updated: 2026-01-26 11:35 GMT
 
 ## What’s Implemented
 - Member management aligned to spec naming (members, not clients): list, detail, create/edit/delete.
+- (Copilot) Admin user management now supports user deletion (single and bulk), bulk actions (delete, role change), and audit logging for all admin actions.
 - Appointment scheduling backbone:
   - Server actions with conflict detection and Google Calendar sync.
   - React Query hooks for create/update/delete/sync.
