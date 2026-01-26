@@ -107,3 +107,6 @@
 ## 2026-01-26 09:59 GMT
 - (Codex) Implemented client-facing pages for Phases 3/5/6: /appointments/me calendar, /cohorts/me read-only, /invoices/me list+detail with print/pay.
 - (Codex) Added /client/* redirects to /.../me routes and client-side invoice payment link action.
+
+## 2026-01-26 10:14 GMT
+- (Codex) Added placeholder client pages for /client/health and /client/settings to prevent 404s.

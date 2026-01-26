@@ -105,6 +105,7 @@ Last updated: 2026-01-26 09:59 GMT
   - `/cohorts/me` (read-only memberships)
   - `/invoices/me` and `/invoices/me/[id]` (list/detail, print, pay)
   - `/client/appointments`, `/client/cohorts`, `/client/invoices` redirect to `/.../me`
+  - `/client/health` and `/client/settings` placeholders added (coming soon)
 - Timer PWA:
   - `src/app/timer/page.tsx`
   - `src/app/timer/TimerSwRegister.tsx`
