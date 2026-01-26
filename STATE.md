@@ -1,6 +1,6 @@
 # Centurion State
 
-Last updated: 2026-01-26 08:51 GMT
+Last updated: 2026-01-26 09:59 GMT
 
 ## Project Summary
 - Unified fitness platform combining Personal Trainer Planner (appointments, bootcamps, invoicing) and CoachFit (cohorts, health data).
@@ -100,6 +100,11 @@ Last updated: 2026-01-26 08:51 GMT
 - Calendar utilities: `src/lib/calendar.ts`
 - Google Calendar: `src/lib/google-calendar.ts`
 - Work log: `WORKLOG.md`
+- Client-facing pages (PTP-style):
+  - `/appointments/me` (calendar)
+  - `/cohorts/me` (read-only memberships)
+  - `/invoices/me` and `/invoices/me/[id]` (list/detail, print, pay)
+  - `/client/appointments`, `/client/cohorts`, `/client/invoices` redirect to `/.../me`
 - Timer PWA:
   - `src/app/timer/page.tsx`
   - `src/app/timer/TimerSwRegister.tsx`
@@ -107,6 +112,20 @@ Last updated: 2026-01-26 08:51 GMT
   - `src/features/timer/TimerShell.tsx`
   - `src/features/timer/TimerEditor.tsx`
   - `src/features/timer/TimerPresetImportExport.tsx`
+  - `src/features/appointments/ClientAppointmentsCalendar.tsx`
+  - `src/app/appointments/me/page.tsx`
+  - `src/app/cohorts/me/page.tsx`
+  - `src/app/invoices/me/page.tsx`
+  - `src/app/invoices/me/[id]/page.tsx`
+  - `src/app/client/appointments/page.tsx`
+  - `src/app/client/cohorts/page.tsx`
+  - `src/app/client/invoices/page.tsx`
+  - `src/app/actions/client-appointments.ts`
+  - `src/app/actions/client-cohorts.ts`
+  - `src/app/actions/client-invoices.ts`
+  - `src/hooks/useClientAppointments.ts`
+  - `src/hooks/useClientCohorts.ts`
+  - `src/hooks/useClientInvoices.ts`
   - `src/features/timer/useIntervalTimer.ts`
   - `src/features/timer/presets.ts`
   - `src/features/timer/types.ts`

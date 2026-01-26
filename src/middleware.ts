@@ -42,7 +42,12 @@ export default auth((req) => {
   }
 
   // Coach access control (ADMIN and COACH only)
-  if (isCoachRoute && userRole === "CLIENT") {
+  const isClientSelfRoute =
+    nextUrl.pathname.startsWith("/appointments/me") ||
+    nextUrl.pathname.startsWith("/cohorts/me") ||
+    nextUrl.pathname.startsWith("/invoices/me")
+
+  if (isCoachRoute && userRole === "CLIENT" && !isClientSelfRoute) {
     return NextResponse.redirect(new URL("/client/dashboard", nextUrl))
   }
 

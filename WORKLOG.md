@@ -100,3 +100,10 @@
 
 ## 2026-01-26 09:36 GMT
 - Added missing /client/dashboard page to resolve login redirect 404s for client users.
+
+## 2026-01-26 09:52 GMT
+- (Codex) Started client-facing Phase 3/5/6 plan + implementation. Plan saved to plans/phase3-5-6-client-pages.md.
+
+## 2026-01-26 09:59 GMT
+- (Codex) Implemented client-facing pages for Phases 3/5/6: /appointments/me calendar, /cohorts/me read-only, /invoices/me list+detail with print/pay.
+- (Codex) Added /client/* redirects to /.../me routes and client-side invoice payment link action.
