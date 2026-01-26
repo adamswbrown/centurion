@@ -1,6 +1,6 @@
 ### Features Complete
 - User management/admin flows (CRUD, bulk, delete, audit logging)
-- Admin user management UI (/admin/users, /admin/users/[id]) with search, filtering, and navigation
+- Admin user management UI (/admin/users, /admin/users/[id]) with search, filtering, navigation, and full accessibility (ARIA labels, keyboard navigation)
 - Combined calendar + credits system (backend, API, UI)
 - Daily check-in system (CoachFit baseline): CRUD, compliance, streaks, UI, stats display
 - Cohort analytics: Backend and UI for compliance, streaks, participation (admin/coach dashboard)
@@ -8,9 +8,9 @@
 - SurveyJS integration: Dynamic questionnaire rendering with open-source v2.5.6
 - Invoice, Payment, and Revenue models with financial reporting
 - Revenue aggregation/reporting (monthly, UK tax year, paid invoices)
+- Settings pages: Admin system settings (/admin/settings) and user account settings (/settings) with full CRUD
 
 ### Features Next Up
-- Settings pages (client, admin, global)
 - Reports dashboard
 - HealthKit integration
 - Email system (Resend)
@@ -163,7 +163,9 @@
   - `/cohorts/me` (read-only memberships)
   - `/invoices/me` and `/invoices/me/[id]` (list/detail, print, pay)
   - `/client/appointments`, `/client/cohorts`, `/client/invoices` redirect to `/.../me`
-  - `/client/health` and `/client/settings` placeholders added (coming soon)
+  - `/client/health` with daily check-in form and history
+- `/settings` user profile settings with name, email, password management
+- `/admin/settings` system settings with feature flags and configuration
 - Timer PWA:
   - `src/app/timer/page.tsx`
   - `src/app/timer/TimerSwRegister.tsx`
@@ -214,9 +216,9 @@
 
 ## Open TODOs
 - Consider adding global toast notifications for feedback (currently inline messages).
-- Add SurveyJS integration for full questionnaire functionality (survey-core, survey-react-ui packages).
 - Begin Phase 9: Health Data Tracking (HealthKit integration, metrics tracking).
-- Add coach analytics views for member check-in data and questionnaire responses.
+- Implement Reports dashboard with analytics visualizations.
+- Add email system integration (Resend).
 
 ## How to Run
 - `npm run dev`

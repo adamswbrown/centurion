@@ -1,10 +1,25 @@
 
 
 ## [In Progress]
-- Admin user management polish (PTP parity):
-  - Toast notifications and error boundaries added
-  - Accessibility and mobile polish underway
-  - Next: finalize mobile/tablet layouts, improve keyboard navigation, and add ARIA labels for key controls
+- Reports dashboard implementation
+- HealthKit integration planning
+
+## 2026-01-26 16:10 GMT
+- Completed admin user management accessibility polish:
+  - Added ARIA labels to all checkboxes (select all, row selection)
+  - Added aria-label to bulk role select dropdown
+  - Added role="alert" and aria-live="assertive" to error messages
+  - Added role="search" and type="search" to user search form
+  - Added aria-label to search and clear buttons
+  - Added aria-busy to loading buttons in delete dialog
+- Implemented Settings Pages:
+  - Created src/app/actions/settings.ts with server actions for system and user settings
+  - Created /admin/settings page with SystemSettingsForm for admin configuration
+  - Updated /settings page with UserSettingsForm for user profile management
+  - Settings include: maxClientsPerCoach, healthkitEnabled, iosIntegrationEnabled, macro percentages
+  - User settings include: name, email, password change, credits display
+  - All forms have proper ARIA labels, error handling, and accessibility
+- Build verified: All 30 routes compile successfully
 
 ## [Done]
 - User management/admin flows: Complete (CRUD, bulk, delete, audit logging)
