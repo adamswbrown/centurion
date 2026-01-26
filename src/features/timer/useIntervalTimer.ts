@@ -215,6 +215,33 @@ export function useIntervalTimer() {
     [presets],
   )
 
+  const importPresets = useCallback(
+    (incoming: IntervalPreset[], replaceExisting: boolean) => {
+      const normalized = incoming.map((preset) => {
+        const presetId = preset.id || `preset-${Date.now()}`
+        return {
+          ...preset,
+          id: presetId,
+          steps: preset.steps.map((step, index) => ({
+            ...step,
+            id: step.id || `${presetId}-step-${index}`,
+          })),
+        }
+      })
+      setPresets((prev) => {
+        if (replaceExisting) return normalized
+        const merged = [...prev]
+        normalized.forEach((preset) => {
+          const index = merged.findIndex((item) => item.id === preset.id)
+          if (index >= 0) merged[index] = preset
+          else merged.push(preset)
+        })
+        return merged
+      })
+    },
+    [],
+  )
+
   const toggleWakeLock = useCallback(async () => {
     if (typeof window === "undefined") return
     if (!("wakeLock" in navigator)) {
@@ -300,6 +327,7 @@ export function useIntervalTimer() {
     updatePreset,
     addPreset,
     deletePreset,
+    importPresets,
     setPresets,
   }
 }

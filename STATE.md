@@ -106,6 +106,7 @@ Last updated: 2026-01-26 08:51 GMT
   - `src/app/timer/limitations.tsx`
   - `src/features/timer/TimerShell.tsx`
   - `src/features/timer/TimerEditor.tsx`
+  - `src/features/timer/TimerPresetImportExport.tsx`
   - `src/features/timer/useIntervalTimer.ts`
   - `src/features/timer/presets.ts`
   - `src/features/timer/types.ts`

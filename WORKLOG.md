@@ -91,3 +91,6 @@
 ## 2026-01-26 08:56 GMT
 - Added interval preset editor (create, duplicate, delete, edit steps) for timer PWA.
 - Wired editor into timer shell and shared timer state.
+
+## 2026-01-26 09:01 GMT
+- Added preset import/export UI with JSON editor and file import/export for timer PWA.
