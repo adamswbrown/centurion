@@ -49,6 +49,7 @@ Last updated: 2026-01-26 08:51 GMT
   - `/timer` route with timer engine, presets, and UI shell.
   - Wake Lock toggle, mute toggle, and limitations guidance.
   - Service worker + manifest for installability.
+  - Preset editor with step add/remove, duplicate, and save.
 
 ## Key Files
 - Spec: `unified-platform-spec.md`
@@ -104,6 +105,7 @@ Last updated: 2026-01-26 08:51 GMT
   - `src/app/timer/TimerSwRegister.tsx`
   - `src/app/timer/limitations.tsx`
   - `src/features/timer/TimerShell.tsx`
+  - `src/features/timer/TimerEditor.tsx`
   - `src/features/timer/useIntervalTimer.ts`
   - `src/features/timer/presets.ts`
   - `src/features/timer/types.ts`

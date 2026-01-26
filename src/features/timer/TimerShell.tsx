@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { TimerLimitations } from "@/app/timer/limitations"
+import { TimerEditor } from "@/features/timer/TimerEditor"
 
 function formatMs(ms: number) {
   const totalSeconds = Math.ceil(ms / 1000)
@@ -29,6 +30,9 @@ export function TimerShell() {
     selectPreset,
     toggleMute,
     toggleWakeLock,
+    updatePreset,
+    addPreset,
+    deletePreset,
   } = useIntervalTimer()
 
   useEffect(() => {
@@ -151,6 +155,15 @@ export function TimerShell() {
               <TimerLimitations />
             </div>
           </section>
+
+          <TimerEditor
+            presets={presets}
+            currentPresetId={state.presetId}
+            updatePreset={updatePreset}
+            addPreset={addPreset}
+            deletePreset={deletePreset}
+            selectPreset={selectPreset}
+          />
         </div>
       </div>
     </div>

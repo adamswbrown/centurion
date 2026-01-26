@@ -150,6 +150,71 @@ export function useIntervalTimer() {
     setState((prev) => ({ ...prev, muted: !prev.muted }))
   }, [])
 
+  const updatePreset = useCallback((preset: IntervalPreset) => {
+    setPresets((prev) => {
+      const next = prev.map((item) => (item.id === preset.id ? preset : item))
+      return next
+    })
+    setState((prev) => {
+      if (prev.presetId !== preset.id) return prev
+      return {
+        ...prev,
+        presetName: preset.name,
+        steps: preset.steps,
+        currentIndex: Math.min(prev.currentIndex, preset.steps.length - 1),
+      }
+    })
+  }, [])
+
+  const addPreset = useCallback(
+    (base?: IntervalPreset) => {
+      const id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `preset-${Date.now()}`
+      const newPreset: IntervalPreset = base
+        ? {
+            ...base,
+            id,
+            name: `${base.name} Copy`,
+            steps: base.steps.map((step, index) => ({
+              ...step,
+              id: `${id}-step-${index}`,
+            })),
+          }
+        : {
+            id,
+            name: "New Preset",
+            steps: [
+              {
+                id: `${id}-step-0`,
+                label: "Work",
+                durationMs: 30_000,
+                phase: "work",
+              },
+              {
+                id: `${id}-step-1`,
+                label: "Rest",
+                durationMs: 15_000,
+                phase: "rest",
+              },
+            ],
+          }
+      setPresets((prev) => [...prev, newPreset])
+      setState(buildStateFromPreset(newPreset))
+    },
+    [],
+  )
+
+  const deletePreset = useCallback(
+    (presetId: string) => {
+      setPresets((prev) => prev.filter((preset) => preset.id !== presetId))
+      setState((prev) => {
+        if (prev.presetId !== presetId) return prev
+        const fallback = presets.find((preset) => preset.id !== presetId) || defaultPresets[0]
+        return buildStateFromPreset(fallback)
+      })
+    },
+    [presets],
+  )
+
   const toggleWakeLock = useCallback(async () => {
     if (typeof window === "undefined") return
     if (!("wakeLock" in navigator)) {
@@ -232,6 +297,9 @@ export function useIntervalTimer() {
     selectPreset,
     toggleMute,
     toggleWakeLock,
+    updatePreset,
+    addPreset,
+    deletePreset,
     setPresets,
   }
 }

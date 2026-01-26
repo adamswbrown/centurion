@@ -87,3 +87,7 @@
 - Started standalone interval timer PWA implementation: manifest, service worker, /timer route, timer engine, presets, and UI shell.
 - Added wake lock toggle, mute toggle, and limitations panel for PWA timer accuracy guidance.
 - Implemented background resync logic for timer steps on visibility changes.
+
+## 2026-01-26 08:56 GMT
+- Added interval preset editor (create, duplicate, delete, edit steps) for timer PWA.
+- Wired editor into timer shell and shared timer state.
