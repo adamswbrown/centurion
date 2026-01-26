@@ -1,3 +1,46 @@
+# 2026-01-26
+Seed script completed successfully. Test accounts created:
+
+ADMIN:
+  Email: admin@centurion.test
+  Password: password123
+
+COACHES:
+  Email: coach@centurion.test (Sarah Coach)
+  Email: coach2@centurion.test (Mike Coach)
+  Password: password123
+
+CLIENTS:
+  Email: client1@centurion.test (Alice - Active, many check-ins)
+  Email: client2@centurion.test (Bob - Active, few check-ins)
+  Email: client3@centurion.test (Charlie - Paused)
+  Email: client4@centurion.test (Diana - New)
+  Password: password123
+
+Appointments and bootcamps seeded from TeamUp and test data. All flows verified. Bootcamps are now multi-week programs, not appointments.
+# 2026-01-26
+Seed script completed successfully. Test accounts created:
+
+ADMIN:
+  Email: admin@centurion.test
+  Password: password123
+
+COACHES:
+  Email: coach@centurion.test (Sarah Coach)
+  Email: coach2@centurion.test (Mike Coach)
+  Password: password123
+
+CLIENTS:
+  Email: client1@centurion.test (Alice - Active, many check-ins)
+  Email: client2@centurion.test (Bob - Active, few check-ins)
+  Email: client3@centurion.test (Charlie - Paused)
+  Email: client4@centurion.test (Diana - New)
+  Password: password123
+
+Appointments and bootcamps seeded from TeamUp and test data. All flows verified.
+# 2026-01-26
+- Added `title` field to Appointment model in Prisma schema for TeamUp compatibility and usability.
+- Updated all relevant UI and backend logic to support appointment titles.
 ## 2026-01-26 - Fix Remaining CRITICAL and HIGH Priority Audit Gaps
 
 Addressed remaining gaps identified in audit.

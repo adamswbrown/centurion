@@ -1,3 +1,7 @@
+# 2026-01-26
+Seed script run completed successfully. Test admin, coach, and client accounts created. Appointments are seeded from TeamUp data and assigned to clients and coaches. Bootcamps are now multi-week programs with attendees, not appointments. All major user flows (client booking, coach assignment, bootcamp creation) are covered and verified.
+# 2026-01-26
+- Appointment model now includes a `title` field. All UI and backend logic updated to support appointment titles. This enables richer event data and full TeamUp compatibility.
 ### Features Complete
 - User management/admin flows (CRUD, bulk, delete, audit logging)
 - Admin user management UI (/admin/users, /admin/users/[id]) with search, filtering, navigation, and full accessibility (ARIA labels, keyboard navigation)

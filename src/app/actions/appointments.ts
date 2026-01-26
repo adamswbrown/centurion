@@ -23,6 +23,7 @@ import { format } from "date-fns"
 
 const createAppointmentSchema = z.object({
   memberId: z.number().int().positive(),
+  title: z.string().min(1, "Title is required"),
   date: z.string().min(1, "Date is required"),
   startTime: z.string().min(1, "Start time is required"),
   endTime: z.string().min(1, "End time is required"),
@@ -34,6 +35,7 @@ const createAppointmentSchema = z.object({
 
 const updateAppointmentSchema = z.object({
   id: z.number().int().positive(),
+  title: z.string().min(1, "Title is required"),
   startTime: z.string().min(1, "Start time is required"),
   endTime: z.string().min(1, "End time is required"),
   fee: z.number().min(0),
@@ -84,6 +86,7 @@ export async function createAppointment(
 
   const {
     memberId,
+    title,
     date,
     startTime,
     endTime,
@@ -154,6 +157,7 @@ export async function createAppointment(
       prisma.appointment.create({
         data: {
           userId: memberId,
+          title,
           startTime: appointment.start,
           endTime: appointment.end,
           fee: new Prisma.Decimal(fee),
@@ -161,6 +165,7 @@ export async function createAppointment(
         },
         select: {
           id: true,
+          title: true,
           startTime: true,
           endTime: true,
           fee: true,
@@ -279,7 +284,7 @@ export async function updateAppointment(input: UpdateAppointmentInput) {
     throw new Error(result.error.errors[0].message)
   }
 
-  const { id, startTime, endTime, fee, notes, status } = result.data
+  const { id, title, startTime, endTime, fee, notes, status } = result.data
 
   const appointment = await prisma.appointment.findUnique({
     where: { id },
@@ -321,6 +326,7 @@ export async function updateAppointment(input: UpdateAppointmentInput) {
   const updated = await prisma.appointment.update({
     where: { id },
     data: {
+      title,
       startTime: startDateTime,
       endTime: endDateTime,
       fee: new Prisma.Decimal(fee),
@@ -420,7 +426,17 @@ export async function getAppointmentById(id: number) {
 
   const appointment = await prisma.appointment.findUnique({
     where: { id },
-    include: { user: { select: { id: true, name: true, email: true } } },
+    select: {
+      id: true,
+      title: true,
+      startTime: true,
+      endTime: true,
+      fee: true,
+      status: true,
+      notes: true,
+      googleEventId: true,
+      user: { select: { id: true, name: true, email: true } },
+    },
   })
 
   if (!appointment) {
@@ -447,7 +463,17 @@ export async function getAppointments(options?: {
           }
         : {}),
     },
-    include: { user: { select: { id: true, name: true, email: true } } },
+    select: {
+      id: true,
+      title: true,
+      startTime: true,
+      endTime: true,
+      fee: true,
+      status: true,
+      notes: true,
+      googleEventId: true,
+      user: { select: { id: true, name: true, email: true } },
+    },
     orderBy: { startTime: "desc" },
   })
 }

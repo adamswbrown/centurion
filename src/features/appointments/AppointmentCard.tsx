@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 interface AppointmentCardProps {
   appointment: {
     id: number
+    title: string
     startTime: Date | string
     endTime: Date | string
     status: string
@@ -27,7 +28,8 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
       className="flex items-center justify-between rounded-md border bg-background px-2 py-1 text-xs hover:bg-muted"
     >
       <div className="flex flex-col">
-        <span className="font-medium">
+        <span className="font-semibold">{appointment.title}</span>
+        <span className="text-muted-foreground">
           {appointment.user.name || appointment.user.email}
         </span>
         <span className="text-muted-foreground">

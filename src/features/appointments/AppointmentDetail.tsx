@@ -18,6 +18,7 @@ import { extractTimeString } from "@/lib/calendar"
 interface AppointmentDetailProps {
   appointment: {
     id: number
+    title: string
     startTime: Date
     endTime: Date
     fee: any
@@ -44,6 +45,7 @@ export function AppointmentDetail({ appointment }: AppointmentDetailProps) {
 
   function handleUpdate(payload: {
     id: number
+    title: string
     startTime: string
     endTime: string
     fee: number
@@ -62,7 +64,24 @@ export function AppointmentDetail({ appointment }: AppointmentDetailProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Appointment</h1>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="title">Title</Label>
+          <Input
+            id="title"
+            type="text"
+            defaultValue={appointment.title}
+            onBlur={(event) =>
+              handleUpdate({
+                id: appointment.id,
+                title: event.target.value,
+                startTime: extractTimeString(new Date(appointment.startTime)),
+                endTime: extractTimeString(new Date(appointment.endTime)),
+                fee: defaultFee,
+                notes: appointment.notes ?? "",
+              })
+            }
+          />
+        </div>
         <p className="text-muted-foreground">
           {appointment.user.name || appointment.user.email}
         </p>

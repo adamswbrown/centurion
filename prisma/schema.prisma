@@ -31,7 +31,8 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   // Personal Training Relations
-  appointments       Appointment[]
+  appointmentsAsClient Appointment[] @relation("AppointmentUser")
+  appointmentsAsCoach  Appointment[] @relation("AppointmentCoach")
   bootcampAttendees  BootcampAttendee[]
   workouts           Workout[]
   invoices           Invoice[]
@@ -124,6 +125,7 @@ model VerificationToken {
 model Appointment {
   id            Int              @id @default(autoincrement())
   userId        Int
+  coachId       Int
   startTime     DateTime
   endTime       DateTime
   fee           Decimal          @db.Decimal(10, 2)
@@ -131,8 +133,10 @@ model Appointment {
   notes         String?
   googleEventId String?          // For calendar sync
   invoiceId     Int?
+  title         String?
 
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User     @relation("AppointmentUser", fields: [userId], references: [id], onDelete: Cascade)
+  coach   User     @relation("AppointmentCoach", fields: [coachId], references: [id], onDelete: Cascade)
   invoice Invoice? @relation(fields: [invoiceId], references: [id])
 
   createdAt DateTime @default(now())
@@ -140,6 +144,7 @@ model Appointment {
 
   @@map("appointments")
   @@index([userId])
+  @@index([coachId])
   @@index([startTime])
   @@index([userId, startTime])
   @@index([invoiceId])

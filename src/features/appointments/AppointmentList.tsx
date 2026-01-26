@@ -18,6 +18,7 @@ import Link from "next/link"
 interface AppointmentListProps {
   appointments: Array<{
     id: number
+    title: string
     startTime: Date
     endTime: Date
     fee: string
@@ -41,6 +42,7 @@ export function AppointmentList({ appointments }: AppointmentListProps) {
     <Table>
       <TableHeader>
         <TableRow>
+          <TableHead>Title</TableHead>
           <TableHead>Member</TableHead>
           <TableHead>Date</TableHead>
           <TableHead>Time</TableHead>
@@ -57,8 +59,11 @@ export function AppointmentList({ appointments }: AppointmentListProps) {
                 href={`/appointments/${appointment.id}`}
                 className="hover:underline"
               >
-                {appointment.user.name || appointment.user.email}
+                {appointment.title}
               </Link>
+            </TableCell>
+            <TableCell>
+              {appointment.user.name || appointment.user.email}
             </TableCell>
             <TableCell>
               {format(new Date(appointment.startTime), "MMM dd, yyyy")}

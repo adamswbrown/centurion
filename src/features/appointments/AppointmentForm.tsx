@@ -13,6 +13,7 @@ import { useCreateAppointment } from "@/hooks/useAppointments"
 
 const formSchema = z.object({
   memberId: z.string().min(1, "Member is required"),
+  title: z.string().min(1, "Title is required"),
   date: z.string().min(1, "Date is required"),
   startTime: z.string().min(1, "Start time is required"),
   endTime: z.string().min(1, "End time is required"),
@@ -52,6 +53,7 @@ export function AppointmentForm({ members, initialDate }: AppointmentFormProps) 
     resolver: zodResolver(formSchema),
     defaultValues: {
       memberId: defaultMemberId,
+      title: "",
       date: new Date().toISOString().split("T")[0],
       startTime: "09:00",
       endTime: "10:00",
@@ -81,6 +83,7 @@ export function AppointmentForm({ members, initialDate }: AppointmentFormProps) 
     try {
       const result = await createAppointment.mutateAsync({
         memberId: Number(values.memberId),
+        title: values.title,
         date: values.date,
         startTime: values.startTime,
         endTime: values.endTime,
@@ -96,6 +99,7 @@ export function AppointmentForm({ members, initialDate }: AppointmentFormProps) 
       }
       form.reset({
         ...values,
+        title: "",
         notes: "",
         weeksToRepeat: 0,
         selectedDays: [],
@@ -121,6 +125,10 @@ export function AppointmentForm({ members, initialDate }: AppointmentFormProps) 
               </option>
             ))}
           </select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="title">Title</Label>
+          <Input id="title" type="text" {...form.register("title")} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="fee">Fee</Label>

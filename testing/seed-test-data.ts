@@ -8,7 +8,11 @@
  *   npx tsx testing/seed-test-data.ts
  */
 
-import { PrismaClient, Role, CohortStatus, AppointmentStatus, InvoiceStatus, ResponseStatus } from "@prisma/client"
+import { PrismaClient, Role, CohortStatus, InvoiceStatus, ResponseStatus } from "@prisma/client"
+import fs from "fs"
+import path from "path"
+// Use AttendanceStatus for appointments
+import type { AttendanceStatus } from "@prisma/client"
 import { hash } from "bcryptjs"
 import { addDays, subDays, addWeeks, startOfDay } from "date-fns"
 import { DEFAULT_TEMPLATES } from "../src/lib/default-questionnaire-templates"
@@ -39,36 +43,18 @@ async function main() {
   console.log("👤 Creating users...")
   const password = await hash("password123", 12)
 
-    const admin = await prisma.user.create({
-      data: {
-        email: "admin@centurion.test",
-        name: "Admin User",
-        password,
-        role: Role.ADMIN,
-        emailVerified: true,
-      },
-    })
-
-    const coach1 = await prisma.user.create({
-      data: {
-        email: "coach@centurion.test",
-        name: "Sarah Coach",
-        password,
-        role: Role.COACH,
-        emailVerified: true,
-      },
-    })
-
-  const coach2 = await prisma.user.create({
+  // Admin user
+  const admin = await prisma.user.create({
     data: {
-      email: "coach2@centurion.test",
-      name: "Mike Coach",
+      email: "admin@centurion.test",
+      name: "Admin User",
       password,
-      role: Role.COACH,
-        emailVerified: true,
+      role: Role.ADMIN,
+      emailVerified: true,
     },
   })
 
+  // Seed clients (static for test consistency)
   const clients = await Promise.all([
     prisma.user.create({
       data: {
@@ -76,7 +62,7 @@ async function main() {
         name: "Alice Client",
         password,
         role: Role.CLIENT,
-          emailVerified: true,
+        emailVerified: true,
       },
     }),
     prisma.user.create({
@@ -85,7 +71,7 @@ async function main() {
         name: "Bob Client",
         password,
         role: Role.CLIENT,
-          emailVerified: true,
+        emailVerified: true,
       },
     }),
     prisma.user.create({
@@ -94,7 +80,7 @@ async function main() {
         name: "Charlie Client",
         password,
         role: Role.CLIENT,
-          emailVerified: true,
+        emailVerified: true,
       },
     }),
     prisma.user.create({
@@ -103,12 +89,28 @@ async function main() {
         name: "Diana Client",
         password,
         role: Role.CLIENT,
-          emailVerified: true,
+        emailVerified: true,
       },
     }),
   ])
 
-  console.log(`✅ Created ${clients.length + 3} users`)
+  // Seed coaches from instructors.json
+  const instructorsPath = path.join(__dirname, "instructors.json")
+  const instructorsData = JSON.parse(fs.readFileSync(instructorsPath, "utf-8")).results
+  const coachUsers = await Promise.all(
+    instructorsData.map((inst, idx) =>
+      prisma.user.create({
+        data: {
+          email: `coach${idx + 1}@centurion.test`,
+          name: inst.name,
+          password,
+          role: Role.COACH,
+          emailVerified: true,
+        },
+      })
+    )
+  )
+  console.log(`✅ Created ${clients.length + coachUsers.length + 1} users (clients + coaches + admin)`)
 
   // Create cohorts
   console.log("🎯 Creating cohorts...")
@@ -148,10 +150,10 @@ async function main() {
   console.log("👨‍🏫 Assigning coaches to cohorts...")
   await prisma.coachCohortMembership.createMany({
     data: [
-      { cohortId: activeCohort.id, coachId: coach1.id },
-      { cohortId: activeCohort.id, coachId: coach2.id }, // Multi-coach
-      { cohortId: upcomingCohort.id, coachId: coach1.id },
-      { cohortId: completedCohort.id, coachId: coach2.id },
+      { cohortId: activeCohort.id, coachId: coachUsers[0]?.id },
+      { cohortId: activeCohort.id, coachId: coachUsers[1]?.id }, // Multi-coach
+      { cohortId: upcomingCohort.id, coachId: coachUsers[0]?.id },
+      { cohortId: completedCohort.id, coachId: coachUsers[1]?.id },
     ],
   })
 
@@ -328,93 +330,77 @@ async function main() {
   }
   console.log("✅ Created questionnaire responses")
 
-  // Create appointments
-  console.log("📅 Creating appointments...")
-  const appointmentsData = []
+  // Create appointments from appointments.json
+  console.log("📅 Creating appointments from appointments.json ...")
+  const appointmentsPath = path.join(__dirname, "appointments.json")
+  const appointmentsRaw = JSON.parse(fs.readFileSync(appointmentsPath, "utf-8")).results
+  let createdAppointments = 0
+  for (const event of appointmentsRaw) {
+    if (!event.instructors || event.instructors.length === 0) continue
+    const coachName = event.instructors[0].name
+    const coach = coachUsers.find((c) => c.name === coachName)
+    if (!coach) continue
+    // Assign a random client
+    const client = clients[Math.floor(Math.random() * clients.length)]
+    await prisma.appointment.create({
+      data: {
+        userId: client.id,
+        coachId: coach.id, // Now supported by schema
+        title: event.name,
+        startTime: new Date(event.starts_at),
+        endTime: new Date(event.ends_at),
+        status: "NOT_ATTENDED",
+        fee: 75.0,
+        notes: event.description ? event.description.replace(/<[^>]+>/g, "") : null,
+      },
+    })
+    createdAppointments++
+  }
+  console.log(`✅ Created ${createdAppointments} appointments from appointments.json`)
 
-  // Past appointments (attended)
-  for (let i = 1; i <= 5; i++) {
-    appointmentsData.push({
-      userId: clients[0].id,
-      coachId: coach1.id,
-      title: `Training Session #${i}`,
-      startTime: subDays(new Date(), i * 3),
-      endTime: addDays(subDays(new Date(), i * 3), 0),
-      status: AppointmentStatus.ATTENDED,
-      fee: 75.0,
-      notes: `Week ${i} progress check`,
+  // Create bootcamps as multi-week programs
+  console.log("💪 Creating bootcamps...")
+  const bootcampPrograms = [
+    {
+      name: "Morning HIIT Bootcamp",
+      description: "High-intensity interval training for 6 weeks",
+      startDate: addDays(new Date(), 1),
+      weeks: 6,
+      location: "Main Gym",
+      attendees: [clients[0], clients[1], clients[2]],
+    },
+    {
+      name: "Strength & Conditioning Bootcamp",
+      description: "Full body strength training for 8 weeks",
+      startDate: addDays(new Date(), 3),
+      weeks: 8,
+      location: "Weight Room",
+      attendees: [clients[0]],
+    },
+  ]
+
+  for (const bootcamp of bootcampPrograms) {
+    const created = await prisma.bootcamp.create({
+      data: {
+        name: bootcamp.name,
+        description: bootcamp.description,
+        startTime: bootcamp.startDate,
+        endTime: addDays(bootcamp.startDate, bootcamp.weeks * 7),
+        location: bootcamp.location,
+        capacity: bootcamp.attendees.length,
+      },
+    })
+    // Register attendees
+    await prisma.bootcampAttendee.createMany({
+      data: bootcamp.attendees.map((user) => ({ bootcampId: created.id, userId: user.id })),
     })
   }
-
-  // Upcoming appointments
-  appointmentsData.push({
-    userId: clients[0].id,
-    coachId: coach1.id,
-    title: "Next Training Session",
-    startTime: addDays(new Date(), 2),
-    endTime: addDays(new Date(), 2),
-    status: AppointmentStatus.SCHEDULED,
-    fee: 75.0,
-    notes: null,
-  })
-
-  appointmentsData.push({
-    userId: clients[1].id,
-    coachId: coach2.id,
-    title: "Initial Consultation",
-    startTime: addDays(new Date(), 5),
-    endTime: addDays(new Date(), 5),
-    status: AppointmentStatus.SCHEDULED,
-    fee: 100.0,
-    notes: "New client assessment",
-  })
-
-  await prisma.appointment.createMany({ data: appointmentsData })
-  console.log(`✅ Created ${appointmentsData.length} appointments`)
-
-  // Create bootcamps
-  console.log("💪 Creating bootcamps...")
-  const bootcamp1 = await prisma.bootcamp.create({
-    data: {
-      coachId: coach1.id,
-      title: "Morning HIIT",
-      description: "High-intensity interval training session",
-      date: addDays(new Date(), 1),
-      startTime: addDays(new Date(), 1),
-      endTime: addDays(new Date(), 1),
-      capacity: 20,
-      location: "Main Gym",
-    },
-  })
-
-  const bootcamp2 = await prisma.bootcamp.create({
-    data: {
-      coachId: coach2.id,
-      title: "Strength & Conditioning",
-      description: "Full body strength training",
-      date: addDays(new Date(), 3),
-      startTime: addDays(new Date(), 3),
-      endTime: addDays(new Date(), 3),
-      capacity: 15,
-      location: "Weight Room",
-    },
-  })
-
-  // Register clients for bootcamps
-  await prisma.bootcampAttendee.createMany({
-    data: [
-      { bootcampId: bootcamp1.id, userId: clients[0].id },
-      { bootcampId: bootcamp1.id, userId: clients[1].id },
-      { bootcampId: bootcamp1.id, userId: clients[2].id },
-      { bootcampId: bootcamp2.id, userId: clients[0].id },
-    ],
-  })
-  console.log("✅ Created 2 bootcamps with attendees")
+  console.log("✅ Created bootcamp programs with attendees")
 
   // Create invoices
   console.log("💵 Creating invoices...")
   const attendedAppointments = await prisma.appointment.findMany({
-    where: { status: AppointmentStatus.ATTENDED },
+    where: { status: "ATTENDED" }, // AttendanceStatus.ATTENDED
     take: 3,
   })
 
