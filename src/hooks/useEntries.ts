@@ -9,6 +9,7 @@ import {
   getCheckInConfig,
   updateCheckInConfig,
   getCheckInStats,
+  getHealthKitPreview,
   type UpsertEntryInput,
 } from "@/app/actions/entries"
 
@@ -69,5 +70,13 @@ export function useUpdateCheckInConfig() {
     onSuccess: (_result, { cohortId }) => {
       queryClient.invalidateQueries({ queryKey: ["checkInConfig", cohortId] })
     },
+  })
+}
+
+export function useHealthKitPreview(dateString: string) {
+  return useQuery({
+    queryKey: ["healthKitPreview", dateString],
+    queryFn: () => getHealthKitPreview(dateString),
+    enabled: !!dateString,
   })
 }

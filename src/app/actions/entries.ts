@@ -3,7 +3,7 @@
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
-import { startOfDay } from "date-fns"
+import { startOfDay, endOfDay } from "date-fns"
 
 const upsertEntrySchema = z.object({
   date: z.string().min(1),
@@ -93,36 +93,168 @@ export async function upsertEntry(input: UpsertEntryInput) {
 
   const validated = result.data
   const date = startOfDay(new Date(validated.date))
+  const userId = Number(session.user.id)
+
+  // Auto-populate from HealthKit data if not provided by user
+  const healthKitData = await getHealthKitDataForDate(userId, date)
+  const dataSources: Record<string, string> = validated.dataSources || {}
 
   // Prepare data - only include defined fields
   const data: any = {}
-  if (validated.weight !== undefined) data.weight = validated.weight
-  if (validated.steps !== undefined) data.steps = validated.steps
-  if (validated.calories !== undefined) data.calories = validated.calories
-  if (validated.sleepQuality !== undefined)
+
+  // Weight: use user input or keep existing
+  if (validated.weight !== undefined) {
+    data.weight = validated.weight
+    if (validated.weight !== null) dataSources.weight = "manual"
+  }
+
+  // Steps: auto-populate from HealthKit workouts if not provided
+  if (validated.steps !== undefined) {
+    data.steps = validated.steps
+    if (validated.steps !== null) dataSources.steps = "manual"
+  } else if (healthKitData.steps !== null) {
+    data.steps = healthKitData.steps
+    dataSources.steps = "healthkit"
+  }
+
+  // Calories: auto-populate from HealthKit if not provided
+  if (validated.calories !== undefined) {
+    data.calories = validated.calories
+    if (validated.calories !== null) dataSources.calories = "manual"
+  } else if (healthKitData.calories !== null) {
+    data.calories = healthKitData.calories
+    dataSources.calories = "healthkit"
+  }
+
+  // Sleep quality: derive from SleepRecord if not provided
+  if (validated.sleepQuality !== undefined) {
     data.sleepQuality = validated.sleepQuality
+    if (validated.sleepQuality !== null) dataSources.sleepQuality = "manual"
+  } else if (healthKitData.sleepQuality !== null) {
+    data.sleepQuality = healthKitData.sleepQuality
+    dataSources.sleepQuality = "healthkit"
+  }
+
   if (validated.perceivedStress !== undefined)
     data.perceivedStress = validated.perceivedStress
   if (validated.notes !== undefined) data.notes = validated.notes
   if (validated.customResponses !== undefined)
     data.customResponses = validated.customResponses
-  if (validated.dataSources !== undefined)
-    data.dataSources = validated.dataSources
+
+  // Always update dataSources if we have any
+  if (Object.keys(dataSources).length > 0) {
+    data.dataSources = dataSources
+  }
 
   return prisma.entry.upsert({
     where: {
       userId_date: {
-        userId: Number(session.user.id),
+        userId,
         date,
       },
     },
     create: {
-      userId: Number(session.user.id),
+      userId,
       date,
       ...data,
     },
     update: data,
   })
+}
+
+/**
+ * Fetches HealthKit data for a specific date to auto-populate entry fields
+ */
+async function getHealthKitDataForDate(
+  userId: number,
+  date: Date
+): Promise<{
+  steps: number | null
+  calories: number | null
+  sleepQuality: number | null
+}> {
+  const dayStart = startOfDay(date)
+  const dayEnd = endOfDay(date)
+
+  // Get workouts for the day (can derive steps from walking/running workouts)
+  const workouts = await prisma.healthKitWorkout.findMany({
+    where: {
+      userId,
+      startTime: { gte: dayStart, lte: dayEnd },
+    },
+  })
+
+  // Get sleep record for the night (sleep that ends on this day)
+  const sleepRecord = await prisma.sleepRecord.findFirst({
+    where: {
+      userId,
+      endTime: { gte: dayStart, lte: dayEnd },
+    },
+    orderBy: { totalSleep: "desc" }, // Get longest sleep session
+  })
+
+  // Calculate steps from walking/running workouts
+  // Estimate ~1300 steps per km for walking, ~1200 for running
+  let totalSteps = 0
+  let totalCalories = 0
+
+  for (const workout of workouts) {
+    // Sum up calories from all workouts
+    if (workout.calories) {
+      totalCalories += Math.round(workout.calories)
+    }
+
+    // Estimate steps from distance-based workouts
+    if (workout.distance) {
+      const distanceKm = workout.distance / 1000
+      const workoutType = workout.workoutType.toLowerCase()
+
+      if (
+        workoutType.includes("walk") ||
+        workoutType.includes("hike")
+      ) {
+        totalSteps += Math.round(distanceKm * 1300)
+      } else if (workoutType.includes("run") || workoutType.includes("jog")) {
+        totalSteps += Math.round(distanceKm * 1200)
+      }
+    }
+  }
+
+  // Derive sleep quality from sleep record (1-10 scale)
+  // Based on total sleep: 8+ hours = 10, 7-8 = 8, 6-7 = 6, <6 = 4
+  let sleepQuality: number | null = null
+  if (sleepRecord) {
+    const sleepHours = sleepRecord.totalSleep / 60
+    if (sleepHours >= 8) sleepQuality = 10
+    else if (sleepHours >= 7.5) sleepQuality = 9
+    else if (sleepHours >= 7) sleepQuality = 8
+    else if (sleepHours >= 6.5) sleepQuality = 7
+    else if (sleepHours >= 6) sleepQuality = 6
+    else if (sleepHours >= 5.5) sleepQuality = 5
+    else if (sleepHours >= 5) sleepQuality = 4
+    else sleepQuality = 3
+  }
+
+  return {
+    steps: totalSteps > 0 ? totalSteps : null,
+    calories: totalCalories > 0 ? totalCalories : null,
+    sleepQuality,
+  }
+}
+
+/**
+ * Get HealthKit data preview for a date (used by UI to show auto-fill indicators)
+ */
+export async function getHealthKitPreview(dateString: string) {
+  const session = await auth()
+  if (!session?.user) {
+    throw new Error("Unauthorized")
+  }
+
+  const date = startOfDay(new Date(dateString))
+  const userId = Number(session.user.id)
+
+  return getHealthKitDataForDate(userId, date)
 }
 
 export async function getCheckInConfig(cohortId?: number) {
