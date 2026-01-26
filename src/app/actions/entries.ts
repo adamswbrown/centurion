@@ -311,6 +311,37 @@ export async function updateCheckInConfig(cohortId: number, prompts: any) {
   })
 }
 
+/**
+ * Delete an entry by ID
+ * Only the owner can delete their own entries
+ */
+export async function deleteEntry(entryId: number) {
+  const session = await auth()
+  if (!session?.user) {
+    throw new Error("Unauthorized")
+  }
+
+  const userId = Number(session.user.id)
+
+  const entry = await prisma.entry.findUnique({
+    where: { id: entryId },
+  })
+
+  if (!entry) {
+    throw new Error("Entry not found")
+  }
+
+  if (entry.userId !== userId) {
+    throw new Error("Forbidden: cannot delete other users' entries")
+  }
+
+  await prisma.entry.delete({
+    where: { id: entryId },
+  })
+
+  return { success: true }
+}
+
 export async function getCheckInStats(userId?: number) {
   const session = await auth()
   if (!session?.user) {

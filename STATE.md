@@ -103,6 +103,11 @@
   - **E2E Tests**: Playwright tests for auth, appointments, cohorts, invoices, review-queue
   - **Total**: 237 passing tests across 11 test files
 
+- **Entry Deletion** (Audit Fix):
+  - Server action: `deleteEntry(entryId)` with ownership verification
+  - React Query hook: `useDeleteEntry()` with cache invalidation
+  - Only entry owner can delete their own entries
+
 ### Features Next Up
 - Database migration for CreditTransaction and isTestUser fields
 - Cron job for weekly review queue reminders

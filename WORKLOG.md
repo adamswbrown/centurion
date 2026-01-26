@@ -1,3 +1,47 @@
+## 2026-01-26 - Fix Remaining CRITICAL and HIGH Priority Audit Gaps
+
+Addressed remaining gaps identified in audit.
+
+### Task 1: Email Template COACH_NOTE_RECEIVED - ALREADY COMPLETE
+- Template already exists at lines 285-295 in `src/lib/email-templates.ts`
+- Subject: "New Note from {{coachName}}"
+- Body includes userName, coachName, and loginUrl tokens
+- No changes needed
+
+### Task 2: useReviewQueue Hooks - ALREADY COMPLETE
+- All 5 hooks fully implemented in `src/hooks/useReviewQueue.ts`:
+  - `useWeeklySummaries(weekStart?, cohortId?)` - Lines 19-25
+  - `useWeeklyResponse(clientId, weekStart)` - Lines 28-34
+  - `useSaveWeeklyResponse()` - Lines 37-58
+  - `useReviewQueueSummary(weekStart?)` - Lines 61-67
+  - `useCoachCohorts()` - Lines 70-76
+- No changes needed
+
+### Task 3: Add deleteEntry Action - IMPLEMENTED
+- Added `deleteEntry(entryId)` server action to `src/app/actions/entries.ts`
+- Ownership verification: only entry owner can delete
+- Returns `{ success: true }` on completion
+- Added `useDeleteEntry()` hook to `src/hooks/useEntries.ts`
+- Hook properly invalidates entries, entry, and checkInStats queries
+
+### Task 4: HealthKit Data Explorer - ALREADY COMPLETE
+- Component at `src/features/healthkit/HealthDataExplorer.tsx` displays:
+  - Workouts: type, duration, calories, distance, heart rate
+  - Sleep: date, total sleep, in-bed time, deep sleep, REM sleep
+  - Steps: daily totals from HealthKit-sourced entries
+- All data source indicators present via dataSources field
+
+### Task 5: WeeklyCoachResponse Schema Constraint - ALREADY COMPLETE
+- `@@unique([coachId, clientId, weekStart])` constraint exists at line 608
+- Ensures one response per coach per client per week
+- No changes needed
+
+### Build Verification
+- `npm run build` passes successfully (39 routes)
+- All TypeScript types validated
+
+---
+
 ## 2026-01-26 - Batch 4: Build Remaining Features to Close All Gaps
 
 Executed Batch 4 to close remaining feature gaps in Centurion platform.

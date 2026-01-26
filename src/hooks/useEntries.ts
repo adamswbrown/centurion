@@ -6,6 +6,7 @@ import {
   getEntries,
   getEntryByDate,
   upsertEntry,
+  deleteEntry,
   getCheckInConfig,
   updateCheckInConfig,
   getCheckInStats,
@@ -53,6 +54,19 @@ export function useUpsertEntry() {
 
   return useMutation({
     mutationFn: (input: UpsertEntryInput) => upsertEntry(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entries"] })
+      queryClient.invalidateQueries({ queryKey: ["entry"] })
+      queryClient.invalidateQueries({ queryKey: ["checkInStats"] })
+    },
+  })
+}
+
+export function useDeleteEntry() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (entryId: number) => deleteEntry(entryId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["entries"] })
       queryClient.invalidateQueries({ queryKey: ["entry"] })
