@@ -10,6 +10,26 @@
 - Invoice, Payment, and Revenue models with financial reporting
 - Revenue aggregation/reporting (monthly, UK tax year, paid invoices)
 - Settings pages: Admin system settings (/admin/settings) and user account settings (/settings) with full CRUD
+
+- **Appointment Conflict Detection** (Batch 4, verified):
+  - Conflict detection for both create and update operations
+  - Uses overlap algorithm: `aStart < bEnd && aEnd > bStart`
+  - Prevents double-booking per member
+- **Bootcamp Capacity Enforcement** (Batch 4, verified):
+  - Capacity check on attendee registration
+  - Credit consumption (decrement) and refund (increment) logic
+- **HealthKit Auto-Entry** (Batch 4):
+  - Auto-populates steps, calories, sleep quality from HealthKit data
+  - Derives steps from walking/running workouts
+  - Derives sleep quality from SleepRecord total hours
+  - Tracks data sources in `dataSources` JSON field
+  - UI preview shows available HealthKit data before form submission
+- **Client Appointment Detail Page** (Batch 4):
+  - `/appointments/me/[id]` - Client-facing appointment details
+  - Shows date, time, duration, status, coach notes
+  - Cancel button with 24-hour restriction
+  - AlertDialog confirmation for cancellation
+  - Calendar view appointments link to detail page
 - **Reports Dashboard** (Phase 11):
   - Multi-domain reports: Members, Cohorts, Revenue (admin), Compliance
   - Dashboard overview with growth metrics and trend indicators

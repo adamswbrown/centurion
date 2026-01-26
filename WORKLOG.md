@@ -1,3 +1,71 @@
+## 2026-01-26 - Batch 4: Build Remaining Features to Close All Gaps
+
+Executed Batch 4 to close remaining feature gaps in Centurion platform.
+
+### Task 1: Appointment Conflict Detection - VERIFIED EXISTING
+- Conflict detection already exists and works correctly:
+  - `createAppointment` (lines 133-150): Queries existing appointments within date range, filters for actual overlaps using `hasOverlap()` helper
+  - `updateAppointment` (lines 307-319): Checks for conflicts excluding the current appointment being updated
+  - Both use the overlap algorithm: `aStart < bEnd && aEnd > bStart`
+- No changes needed - implementation is complete and robust
+
+### Task 2: Bootcamp Capacity Enforcement - VERIFIED EXISTING
+- Capacity enforcement already exists at lines 140-142 in `src/app/actions/bootcamps.ts`:
+  - Fetches bootcamp with attendee count
+  - Checks `if (bootcamp.capacity && bootcamp.attendees.length >= bootcamp.capacity)`
+  - Throws error "Bootcamp is at capacity" when full
+- Credit consumption (line 150) and refund logic (line 173) also working
+- No changes needed - implementation is complete
+
+### Task 3: HealthKit Auto-Entry for Entries
+- Updated `src/app/actions/entries.ts`:
+  - Added `getHealthKitDataForDate()` function to fetch HealthKit data
+  - Derives steps from walking/running workouts (1300 steps/km walking, 1200 steps/km running)
+  - Derives calories from workout calorie totals
+  - Derives sleep quality (1-10 scale) from SleepRecord total sleep hours
+  - Auto-populates entry fields when user doesn't provide values
+  - Tracks data source in `dataSources` JSON field: `{"steps": "healthkit", "sleepQuality": "healthkit"}`
+  - Added `getHealthKitPreview()` server action for UI previews
+- Updated `src/hooks/useEntries.ts`:
+  - Added `useHealthKitPreview()` hook for fetching HealthKit preview data
+
+### Task 4: DataSourceBadge Integration
+- `CheckInHistory.tsx` already had DataSourceBadge integrated (verified at line 87)
+- Updated `src/features/entries/CheckInForm.tsx`:
+  - Added `HealthKitIndicator` component showing purple Apple icon with value preview
+  - Added `useHealthKitPreview` hook to fetch available HealthKit data
+  - Steps, Calories, Sleep Quality fields now show HealthKit indicators when:
+    - User hasn't entered a value AND HealthKit data is available
+    - Placeholder text shows HealthKit value (e.g., "HealthKit: 8,500")
+  - Visual indicator: "HealthKit: {value} (auto-fills if empty)"
+
+### Task 5: Client Appointment Detail Page
+- Created new server actions in `src/app/actions/client-appointments.ts`:
+  - `getMyAppointmentById(id)` - Fetches appointment by ID with ownership verification
+  - `cancelMyAppointment(id)` - Cancel appointment with 24-hour restriction
+  - Sends cancellation email and removes Google Calendar event
+- Updated `src/hooks/useClientAppointments.ts`:
+  - Added `useMyAppointment(id)` hook
+  - Added `useCancelMyAppointment()` mutation hook
+- Created `src/app/appointments/me/[id]/page.tsx`:
+  - Client appointment detail page with ownership check
+  - Returns 404 if appointment doesn't exist or doesn't belong to user
+- Created `src/features/appointments/ClientAppointmentDetail.tsx`:
+  - Full appointment detail view (date, time, duration, location, status)
+  - Coach notes section
+  - Cancel button with 24-hour restriction check
+  - AlertDialog confirmation for cancellation
+  - Status badges (Scheduled, Attended, Missed)
+- Updated `src/features/appointments/ClientAppointmentsCalendar.tsx`:
+  - Appointment items now link to `/appointments/me/[id]`
+  - Added hover states for clickable appointments
+
+### Build Verification
+- `npm run build` passes successfully (39 routes)
+- All TypeScript types validated
+
+---
+
 ## 2026-01-26 - Comprehensive Testing Suite Implementation
 
 Built a full testing suite covering the entire Centurion project using the chief-architect agent.
