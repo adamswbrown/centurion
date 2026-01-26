@@ -1,30 +1,19 @@
 ### Features Complete
-### Features Complete
- - User management/admin flows (CRUD, bulk, delete, audit logging)
- - Combined calendar + credits system (backend, API, UI)
- - Daily check-in system (CoachFit baseline): CRUD, compliance, streaks, UI, stats display
- - Cohort analytics: Backend and UI for compliance, streaks, participation (admin/coach dashboard)
- - Admin user management polish (PTP parity): Toast notification support, error boundary coverage added; accessibility/mobile polish underway
- - Added Invoice, Payment, and Revenue models to Prisma schema (financial reporting foundation)
- - Real revenue aggregation/reporting in csv-export.ts (monthly, UK tax year, paid invoices)
- - ExportCSVDialog UI polished for accessibility, error handling, mobile responsiveness, edge cases
-### Features Complete
 - User management/admin flows (CRUD, bulk, delete, audit logging)
+- Admin user management UI (/admin/users, /admin/users/[id]) with search, filtering, and navigation
 - Combined calendar + credits system (backend, API, UI)
 - Daily check-in system (CoachFit baseline): CRUD, compliance, streaks, UI, stats display
 - Cohort analytics: Backend and UI for compliance, streaks, participation (admin/coach dashboard)
-
-
-- Admin user management polish (PTP parity): Toast notification support, error boundary coverage added; accessibility/mobile polish underway
-
-### Features Next Up
-### Features Next Up
-- Admin UI polish
-- Settings
+- Coach analytics dashboard: Attention score algorithm, member prioritization, check-in history views
+- SurveyJS integration: Dynamic questionnaire rendering with open-source v2.5.6
+- Invoice, Payment, and Revenue models with financial reporting
+- Revenue aggregation/reporting (monthly, UK tax year, paid invoices)
 
 ### Features Next Up
-- Admin UI polish
-- Reports
+- Settings pages (client, admin, global)
+- Reports dashboard
+- HealthKit integration
+- Email system (Resend)
 ## Project Summary
 - Unified fitness platform combining Personal Trainer Planner (appointments, bootcamps, invoicing) and CoachFit (cohorts, health data).
 - **Phase 7 (Daily Check-In System) and Phase 8 (Weekly Questionnaires) complete**. Ready for Phase 9: Health Data Tracking.
@@ -69,15 +58,18 @@
   - Upsert pattern for one entry per user per day (userId_date unique constraint).
 - Weekly Questionnaires (Phase 8 ✅):
   - Questionnaire bundle actions: getQuestionnaireBundle, getQuestionnaireBundles, createQuestionnaireBundle, updateQuestionnaireBundle.
-  - Response actions: getQuestionnaireResponse, upsertQuestionnaireResponse, getWeeklyResponses.
+  - Response actions: getQuestionnaireResponse, upsertQuestionnaireResponse, getWeeklyResponses, getAllQuestionnaires.
   - Week-based access control (current week calculation from cohort startDate).
   - Status locking: IN_PROGRESS → COMPLETED (cannot edit after submission).
   - Week locking: cannot access future weeks, cannot edit past weeks.
   - React Query hooks for questionnaires with cache invalidation.
-  - QuestionnaireViewer component for members (placeholder for SurveyJS integration).
+  - SurveyJS integration: Dynamic questionnaire rendering with custom theme, read-only mode, auto-save detection.
+  - SurveyContainer component: Wrapper for SurveyJS Model with event handling and theme application.
+  - QuestionnaireViewer component: Full survey rendering with save/submit functionality.
   - QuestionnaireResponseList component for coaches to view all responses.
-  - Member questionnaire page at `/client/questionnaires/[cohortId]/[weekNumber]`.
-  - Note: Full SurveyJS integration pending - current implementation shows structure.
+  - WeeklyQuestionnaireReport component: Completion tracking across cohorts.
+  - Member questionnaire page at `/client/questionnaires/[cohortId]/[weekNumber]` with live survey rendering.
+  - CoachFit baseline templates (6 weeks) integrated and ready for use.
 - Invoicing & Payments (Phase 6 ✅):
   - Extended Invoice model with payment tracking (paymentStatus, stripePaymentUrl, paidAt).
   - PaymentStatus enum (UNPAID, PAID, OVERDUE, CANCELLED).
@@ -88,6 +80,16 @@
   - Revenue chart showing monthly revenue with year selector (Recharts).
   - Stripe webhook endpoint at `/api/webhooks/stripe` for payment event handling.
   - Billing pages at `/billing` and `/billing/[id]` (admin-only access).
+- Coach Analytics & Insights (Phase 10 ✅):
+  - Attention score algorithm: Check-ins (40%), Questionnaires (30%), Sentiment (30%), score 0-100.
+  - CoachDashboard component: Member prioritization, summary statistics, drill-down to details.
+  - AttentionScoreCard component: Visual score display with color-coded priorities (red/amber/green).
+  - MemberCheckInList component: Detailed check-in history with stress highlighting.
+  - WeeklyQuestionnaireReport component: Completion tracking and status badges.
+  - React Query hooks with 5-minute stale time and 10-minute auto-refresh.
+  - Server actions: calculateAttentionScore, getCoachInsights, getMemberCheckInData, getCoachCohortMembers.
+  - Automatic data scoping to coach's cohorts only.
+  - Integrated into /dashboard page (conditional render for COACH role).
 - Google Calendar integration module using service account credentials.
 - Interval timer PWA (standalone):
   - `/timer` route with timer engine, presets, and UI shell.

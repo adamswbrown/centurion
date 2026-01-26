@@ -304,3 +304,48 @@ export async function getWeeklyResponses(cohortId: number, weekNumber: number) {
 
   return bundle
 }
+
+// Get all questionnaires for coach's cohorts
+export async function getAllQuestionnaires() {
+  const session = await auth()
+  if (!session?.user) {
+    throw new Error("Unauthorized")
+  }
+
+  // Only coaches/admins can view questionnaires
+  if (session.user.role === "CLIENT") {
+    throw new Error("Forbidden: only coaches can view questionnaires")
+  }
+
+  // Get all cohorts for this coach
+  const coachMemberships = await prisma.coachCohortMembership.findMany({
+    where: { coachId: Number(session.user.id) },
+    select: { cohortId: true },
+  })
+
+  const cohortIds = coachMemberships.map((m) => m.cohortId)
+
+  if (cohortIds.length === 0) {
+    return []
+  }
+
+  return prisma.questionnaireBundle.findMany({
+    where: {
+      cohortId: { in: cohortIds },
+    },
+    include: {
+      cohort: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      _count: {
+        select: {
+          responses: true,
+        },
+      },
+    },
+    orderBy: [{ cohortId: "asc" }, { weekNumber: "asc" }],
+  })
+}

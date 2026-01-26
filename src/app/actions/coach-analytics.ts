@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { requireCoach, auth } from "@/lib/auth"
+import { requireCoach } from "@/lib/auth"
 import { startOfDay, subDays } from "date-fns"
 
 /**
@@ -241,11 +241,11 @@ async function calculateMemberAttentionScore(
  * Get coach insights for all members in coach's cohorts
  */
 export async function getCoachInsights(): Promise<CoachInsights> {
-  const session = await requireCoach()
+  const user = await requireCoach()
 
   // Get all cohorts where user is a coach
   const coachCohorts = await prisma.coachCohortMembership.findMany({
-    where: { coachId: session.user.id },
+    where: { coachId: Number(user.id) },
     select: { cohortId: true },
   })
 
@@ -398,11 +398,11 @@ export async function getMemberCheckInData(memberId: number): Promise<MemberChec
  * Get all members in coach's cohorts with basic info
  */
 export async function getCoachCohortMembers() {
-  const session = await requireCoach()
+  const user = await requireCoach()
 
   // Get all cohorts where user is a coach
   const coachCohorts = await prisma.coachCohortMembership.findMany({
-    where: { coachId: session.user.id },
+    where: { coachId: Number(user.id) },
     select: {
       cohort: {
         select: {

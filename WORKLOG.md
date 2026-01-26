@@ -188,3 +188,27 @@
   - Updated UserTable UI to support row selection, bulk delete, and bulk role change with confirmation and feedback.
   - Added DeleteUserButton component for single user deletion with confirmation dialog.
   - All admin user management actions now log to the AuditLog model for traceability.
+
+## 2026-01-26 13:45 GMT
+- (Claude) Completed missing functionality implementation across three major areas:
+  - **Phase 1 - SurveyJS Integration**: Implemented dynamic questionnaire rendering using open-source SurveyJS v2.5.6.
+    - Created src/lib/surveyjs-config.ts with custom theme matching Centurion design system.
+    - Created src/components/questionnaires/SurveyContainer.tsx wrapper component with event handling.
+    - Updated QuestionnaireViewer.tsx to replace placeholder with actual survey rendering.
+    - Supports read-only mode for completed questionnaires, auto-save detection, and theme customization.
+    - Build verified: /client/questionnaires/[cohortId]/[weekNumber] route compiles successfully.
+  - **Phase 2 - Admin User Management**: Completed admin user management UI (already partially implemented).
+    - Added "Users" navigation link to Sidebar and MobileNav with UserCog icon.
+    - Fixed type errors in audit logging (session.id string to number conversion).
+    - Fixed ErrorBoundary client component directive.
+    - Verified /admin/users and /admin/users/[id] routes compile and are protected with requireAdmin().
+  - **Phase 3 - Coach Analytics & Insights**: Implemented attention score algorithm and coach dashboard.
+    - Created src/app/actions/coach-analytics.ts with attention score calculation (Check-ins 40%, Questionnaires 30%, Sentiment 30%).
+    - Created src/hooks/useCoachAnalytics.ts with React Query hooks (5-min stale time, 10-min auto-refresh).
+    - Created src/components/coach/AttentionScoreCard.tsx for visual score display with color-coded priorities.
+    - Created src/components/coach/CoachDashboard.tsx with member prioritization and summary statistics.
+    - Created src/components/coach/MemberCheckInList.tsx for detailed check-in history.
+    - Created src/components/coach/WeeklyQuestionnaireReport.tsx for completion tracking.
+    - Integrated CoachDashboard into /dashboard page (conditional render for COACH role).
+    - All server actions protected with requireCoach(), automatic data scoping to coach's cohorts.
+- All work tagged as Claude implementation, verified build passes for all 29 routes.

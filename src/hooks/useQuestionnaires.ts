@@ -95,3 +95,14 @@ export function useUpsertQuestionnaireResponse() {
     },
   })
 }
+
+// Hook for all questionnaires (used by coach dashboard)
+export function useQuestionnaires() {
+  return useQuery({
+    queryKey: ["questionnaires"],
+    queryFn: async () => {
+      const { getAllQuestionnaires } = await import("@/app/actions/questionnaires")
+      return getAllQuestionnaires()
+    },
+  })
+}
