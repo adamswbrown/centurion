@@ -94,3 +94,6 @@
 
 ## 2026-01-26 09:01 GMT
 - Added preset import/export UI with JSON editor and file import/export for timer PWA.
+
+## 2026-01-26 09:34 GMT
+- Testing-only: ran local Postgres migration `init` against centurion_dev and generated Prisma Client. (No code changes.)
