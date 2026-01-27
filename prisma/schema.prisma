@@ -34,7 +34,6 @@ model User {
   // Personal Training Relations
   appointmentsAsClient Appointment[] @relation("AppointmentUser")
   appointmentsAsCoach  Appointment[] @relation("AppointmentCoach")
-  bootcampAttendees  BootcampAttendee[]
   workouts           Workout[]
   invoices           Invoice[]
 
@@ -197,41 +196,6 @@ model Appointment {
 enum AttendanceStatus {
   ATTENDED
   NOT_ATTENDED
-}
-
-model Bootcamp {
-  id          Int      @id @default(autoincrement())
-  name        String
-  startTime   DateTime
-  endTime     DateTime
-  location    String?
-  capacity    Int?
-  description String?
-
-  attendees  BootcampAttendee[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("bootcamps")
-  @@index([startTime])
-  @@index([name])
-}
-
-model BootcampAttendee {
-  id         Int      @id @default(autoincrement())
-  bootcampId Int
-  userId     Int
-
-  bootcamp   Bootcamp @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@unique([bootcampId, userId])
-  @@map("bootcamp_attendees")
-  @@index([bootcampId])
-  @@index([userId])
 }
 
 model Workout {
