@@ -28,6 +28,13 @@ const statusColors = {
   ARCHIVED: "bg-gray-100 text-gray-800",
 }
 
+const typeColors: Record<string, string> = {
+  TIMED: "bg-purple-100 text-purple-800",
+  ONGOING: "bg-indigo-100 text-indigo-800",
+  CHALLENGE: "bg-orange-100 text-orange-800",
+  CUSTOM: "bg-pink-100 text-pink-800",
+}
+
 export function CohortList() {
   const [statusFilter, setStatusFilter] = useState<CohortStatus | "ALL">("ALL")
   const { data: cohorts, isLoading } = useCohorts(
@@ -75,7 +82,14 @@ export function CohortList() {
           <Card key={cohort.id} className="hover:shadow-md transition-shadow">
             <CardHeader>
               <div className="flex items-start justify-between">
-                <CardTitle className="text-lg">{cohort.name}</CardTitle>
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-lg">{cohort.name}</CardTitle>
+                  {cohort.type && (
+                    <Badge className={typeColors[cohort.type] || ""} variant="secondary">
+                      {cohort.type}
+                    </Badge>
+                  )}
+                </div>
                 <Badge className={statusColors[cohort.status]} variant="secondary">
                   {cohort.status}
                 </Badge>

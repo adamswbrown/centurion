@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { requireCoach } from "@/lib/auth"
-import { startOfDay, subDays } from "date-fns"
+import { startOfDay, startOfWeek, endOfWeek, subDays } from "date-fns"
 
 /**
  * Attention Score Algorithm (Based on CoachFit)
@@ -515,4 +515,226 @@ export async function calculateAttentionScore(memberId: number): Promise<MemberA
   }
 
   return await calculateMemberAttentionScore(member.id, member.name, member.email)
+}
+
+/**
+ * Member overview row for the coach dashboard members table
+ */
+export interface CoachMemberOverview {
+  memberId: number
+  memberName: string | null
+  memberEmail: string
+  cohortName: string
+  priority: AttentionPriority
+  score: number
+  checkInsThisWeek: number
+  expectedCheckIns: number
+  lastCheckIn: Date | null
+  currentStreak: number
+  questionnaireStatus: "COMPLETED" | "IN_PROGRESS" | "NOT_STARTED" | "N/A"
+}
+
+/**
+ * Get a flat overview of all members for the coach dashboard table.
+ * Single optimized fetch: members + this week's entries + latest questionnaire responses + attention scores.
+ */
+export async function getCoachMembersOverview(): Promise<CoachMemberOverview[]> {
+  const user = await requireCoach()
+  const isAdmin = user.role === "ADMIN"
+
+  const now = new Date()
+  const weekStart = startOfWeek(now, { weekStartsOn: 1 })
+  const weekEnd = endOfWeek(now, { weekStartsOn: 1 })
+
+  // 1. Get all members in coach's cohorts
+  let membersWithCohort: Array<{
+    userId: number
+    userName: string | null
+    userEmail: string
+    cohortId: number
+    cohortName: string
+  }>
+
+  if (isAdmin) {
+    const allCohorts = await prisma.cohort.findMany({
+      where: { status: "ACTIVE" },
+      select: {
+        id: true,
+        name: true,
+        members: {
+          where: { status: "ACTIVE" },
+          include: {
+            user: { select: { id: true, name: true, email: true } },
+          },
+        },
+      },
+    })
+    membersWithCohort = allCohorts.flatMap((c) =>
+      c.members.map((m) => ({
+        userId: m.user.id,
+        userName: m.user.name,
+        userEmail: m.user.email,
+        cohortId: c.id,
+        cohortName: c.name,
+      }))
+    )
+  } else {
+    const coachCohorts = await prisma.coachCohortMembership.findMany({
+      where: { coachId: Number(user.id) },
+      select: {
+        cohort: {
+          select: {
+            id: true,
+            name: true,
+            members: {
+              where: { status: "ACTIVE" },
+              include: {
+                user: { select: { id: true, name: true, email: true } },
+              },
+            },
+          },
+        },
+      },
+    })
+    membersWithCohort = coachCohorts.flatMap((cc) =>
+      cc.cohort.members.map((m) => ({
+        userId: m.user.id,
+        userName: m.user.name,
+        userEmail: m.user.email,
+        cohortId: cc.cohort.id,
+        cohortName: cc.cohort.name,
+      }))
+    )
+  }
+
+  // Deduplicate (keep first cohort encountered)
+  const uniqueMembers = Array.from(
+    new Map(membersWithCohort.map((m) => [m.userId, m])).values()
+  )
+
+  if (uniqueMembers.length === 0) return []
+
+  const memberIds = uniqueMembers.map((m) => m.userId)
+
+  // 2. Batch fetch: this week's entries, last entry, attention scores, questionnaire responses
+  const [weekEntries, lastEntries, allRecentEntries, questionnaireResponses] = await Promise.all([
+    // This week's entries grouped by user
+    prisma.entry.findMany({
+      where: { userId: { in: memberIds }, date: { gte: weekStart, lte: weekEnd } },
+      select: { userId: true, date: true },
+    }),
+    // Last entry per user
+    prisma.entry.findMany({
+      where: { userId: { in: memberIds } },
+      orderBy: { date: "desc" },
+      distinct: ["userId"],
+      select: { userId: true, date: true },
+    }),
+    // Recent 14-day entries for streak calculation
+    prisma.entry.findMany({
+      where: { userId: { in: memberIds }, date: { gte: subDays(now, 14) } },
+      orderBy: { date: "desc" },
+      select: { userId: true, date: true },
+    }),
+    // Latest questionnaire response per user (from active bundles)
+    prisma.weeklyQuestionnaireResponse.findMany({
+      where: { userId: { in: memberIds } },
+      orderBy: { updatedAt: "desc" },
+      distinct: ["userId"],
+      select: { userId: true, status: true },
+    }),
+  ])
+
+  // Build lookup maps
+  const weekEntryCountMap = new Map<number, number>()
+  for (const e of weekEntries) {
+    weekEntryCountMap.set(e.userId, (weekEntryCountMap.get(e.userId) || 0) + 1)
+  }
+
+  const lastEntryMap = new Map(lastEntries.map((e) => [e.userId, e.date]))
+
+  const recentEntriesByUser = new Map<number, Date[]>()
+  for (const e of allRecentEntries) {
+    const list = recentEntriesByUser.get(e.userId) || []
+    list.push(e.date)
+    recentEntriesByUser.set(e.userId, list)
+  }
+
+  const qStatusMap = new Map(
+    questionnaireResponses.map((q) => [q.userId, q.status])
+  )
+
+  // Calculate expected check-ins (days elapsed this week, max 7)
+  const daysIntoWeek = Math.min(
+    7,
+    Math.floor((now.getTime() - weekStart.getTime()) / (1000 * 60 * 60 * 24)) + 1
+  )
+
+  // 3. Calculate attention scores in parallel
+  const attentionScores = await Promise.all(
+    uniqueMembers.map((m) =>
+      calculateMemberAttentionScore(m.userId, m.userName, m.userEmail)
+    )
+  )
+  const scoreMap = new Map(attentionScores.map((s) => [s.memberId, s]))
+
+  // 4. Build overview rows
+  const overview: CoachMemberOverview[] = uniqueMembers.map((m) => {
+    const score = scoreMap.get(m.userId)
+    const userDates = recentEntriesByUser.get(m.userId) || []
+
+    // Calculate streak
+    let currentStreak = 0
+    let lastDate: Date | null = null
+    for (const date of userDates) {
+      const entryDate = startOfDay(date)
+      if (!lastDate) {
+        const daysDiff = Math.floor(
+          (startOfDay(now).getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24)
+        )
+        if (daysDiff === 0) {
+          currentStreak = 1
+          lastDate = entryDate
+        } else {
+          break
+        }
+      } else {
+        const daysDiff = Math.floor(
+          (lastDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24)
+        )
+        if (daysDiff === 1) {
+          currentStreak++
+          lastDate = entryDate
+        } else {
+          break
+        }
+      }
+    }
+
+    const qRaw = qStatusMap.get(m.userId)
+    let questionnaireStatus: CoachMemberOverview["questionnaireStatus"] = "N/A"
+    if (qRaw === "COMPLETED") questionnaireStatus = "COMPLETED"
+    else if (qRaw === "IN_PROGRESS") questionnaireStatus = "IN_PROGRESS"
+    else if (qRaw === undefined) questionnaireStatus = "NOT_STARTED"
+
+    return {
+      memberId: m.userId,
+      memberName: m.userName,
+      memberEmail: m.userEmail,
+      cohortName: m.cohortName,
+      priority: score?.priority || "green",
+      score: score?.score || 0,
+      checkInsThisWeek: weekEntryCountMap.get(m.userId) || 0,
+      expectedCheckIns: daysIntoWeek,
+      lastCheckIn: lastEntryMap.get(m.userId) || null,
+      currentStreak,
+      questionnaireStatus,
+    }
+  })
+
+  // Sort: red first, then amber, then green
+  const priorityOrder = { red: 0, amber: 1, green: 2 }
+  overview.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority] || b.score - a.score)
+
+  return overview
 }

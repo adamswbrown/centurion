@@ -1,7 +1,7 @@
 "use server"
 
 import { z } from "zod"
-import { CohortStatus, MembershipStatus } from "@prisma/client"
+import { CohortStatus, CohortType, MembershipStatus } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { requireAdmin, requireCoach } from "@/lib/auth"
 import { sendSystemEmail } from "@/lib/email"
@@ -11,7 +11,10 @@ const createCohortSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   startDate: z.string().min(1, "Start date is required"),
-  endDate: z.string().min(1, "End date is required"),
+  endDate: z.string().optional(),
+  type: z.nativeEnum(CohortType).optional().nullable(),
+  customCohortTypeId: z.number().int().positive().optional().nullable(),
+  membershipDurationMonths: z.number().int().positive().optional().nullable(),
 })
 
 const updateCohortSchema = z.object({
@@ -19,7 +22,10 @@ const updateCohortSchema = z.object({
   name: z.string().min(1, "Name is required").optional(),
   description: z.string().optional(),
   startDate: z.string().optional(),
-  endDate: z.string().optional(),
+  endDate: z.string().optional().nullable(),
+  type: z.nativeEnum(CohortType).optional().nullable(),
+  customCohortTypeId: z.number().int().positive().optional().nullable(),
+  membershipDurationMonths: z.number().int().positive().optional().nullable(),
 })
 
 export type CreateCohortInput = z.infer<typeof createCohortSchema>
@@ -92,13 +98,23 @@ export async function createCohort(input: CreateCohortInput) {
     throw new Error(result.error.errors[0].message)
   }
 
-  const { name, description, startDate, endDate } = result.data
+  const { name, description, startDate, endDate, type, customCohortTypeId, membershipDurationMonths } = result.data
 
   const start = new Date(startDate)
-  const end = new Date(endDate)
+  const end = endDate ? new Date(endDate) : null
 
-  if (end <= start) {
+  if (end && end <= start) {
     throw new Error("End date must be after start date")
+  }
+
+  // TIMED cohorts require an end date
+  if (type === "TIMED" && !end) {
+    throw new Error("Timed cohorts require an end date")
+  }
+
+  // CUSTOM type requires a customCohortTypeId
+  if (type === "CUSTOM" && !customCohortTypeId) {
+    throw new Error("Custom cohort type must be selected for CUSTOM type")
   }
 
   const existing = await prisma.cohort.findFirst({
@@ -116,6 +132,9 @@ export async function createCohort(input: CreateCohortInput) {
       startDate: start,
       endDate: end,
       status: "ACTIVE",
+      type: type || null,
+      customCohortTypeId: type === "CUSTOM" ? customCohortTypeId : null,
+      membershipDurationMonths: type === "ONGOING" ? membershipDurationMonths : null,
     },
   })
 
@@ -130,7 +149,7 @@ export async function updateCohort(input: UpdateCohortInput) {
     throw new Error(result.error.errors[0].message)
   }
 
-  const { id, name, description, startDate, endDate } = result.data
+  const { id, name, description, startDate, endDate, type, customCohortTypeId, membershipDurationMonths } = result.data
 
   const cohort = await prisma.cohort.findUnique({
     where: { id },
@@ -144,7 +163,10 @@ export async function updateCohort(input: UpdateCohortInput) {
     name?: string
     description?: string | null
     startDate?: Date
-    endDate?: Date
+    endDate?: Date | null
+    type?: CohortType | null
+    customCohortTypeId?: number | null
+    membershipDurationMonths?: number | null
   } = {}
 
   if (name !== undefined) {
@@ -171,11 +193,31 @@ export async function updateCohort(input: UpdateCohortInput) {
   }
 
   if (endDate !== undefined) {
-    updateData.endDate = new Date(endDate)
+    updateData.endDate = endDate ? new Date(endDate) : null
+  }
+
+  if (type !== undefined) {
+    updateData.type = type
+    // Clear custom type if not CUSTOM
+    if (type !== "CUSTOM") {
+      updateData.customCohortTypeId = null
+    }
+    // Clear duration if not ONGOING
+    if (type !== "ONGOING") {
+      updateData.membershipDurationMonths = null
+    }
+  }
+
+  if (customCohortTypeId !== undefined) {
+    updateData.customCohortTypeId = customCohortTypeId
+  }
+
+  if (membershipDurationMonths !== undefined) {
+    updateData.membershipDurationMonths = membershipDurationMonths
   }
 
   const finalStartDate = updateData.startDate || cohort.startDate
-  const finalEndDate = updateData.endDate || cohort.endDate
+  const finalEndDate = updateData.endDate !== undefined ? updateData.endDate : cohort.endDate
 
   if (finalEndDate && finalEndDate <= finalStartDate) {
     throw new Error("End date must be after start date")

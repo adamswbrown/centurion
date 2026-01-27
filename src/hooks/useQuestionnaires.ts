@@ -106,3 +106,18 @@ export function useQuestionnaires() {
     },
   })
 }
+
+// Hook for per-member questionnaire status (coach dashboard tab)
+export function useQuestionnaireStatusForCoach(
+  cohortId?: number,
+  weekNumber?: number
+) {
+  return useQuery({
+    queryKey: ["questionnaire-status-coach", cohortId, weekNumber],
+    queryFn: async () => {
+      const { getQuestionnaireStatusForCoach } = await import("@/app/actions/questionnaires")
+      return getQuestionnaireStatusForCoach(cohortId, weekNumber)
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+}

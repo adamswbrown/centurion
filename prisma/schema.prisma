@@ -61,6 +61,17 @@ model User {
   accounts      Account[]
   sessions      Session[]
 
+  // Legal & Consent
+  consent        UserConsent?
+
+  // User Personalization
+  goals              UserGoals?
+  preferences        UserPreference?
+  checkInFrequencyDays Int?  // Override cohort and system default
+
+  // Cohort Types (Phase 3 - C8)
+  customCohortTypes  CustomCohortType[]
+
   @@map("users")
   @@index([email])
   @@index([role])
@@ -116,6 +127,31 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+// ============================================
+// LEGAL & CONSENT
+// ============================================
+
+model UserConsent {
+  id              Int       @id @default(autoincrement())
+  userId          Int       @unique
+  termsAccepted   DateTime
+  privacyAccepted DateTime
+  dataProcessing  DateTime
+  marketing       DateTime? // Optional marketing opt-in
+  version         String    // e.g. "1.0.0" - tracks which version of terms
+  ipAddress       String?
+  userAgent       String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_consents")
+  @@index([userId])
+  @@index([createdAt])
 }
 
 // ============================================
@@ -258,6 +294,14 @@ model Cohort {
   endDate     DateTime?
   status      CohortStatus @default(ACTIVE)
 
+  checkInFrequencyDays Int?  // Override system default
+
+  // Cohort type (Phase 3 - C8)
+  type                   CohortType?
+  customCohortTypeId     Int?
+  customCohortType       CustomCohortType? @relation(fields: [customCohortTypeId], references: [id], onDelete: Restrict)
+  membershipDurationMonths Int?   // For ONGOING type cohorts
+
   coaches     CoachCohortMembership[]
   members     CohortMembership[]
   bundles     QuestionnaireBundle[]
@@ -272,6 +316,8 @@ model Cohort {
   @@index([startDate])
   @@index([status, startDate])
   @@index([name])
+  @@index([type])
+  @@index([customCohortTypeId])
 }
 
 enum CohortStatus {
@@ -615,4 +661,98 @@ model WeeklyCoachResponse {
   @@index([coachId, clientId])
   @@index([weekStart])
   @@index([clientId])
+}
+
+// ============================================
+// USER PERSONALIZATION
+// ============================================
+
+model UserGoals {
+  id                   Int      @id @default(autoincrement())
+  userId               Int      @unique
+  currentWeightKg      Float?
+  targetWeightKg       Float?
+  heightCm             Float?
+  dailyCaloriesKcal    Int?
+  proteinGrams         Float?
+  carbGrams            Float?
+  fatGrams             Float?
+  waterIntakeMl        Int?
+  dailyStepsTarget     Int?
+  weeklyWorkoutMinutes Int?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_goals")
+  @@index([userId])
+}
+
+model UserPreference {
+  id              Int      @id @default(autoincrement())
+  userId          Int      @unique
+  weightUnit      String   @default("lbs")       // "lbs" | "kg"
+  measurementUnit String   @default("inches")     // "inches" | "cm"
+  dateFormat      String   @default("MM/dd/yyyy") // "MM/dd/yyyy" | "dd/MM/yyyy" | "yyyy-MM-dd"
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_preferences")
+  @@index([userId])
+}
+
+// ============================================
+// EMAIL TEMPLATES (Phase 3 - C5)
+// ============================================
+
+model EmailTemplate {
+  id              Int      @id @default(autoincrement())
+  key             String   @unique        // e.g. "welcome_client"
+  name            String                  // Human-readable name
+  description     String?                 // What this template is for
+  subjectTemplate String                  // Subject with {{tokens}}
+  bodyTemplate    String   @db.Text       // HTML body with {{tokens}}
+  textTemplate    String   @db.Text       // Plain text version
+  availableTokens String[]               // List of valid tokens for this template
+  enabled         Boolean  @default(true)
+  isSystem        Boolean  @default(true) // System templates can't be deleted
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("email_templates")
+  @@index([key])
+  @@index([enabled])
+}
+
+// ============================================
+// COHORT TYPES (Phase 3 - C8)
+// ============================================
+
+enum CohortType {
+  TIMED
+  ONGOING
+  CHALLENGE
+  CUSTOM
+}
+
+model CustomCohortType {
+  id          Int      @id @default(autoincrement())
+  label       String   @unique
+  description String?
+  createdBy   Int
+
+  creator User     @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+  cohorts Cohort[]
+
+  createdAt DateTime @default(now())
+
+  @@map("custom_cohort_types")
+  @@index([createdBy])
+  @@index([createdAt])
 }

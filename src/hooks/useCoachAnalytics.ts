@@ -4,6 +4,7 @@ import {
   getMemberCheckInData,
   getCoachCohortMembers,
   calculateAttentionScore,
+  getCoachMembersOverview,
 } from "@/app/actions/coach-analytics"
 
 /**
@@ -43,5 +44,14 @@ export function useAttentionScore(memberId: number | null) {
     queryFn: () => memberId ? calculateAttentionScore(memberId) : null,
     enabled: !!memberId,
     staleTime: 5 * 60 * 1000,
+  })
+}
+
+export function useCoachMembersOverview() {
+  return useQuery({
+    queryKey: ["coach-members-overview"],
+    queryFn: () => getCoachMembersOverview(),
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 10 * 60 * 1000,
   })
 }

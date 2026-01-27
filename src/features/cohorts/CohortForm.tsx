@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -17,21 +17,39 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useCreateCohort } from "@/hooks/useCohorts"
+import { getCustomCohortTypes } from "@/app/actions/cohort-types"
 import { useRouter } from "next/navigation"
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   startDate: z.string().min(1, "Start date is required"),
-  endDate: z.string().min(1, "End date is required"),
+  endDate: z.string().optional(),
+  type: z.enum(["TIMED", "ONGOING", "CHALLENGE", "CUSTOM", ""]).optional(),
+  customCohortTypeId: z.string().optional(),
+  membershipDurationMonths: z.string().optional(),
 })
 
 type FormData = z.infer<typeof formSchema>
 
+interface CustomCohortTypeOption {
+  id: number
+  label: string
+  description: string | null
+}
+
 export function CohortForm() {
   const [open, setOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [customTypes, setCustomTypes] = useState<CustomCohortTypeOption[]>([])
   const createCohort = useCreateCohort()
   const router = useRouter()
 
@@ -40,31 +58,69 @@ export function CohortForm() {
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
+    setValue,
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      type: "",
+    },
   })
+
+  const selectedType = watch("type")
+
+  useEffect(() => {
+    if (open) {
+      getCustomCohortTypes()
+        .then((types) => setCustomTypes(types))
+        .catch(() => setCustomTypes([]))
+    }
+  }, [open])
 
   const onSubmit = (data: FormData) => {
     setError(null)
 
     const start = new Date(data.startDate)
-    const end = new Date(data.endDate)
+    const end = data.endDate ? new Date(data.endDate) : undefined
 
-    if (end <= start) {
+    if (end && end <= start) {
       setError("End date must be after start date")
       return
     }
 
-    createCohort.mutate(data, {
-      onSuccess: (cohort) => {
-        setOpen(false)
-        reset()
-        router.push(`/cohorts/${cohort.id}`)
+    if (data.type === "TIMED" && !data.endDate) {
+      setError("Timed cohorts require an end date")
+      return
+    }
+
+    if (data.type === "CUSTOM" && !data.customCohortTypeId) {
+      setError("Please select a custom cohort type")
+      return
+    }
+
+    createCohort.mutate(
+      {
+        name: data.name,
+        description: data.description,
+        startDate: data.startDate,
+        endDate: data.endDate,
+        type: data.type ? (data.type as "TIMED" | "ONGOING" | "CHALLENGE" | "CUSTOM") : undefined,
+        customCohortTypeId: data.customCohortTypeId ? Number(data.customCohortTypeId) : undefined,
+        membershipDurationMonths: data.membershipDurationMonths
+          ? Number(data.membershipDurationMonths)
+          : undefined,
       },
-      onError: (err) => {
-        setError(err instanceof Error ? err.message : "Failed to create cohort")
-      },
-    })
+      {
+        onSuccess: (cohort) => {
+          setOpen(false)
+          reset()
+          router.push(`/cohorts/${cohort.id}`)
+        },
+        onError: (err) => {
+          setError(err instanceof Error ? err.message : "Failed to create cohort")
+        },
+      }
+    )
   }
 
   return (
@@ -108,6 +164,78 @@ export function CohortForm() {
             />
           </div>
 
+          {/* Cohort Type */}
+          <div className="space-y-2">
+            <Label htmlFor="type">Cohort Type</Label>
+            <Select
+              value={selectedType || ""}
+              onValueChange={(value) => setValue("type", value as FormData["type"])}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select type (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="TIMED">Timed</SelectItem>
+                <SelectItem value="ONGOING">Ongoing</SelectItem>
+                <SelectItem value="CHALLENGE">Challenge</SelectItem>
+                <SelectItem value="CUSTOM">Custom</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground">
+              {selectedType === "TIMED" && "Has a fixed start and end date."}
+              {selectedType === "ONGOING" && "No fixed end date, with optional membership duration."}
+              {selectedType === "CHALLENGE" && "A time-limited challenge program."}
+              {selectedType === "CUSTOM" && "Select a custom type defined by your admin."}
+              {!selectedType && "Optional. Categorize your cohort."}
+            </p>
+          </div>
+
+          {/* Custom Type Selector */}
+          {selectedType === "CUSTOM" && (
+            <div className="space-y-2">
+              <Label htmlFor="customCohortTypeId">Custom Type</Label>
+              <Select
+                value={watch("customCohortTypeId") || ""}
+                onValueChange={(value) => setValue("customCohortTypeId", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select custom type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {customTypes.map((ct) => (
+                    <SelectItem key={ct.id} value={String(ct.id)}>
+                      {ct.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {customTypes.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  No custom types defined. Create them in Admin Settings first.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Membership Duration for ONGOING */}
+          {selectedType === "ONGOING" && (
+            <div className="space-y-2">
+              <Label htmlFor="membershipDurationMonths">
+                Membership Duration (months)
+              </Label>
+              <Input
+                id="membershipDurationMonths"
+                type="number"
+                min={1}
+                {...register("membershipDurationMonths")}
+                placeholder="e.g., 3"
+              />
+              <p className="text-sm text-muted-foreground">
+                Optional. How long each member stays in the cohort.
+              </p>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="startDate">Start Date</Label>
@@ -120,7 +248,9 @@ export function CohortForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="endDate">End Date</Label>
+              <Label htmlFor="endDate">
+                End Date{selectedType === "ONGOING" ? " (optional)" : ""}
+              </Label>
               <Input id="endDate" type="date" {...register("endDate")} />
               {errors.endDate && (
                 <p className="text-sm text-destructive">

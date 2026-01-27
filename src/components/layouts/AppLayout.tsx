@@ -7,6 +7,7 @@ import { MobileNav } from "./MobileNav"
 import type { Session } from "next-auth"
 import { ToastProvider } from "@/components/providers/ToastProvider"
 import { ViewModeProvider } from "@/contexts/ViewModeContext"
+import { ConsentBanner } from "@/features/consent/ConsentBanner"
 
 interface AppLayoutProps {
   session: Session
@@ -18,6 +19,7 @@ export function AppLayout({ session, children }: AppLayoutProps) {
 
   return (
     <ViewModeProvider userRole={session.user.role}>
+      <ConsentBanner />
       <div className="flex h-screen overflow-hidden">
         <Sidebar userRole={session.user.role} />
         <MobileNav

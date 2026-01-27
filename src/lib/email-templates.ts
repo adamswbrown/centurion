@@ -46,6 +46,7 @@ const TOKEN_WHITELIST = [
   "invoiceMonth",
   "paymentUrl",
   "loomUrl",
+  "resetUrl",
 ] as const
 
 export type EmailToken = (typeof TOKEN_WHITELIST)[number]
@@ -68,6 +69,7 @@ export interface EmailVariables {
   invoiceMonth?: string
   paymentUrl?: string
   loomUrl?: string
+  resetUrl?: string
 }
 
 export interface RenderedEmail {
@@ -148,11 +150,12 @@ const DEFAULT_TEMPLATES: Record<EmailTemplateKey, { subject: string; body: strin
       <h1>Password Reset Request</h1>
       <p>Hi {{userName}},</p>
       <p>You requested to reset your password. Click the link below to set a new password:</p>
-      <p><a href="{{loginUrl}}">Reset Password</a></p>
+      <p><a href="{{resetUrl}}">Reset Password</a></p>
+      <p>This link will expire in 1 hour.</p>
       <p>If you didn't request this, please ignore this email.</p>
       <p>Best regards,<br>The Centurion Team</p>
     `,
-    text: "Password Reset Request for {{userName}}. Click here to reset: {{loginUrl}}. If you didn't request this, please ignore this email.",
+    text: "Password Reset Request for {{userName}}. Click here to reset: {{resetUrl}}. This link expires in 1 hour. If you didn't request this, please ignore this email.",
   },
 
   // Invitations
@@ -296,13 +299,40 @@ const DEFAULT_TEMPLATES: Record<EmailTemplateKey, { subject: string; body: strin
 }
 
 /**
- * Renders an email template with the provided variables
+ * Renders an email template with the provided variables.
+ * Checks the database first for DB-stored templates, falls back to hardcoded defaults.
  */
-export function renderEmailTemplate(
+export async function renderEmailTemplate(
   key: EmailTemplateKey,
   variables: EmailVariables
-): RenderedEmail | null {
+): Promise<RenderedEmail | null> {
   try {
+    // 1. Try to find template in DB
+    let dbTemplate: { subjectTemplate: string; bodyTemplate: string; textTemplate: string; enabled: boolean } | null = null
+    try {
+      const { prisma } = await import("@/lib/prisma")
+      dbTemplate = await prisma.emailTemplate.findUnique({
+        where: { key },
+        select: {
+          subjectTemplate: true,
+          bodyTemplate: true,
+          textTemplate: true,
+          enabled: true,
+        },
+      })
+    } catch {
+      // DB lookup failed (e.g. table doesn't exist yet) - fall through to defaults
+    }
+
+    if (dbTemplate && dbTemplate.enabled) {
+      return {
+        subject: substituteTokens(dbTemplate.subjectTemplate, variables, false),
+        html: substituteTokens(dbTemplate.bodyTemplate, variables, true),
+        text: substituteTokens(dbTemplate.textTemplate, variables, false),
+      }
+    }
+
+    // 2. Fall back to hardcoded template
     const template = DEFAULT_TEMPLATES[key]
 
     if (!template) {
@@ -311,9 +341,9 @@ export function renderEmailTemplate(
     }
 
     return {
-      subject: substituteTokens(template.subject, variables, false), // No escaping for subject
-      html: substituteTokens(template.body, variables, true), // Escape for HTML
-      text: substituteTokens(template.text, variables, false), // No escaping for plain text
+      subject: substituteTokens(template.subject, variables, false),
+      html: substituteTokens(template.body, variables, true),
+      text: substituteTokens(template.text, variables, false),
     }
   } catch (error) {
     console.error(`Error rendering email template ${key}:`, error)

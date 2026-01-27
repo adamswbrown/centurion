@@ -99,8 +99,8 @@ export async function sendSystemEmail(
   } = options
 
   try {
-    // Try to render from template
-    const rendered = renderEmailTemplate(templateKey, variables)
+    // Try to render from template (async - checks DB first, falls back to hardcoded)
+    const rendered = await renderEmailTemplate(templateKey, variables)
 
     let subject: string
     let html: string

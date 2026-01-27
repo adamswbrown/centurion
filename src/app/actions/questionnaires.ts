@@ -3,7 +3,8 @@
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
-import { ResponseStatus } from "@prisma/client"
+import { requireCoach } from "@/lib/auth"
+import { ResponseStatus, MembershipStatus } from "@prisma/client"
 
 const createBundleSchema = z.object({
   cohortId: z.number().int().positive(),
@@ -486,4 +487,106 @@ export async function getOrCreateQuestionnaireBundle(cohortId: number, weekNumbe
   }
 
   return bundle
+}
+
+/**
+ * Per-member questionnaire completion status for coach dashboard.
+ */
+export interface QuestionnaireStatusRow {
+  memberId: number
+  memberName: string | null
+  memberEmail: string
+  cohortName: string
+  weekNumber: number
+  status: "COMPLETED" | "IN_PROGRESS" | "NOT_STARTED"
+  submittedAt: Date | null
+  responseCount: number
+}
+
+export async function getQuestionnaireStatusForCoach(
+  cohortId?: number,
+  weekNumber?: number
+): Promise<QuestionnaireStatusRow[]> {
+  const user = await requireCoach()
+  const isAdmin = user.role === "ADMIN"
+
+  // Get cohorts the coach can see
+  let cohortIds: number[]
+  if (cohortId) {
+    cohortIds = [cohortId]
+  } else if (isAdmin) {
+    const allCohorts = await prisma.cohort.findMany({
+      where: { status: "ACTIVE" },
+      select: { id: true },
+    })
+    cohortIds = allCohorts.map((c) => c.id)
+  } else {
+    const coachCohorts = await prisma.coachCohortMembership.findMany({
+      where: { coachId: Number(user.id) },
+      select: { cohortId: true },
+    })
+    cohortIds = coachCohorts.map((c) => c.cohortId)
+  }
+
+  if (cohortIds.length === 0) return []
+
+  // Get active bundles for these cohorts
+  const bundles = await prisma.questionnaireBundle.findMany({
+    where: {
+      cohortId: { in: cohortIds },
+      isActive: true,
+      ...(weekNumber ? { weekNumber } : {}),
+    },
+    include: {
+      cohort: {
+        select: {
+          id: true,
+          name: true,
+          members: {
+            where: { status: MembershipStatus.ACTIVE },
+            include: {
+              user: { select: { id: true, name: true, email: true } },
+            },
+          },
+        },
+      },
+      responses: {
+        select: {
+          userId: true,
+          status: true,
+          updatedAt: true,
+          responses: true,
+        },
+      },
+    },
+    orderBy: [{ cohortId: "asc" }, { weekNumber: "desc" }],
+  })
+
+  const rows: QuestionnaireStatusRow[] = []
+
+  for (const bundle of bundles) {
+    const responseMap = new Map(
+      bundle.responses.map((r) => [r.userId, r])
+    )
+
+    for (const membership of bundle.cohort.members) {
+      const response = responseMap.get(membership.user.id)
+      const responseData = response?.responses as Record<string, unknown> | null
+
+      rows.push({
+        memberId: membership.user.id,
+        memberName: membership.user.name,
+        memberEmail: membership.user.email,
+        cohortName: bundle.cohort.name,
+        weekNumber: bundle.weekNumber,
+        status: response
+          ? (response.status as "COMPLETED" | "IN_PROGRESS")
+          : "NOT_STARTED",
+        submittedAt: response?.updatedAt || null,
+        responseCount: responseData ? Object.keys(responseData).length : 0,
+      })
+    }
+  }
+
+  return rows
 }

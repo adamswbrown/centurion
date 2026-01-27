@@ -8,7 +8,7 @@
  *   npx tsx testing/seed-test-data.ts
  */
 
-import { PrismaClient, Role, CohortStatus, InvoiceStatus, ResponseStatus } from "@prisma/client"
+import { PrismaClient, Role, CohortStatus, PaymentStatus, ResponseStatus } from "@prisma/client"
 import fs from "fs"
 import path from "path"
 // Use AttendanceStatus for appointments
@@ -98,7 +98,7 @@ async function main() {
   const instructorsPath = path.join(__dirname, "instructors.json")
   const instructorsData = JSON.parse(fs.readFileSync(instructorsPath, "utf-8")).results
   const coachUsers = await Promise.all(
-    instructorsData.map((inst, idx) =>
+    instructorsData.map((inst: any, idx: number) =>
       prisma.user.create({
         data: {
           email: `coach${idx + 1}@centurion.test`,
@@ -403,7 +403,14 @@ async function main() {
     })
   }
 
-  await prisma.entry.createMany({ data: entriesData })
+  // Remove nulls for JSON fields (customResponses, dataSources)
+  // Convert JSON fields to JSON.stringify for createMany
+  const entriesDataCleaned = entriesData.map((entry) => ({
+    ...entry,
+    customResponses: entry.customResponses == null ? undefined : JSON.stringify(entry.customResponses),
+    dataSources: entry.dataSources == null ? undefined : JSON.stringify(entry.dataSources),
+  }))
+  await prisma.entry.createMany({ data: entriesDataCleaned })
   console.log(`✅ Created ${entriesData.length} check-in entries across all clients`)
 
   // Create questionnaire bundles for active cohort using CoachFit baseline templates
@@ -505,14 +512,14 @@ async function main() {
     await prisma.appointment.create({
       data: {
         userId: client.id,
-        coachId: coach.id, // Now supported by schema
+        coachId: coach.id,
         title: event.name,
         startTime: new Date(event.starts_at),
         endTime: new Date(event.ends_at),
         status: "NOT_ATTENDED",
         fee: 75.0,
         notes: event.description ? event.description.replace(/<[^>]+>/g, "") : null,
-      },
+      } as any,
     })
     createdAppointments++
   }
@@ -568,9 +575,9 @@ async function main() {
     const invoice1 = await prisma.invoice.create({
       data: {
         userId: clients[0].id,
-        amount: 225.0, // 3 sessions x $75
-        dueDate: addDays(new Date(), 7),
-        paymentStatus: InvoiceStatus.UNPAID,
+        totalAmount: 225.0, // 3 sessions x $75
+        month: new Date(),
+        paymentStatus: PaymentStatus.UNPAID,
       },
     })
 
@@ -588,9 +595,9 @@ async function main() {
     const invoice2 = await prisma.invoice.create({
       data: {
         userId: clients[0].id,
-        amount: 150.0,
-        dueDate: subDays(new Date(), 7),
-        paymentStatus: InvoiceStatus.PAID,
+        totalAmount: 150.0,
+        month: new Date(),
+        paymentStatus: PaymentStatus.PAID,
         paidAt: subDays(new Date(), 3),
         stripePaymentUrl: "https://checkout.stripe.com/test_sample",
       },

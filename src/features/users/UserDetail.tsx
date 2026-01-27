@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { CreditAllocationForm, CreditBalanceWidget, CreditHistoryTable } from "@/features/credits"
+import { UserCheckInFrequency } from "./UserCheckInFrequency"
 
 interface UserDetailProps {
   user: {
@@ -25,6 +26,7 @@ interface UserDetailProps {
     email: string
     role: string
     credits: number
+    checkInFrequencyDays: number | null
     createdAt: Date
     appointmentsAsClient: Array<{
       id: number
@@ -203,6 +205,12 @@ export function UserDetail({ user }: UserDetailProps) {
           )}
         </div>
       </div>
+
+      {/* Check-in Frequency Override */}
+      <UserCheckInFrequency
+        userId={user.id}
+        currentFrequency={user.checkInFrequencyDays}
+      />
 
       {/* Appointments */}
       <div className="rounded-md border p-4">

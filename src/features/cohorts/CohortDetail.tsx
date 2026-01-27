@@ -29,6 +29,7 @@ import { CoachAssignment } from "./CoachAssignment"
 import { MemberManagement } from "./MemberManagement"
 import { CohortAnalytics } from "./CohortAnalytics"
 import { CheckInConfigEditor } from "./CheckInConfigEditor"
+import { CohortCheckInFrequency } from "./CohortCheckInFrequency"
 import { CohortStatus } from "@prisma/client"
 
 interface CohortDetailProps {
@@ -39,6 +40,7 @@ interface CohortDetailProps {
     startDate: Date
     endDate: Date | null
     status: CohortStatus
+    checkInFrequencyDays: number | null
     members: Array<{
       status: "ACTIVE" | "PAUSED" | "INACTIVE"
       joinedAt: Date
@@ -265,6 +267,11 @@ export function CohortDetail({ cohort }: CohortDetailProps) {
       </Card>
 
       <CohortAnalytics cohortId={cohort.id} />
+
+      <CohortCheckInFrequency
+        cohortId={cohort.id}
+        currentFrequency={cohort.checkInFrequencyDays}
+      />
 
       <CheckInConfigEditor cohortId={cohort.id} />
 
