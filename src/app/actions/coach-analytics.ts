@@ -242,14 +242,25 @@ async function calculateMemberAttentionScore(
  */
 export async function getCoachInsights(): Promise<CoachInsights> {
   const user = await requireCoach()
+  const isAdmin = user.role === "ADMIN"
 
-  // Get all cohorts where user is a coach
-  const coachCohorts = await prisma.coachCohortMembership.findMany({
-    where: { coachId: Number(user.id) },
-    select: { cohortId: true },
-  })
+  let cohortIds: number[]
 
-  const cohortIds = coachCohorts.map((c) => c.cohortId)
+  if (isAdmin) {
+    // Admin sees all active cohorts
+    const allCohorts = await prisma.cohort.findMany({
+      where: { status: "ACTIVE" },
+      select: { id: true },
+    })
+    cohortIds = allCohorts.map((c) => c.id)
+  } else {
+    // Coach sees only their assigned cohorts
+    const coachCohorts = await prisma.coachCohortMembership.findMany({
+      where: { coachId: Number(user.id) },
+      select: { cohortId: true },
+    })
+    cohortIds = coachCohorts.map((c) => c.cohortId)
+  }
 
   if (cohortIds.length === 0) {
     return {
@@ -399,41 +410,82 @@ export async function getMemberCheckInData(memberId: number): Promise<MemberChec
  */
 export async function getCoachCohortMembers() {
   const user = await requireCoach()
+  const isAdmin = user.role === "ADMIN"
 
-  // Get all cohorts where user is a coach
-  const coachCohorts = await prisma.coachCohortMembership.findMany({
-    where: { coachId: Number(user.id) },
-    select: {
-      cohort: {
-        select: {
-          id: true,
-          name: true,
-          members: {
-            where: { status: "ACTIVE" },
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  name: true,
-                  email: true,
-                  image: true,
+  let members: Array<{
+    id: number
+    name: string | null
+    email: string
+    image: string | null
+    cohortId: number
+    cohortName: string
+  }>
+
+  if (isAdmin) {
+    // Admin sees all active cohorts and their members
+    const allCohorts = await prisma.cohort.findMany({
+      where: { status: "ACTIVE" },
+      select: {
+        id: true,
+        name: true,
+        members: {
+          where: { status: "ACTIVE" },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    members = allCohorts.flatMap((cohort) =>
+      cohort.members.map((m) => ({
+        ...m.user,
+        cohortId: cohort.id,
+        cohortName: cohort.name,
+      }))
+    )
+  } else {
+    // Coach sees only their assigned cohorts
+    const coachCohorts = await prisma.coachCohortMembership.findMany({
+      where: { coachId: Number(user.id) },
+      select: {
+        cohort: {
+          select: {
+            id: true,
+            name: true,
+            members: {
+              where: { status: "ACTIVE" },
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    image: true,
+                  },
                 },
               },
             },
           },
         },
       },
-    },
-  })
+    })
 
-  // Flatten members with cohort info
-  const members = coachCohorts.flatMap((cc) =>
-    cc.cohort.members.map((m) => ({
-      ...m.user,
-      cohortId: cc.cohort.id,
-      cohortName: cc.cohort.name,
-    }))
-  )
+    members = coachCohorts.flatMap((cc) =>
+      cc.cohort.members.map((m) => ({
+        ...m.user,
+        cohortId: cc.cohort.id,
+        cohortName: cc.cohort.name,
+      }))
+    )
+  }
 
   // Deduplicate members (a member can be in multiple cohorts)
   const uniqueMembers = Array.from(

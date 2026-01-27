@@ -140,6 +140,9 @@ export default async function DashboardPage() {
               </p>
             </CardContent>
           </Card>
+
+          {/* Coach features for admin users */}
+          <CoachDashboard />
         </div>
       )}
     </AppLayout>

@@ -212,39 +212,199 @@ async function main() {
     },
   })
 
-  // Create daily check-in entries for active members
-  console.log("📊 Creating daily check-in entries...")
-  const entriesData = []
-  for (let i = 0; i < 14; i++) {
+  // Create full-featured daily check-in entries for all clients
+  console.log("📊 Creating full-featured check-in entries...")
+  const entriesData: Array<{
+    userId: number
+    date: Date
+    weight: number | null
+    steps: number | null
+    calories: number | null
+    sleepQuality: number | null
+    perceivedStress: number | null
+    notes: string | null
+    customResponses: Record<string, unknown> | null
+    dataSources: Record<string, string> | null
+  }> = []
+
+  const aliceNotes = [
+    "Feeling great today! Hit all my macros.",
+    "Legs are sore from yesterday's workout but pushed through cardio.",
+    "Meal prep paid off - stayed on plan all day.",
+    "Busy day at work, squeezed in a quick 30min session.",
+    "Rest day. Focused on stretching and recovery.",
+    "Morning run felt amazing, best pace this month!",
+    "Struggled with cravings in the evening but stayed strong.",
+    "Had a social dinner out - estimated calories as best I could.",
+    "Great sleep last night, woke up feeling refreshed.",
+    "Tough day mentally. Skipped the gym but hit step goal.",
+    "New PR on deadlift! Feeling strong.",
+    "Water intake was excellent today - 3L+.",
+    null,
+    null,
+    null,
+  ]
+
+  const bobNotes = [
+    "Getting into the groove finally.",
+    "Missed morning alarm, did evening workout instead.",
+    "Work stress made it hard to focus on nutrition.",
+    null,
+    null,
+    null,
+  ]
+
+  const charlieNotes = [
+    "Back at it after a break. Taking things slow.",
+    "Feeling motivated again after talking to coach.",
+    null,
+    null,
+  ]
+
+  // --- Alice (Client 1): Dedicated & consistent ---
+  // 42 days of daily check-ins showing a weight loss journey
+  for (let i = 0; i < 42; i++) {
     const date = startOfDay(subDays(new Date(), i))
-    // Client 1: Consistent daily check-ins
+    // Gradual weight loss from 182 to ~173 with natural fluctuation
+    const baseWeight = 182 - (i * 0.2)
+    const weightFluctuation = (Math.sin(i * 0.7) * 0.8) + (Math.random() * 0.6 - 0.3)
+    const weight = Math.round((baseWeight + weightFluctuation) * 10) / 10
+
+    // Steps: generally high with weekend peaks
+    const dayOfWeek = date.getDay()
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+    const baseSteps = isWeekend ? 12000 : 9000
+    const steps = baseSteps + Math.floor(Math.random() * 3000)
+
+    // Calories: disciplined, trending down slightly
+    const baseCals = 1900 - Math.floor(i * 2)
+    const calories = Math.max(1600, baseCals + Math.floor(Math.random() * 300 - 150))
+
+    // Sleep: generally good (7-9), occasional bad nights
+    const sleepQuality = i % 7 === 3 ? 4 + Math.floor(Math.random() * 2) : 7 + Math.floor(Math.random() * 3)
+
+    // Stress: low-moderate, spikes mid-week
+    const isWorkDay = dayOfWeek >= 1 && dayOfWeek <= 5
+    const perceivedStress = isWorkDay
+      ? 3 + Math.floor(Math.random() * 3)
+      : 1 + Math.floor(Math.random() * 3)
+
+    // High stress event around day 20
+    const stressOverride = (i >= 19 && i <= 22) ? 7 + Math.floor(Math.random() * 3) : null
+
     entriesData.push({
       userId: clients[0].id,
       date,
-      weight: 180 - i * 0.5, // Losing weight gradually
-      steps: 8000 + Math.floor(Math.random() * 4000),
-      calories: 1800 + Math.floor(Math.random() * 400),
-      sleepQuality: 6 + Math.floor(Math.random() * 4),
-      perceivedStress: 3 + Math.floor(Math.random() * 4),
-      notes: i === 0 ? "Feeling great today!" : null,
+      weight,
+      steps,
+      calories,
+      sleepQuality: Math.min(10, sleepQuality),
+      perceivedStress: stressOverride ?? Math.min(10, perceivedStress),
+      notes: aliceNotes[i % aliceNotes.length],
+      customResponses: i < 14 ? {
+        mood: ["great", "good", "okay", "tired", "energized"][Math.floor(Math.random() * 5)],
+        water_litres: Math.round((2 + Math.random() * 1.5) * 10) / 10,
+        protein_grams: 120 + Math.floor(Math.random() * 40),
+      } : null,
+      dataSources: i % 3 === 0
+        ? { weight: "manual", steps: "healthkit", calories: "myfitnesspal" }
+        : { weight: "manual", steps: "manual", calories: "manual" },
     })
-
-    // Client 2: Sporadic check-ins (only every 3 days)
-    if (i % 3 === 0) {
-      entriesData.push({
-        userId: clients[1].id,
-        date,
-        weight: 165,
-        steps: 10000 + Math.floor(Math.random() * 2000),
-        calories: 2000,
-        sleepQuality: 7,
-        perceivedStress: 4,
-        notes: null,
-      })
-    }
   }
+
+  // --- Bob (Client 2): Sporadic but improving ---
+  // ~20 entries over 42 days, getting more consistent recently
+  for (let i = 0; i < 42; i++) {
+    const date = startOfDay(subDays(new Date(), i))
+    // Recent weeks: check-in ~5/7 days. Older weeks: ~2/7 days
+    const recentConsistency = i < 14 ? 0.7 : i < 28 ? 0.4 : 0.25
+    if (Math.random() > recentConsistency) continue
+
+    const weight = Math.round((195 - i * 0.1 + Math.random() * 1.5 - 0.75) * 10) / 10
+    const steps = 6000 + Math.floor(Math.random() * 6000)
+    const calories = 2200 + Math.floor(Math.random() * 600 - 300)
+    const sleepQuality = 5 + Math.floor(Math.random() * 4)
+    const perceivedStress = 4 + Math.floor(Math.random() * 4)
+
+    entriesData.push({
+      userId: clients[1].id,
+      date,
+      weight,
+      steps,
+      calories,
+      sleepQuality: Math.min(10, sleepQuality),
+      perceivedStress: Math.min(10, perceivedStress),
+      notes: bobNotes[i % bobNotes.length],
+      customResponses: i < 7 ? {
+        mood: ["okay", "tired", "good"][Math.floor(Math.random() * 3)],
+        water_litres: Math.round((1.5 + Math.random() * 1) * 10) / 10,
+      } : null,
+      dataSources: { weight: "manual", steps: "manual", calories: "manual" },
+    })
+  }
+
+  // --- Charlie (Client 3): Paused member with historical data ---
+  // Check-ins from 60-20 days ago (before pause), then a few recent ones
+  for (let i = 20; i < 60; i++) {
+    const date = startOfDay(subDays(new Date(), i))
+    if (Math.random() > 0.6) continue // ~60% consistency before pause
+
+    const weight = Math.round((210 - (60 - i) * 0.15 + Math.random() * 2 - 1) * 10) / 10
+    const steps = 5000 + Math.floor(Math.random() * 4000)
+    const calories = 2400 + Math.floor(Math.random() * 400 - 200)
+    const sleepQuality = 4 + Math.floor(Math.random() * 4) // poorer sleep
+    const perceivedStress = 5 + Math.floor(Math.random() * 4) // higher stress
+
+    entriesData.push({
+      userId: clients[2].id,
+      date,
+      weight,
+      steps,
+      calories,
+      sleepQuality: Math.min(10, sleepQuality),
+      perceivedStress: Math.min(10, perceivedStress),
+      notes: charlieNotes[i % charlieNotes.length],
+      customResponses: null,
+      dataSources: { weight: "manual", steps: "manual", calories: "manual" },
+    })
+  }
+  // Charlie's recent comeback: 3 entries in last week
+  for (let i = 0; i < 3; i++) {
+    const date = startOfDay(subDays(new Date(), i * 2))
+    entriesData.push({
+      userId: clients[2].id,
+      date,
+      weight: Math.round((205 + Math.random() * 1.5) * 10) / 10,
+      steps: 4000 + Math.floor(Math.random() * 3000),
+      calories: 2300 + Math.floor(Math.random() * 300),
+      sleepQuality: 5 + Math.floor(Math.random() * 3),
+      perceivedStress: 6 + Math.floor(Math.random() * 3),
+      notes: i === 0 ? "First check-in back. Ready to restart." : null,
+      customResponses: null,
+      dataSources: { weight: "manual", steps: "manual", calories: "manual" },
+    })
+  }
+
+  // --- Diana (Client 4): Brand new, minimal data ---
+  // Just 3 entries from the last few days
+  for (let i = 0; i < 3; i++) {
+    const date = startOfDay(subDays(new Date(), i))
+    entriesData.push({
+      userId: clients[3].id,
+      date,
+      weight: i === 0 ? 155.0 : null, // Only weighed on first day
+      steps: 7000 + Math.floor(Math.random() * 2000),
+      calories: i < 2 ? 1800 + Math.floor(Math.random() * 200) : null, // Didn't track on day 3
+      sleepQuality: 7,
+      perceivedStress: 3,
+      notes: i === 0 ? "Just getting started! Excited to begin the program." : null,
+      customResponses: null,
+      dataSources: { steps: "healthkit" },
+    })
+  }
+
   await prisma.entry.createMany({ data: entriesData })
-  console.log(`✅ Created ${entriesData.length} check-in entries`)
+  console.log(`✅ Created ${entriesData.length} check-in entries across all clients`)
 
   // Create questionnaire bundles for active cohort using CoachFit baseline templates
   console.log("📝 Creating questionnaire bundles...")

@@ -42,14 +42,34 @@ export async function getMemberById(id: number) {
     include: {
       appointmentsAsClient: {
         orderBy: { startTime: "desc" },
-        take: 5,
+        take: 20,
+        include: {
+          coach: { select: { id: true, name: true } },
+        },
       },
       cohortMemberships: {
         include: { cohort: true },
       },
       invoices: {
         orderBy: { month: "desc" },
-        take: 5,
+        take: 10,
+      },
+      entries: {
+        orderBy: { date: "desc" },
+        take: 30,
+      },
+      questionnaireResponses: {
+        orderBy: { updatedAt: "desc" },
+        take: 20,
+        include: {
+          bundle: {
+            select: {
+              id: true,
+              weekNumber: true,
+              cohort: { select: { id: true, name: true } },
+            },
+          },
+        },
       },
     },
   })
