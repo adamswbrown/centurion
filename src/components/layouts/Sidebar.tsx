@@ -19,6 +19,8 @@ import {
   ClipboardList,
 } from "lucide-react"
 import type { Role } from "@prisma/client"
+import { useViewMode } from "@/contexts/ViewModeContext"
+import { ViewModeSwitcher } from "./ViewModeSwitcher"
 
 interface SidebarProps {
   userRole: Role
@@ -64,7 +66,8 @@ const navigation = {
 
 export function Sidebar({ userRole }: SidebarProps) {
   const pathname = usePathname()
-  const navItems = navigation[userRole] || navigation.CLIENT
+  const { effectiveNavRole } = useViewMode()
+  const navItems = navigation[effectiveNavRole] || navigation.CLIENT
 
   return (
     <div className="hidden md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col">
@@ -72,6 +75,9 @@ export function Sidebar({ userRole }: SidebarProps) {
         <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
           <div className="flex flex-shrink-0 items-center px-4">
             <h1 className="text-xl font-bold">Centurion</h1>
+          </div>
+          <div className="px-4 mt-3">
+            <ViewModeSwitcher />
           </div>
           <nav className="mt-8 flex-1 space-y-1 px-2">
             {navItems.map((item) => {

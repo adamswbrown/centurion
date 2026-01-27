@@ -130,7 +130,7 @@ Seed script run completed successfully. Test admin, coach, and client accounts c
 - Billing email field (separate from login email) - from PTP
 - Body fat percentage in entries - from CoachFit
 - Fitness Wrapped / Year-in-Review - from CoachFit
-- Role switcher for multi-role users - from CoachFit
+- ~~Role switcher for multi-role users - from CoachFit~~ **DONE**
 - Apple OAuth provider - from CoachFit
 - BMI calculation + unit conversions - from CoachFit
 
@@ -211,8 +211,15 @@ Seed script run completed successfully. Test admin, coach, and client accounts c
   - WeeklyQuestionnaireReport component: Completion tracking and status badges.
   - React Query hooks with 5-minute stale time and 10-minute auto-refresh.
   - Server actions: calculateAttentionScore, getCoachInsights, getMemberCheckInData, getCoachCohortMembers.
-  - Automatic data scoping to coach's cohorts only.
-  - Integrated into /dashboard page (conditional render for COACH role).
+  - Admin-aware data scoping: admin sees all active cohorts, coach sees only assigned cohorts.
+  - Integrated into /dashboard page (CoachDashboard shown for both admin and coach roles).
+- **Role Switcher** (from CoachFit):
+  - ViewModeContext: Client-side React Context with localStorage persistence (`centurion-view-mode` key)
+  - ViewModeSwitcher: Select dropdown in sidebar/mobile nav (Admin View / Coach View)
+  - Only visible for ADMIN users — COACH and CLIENT users see no switcher
+  - Switches navigation items between ADMIN and COACH nav arrays
+  - No schema, auth, or middleware changes — purely client-side view mode
+  - Integrated into AppLayout (ViewModeProvider), Sidebar, and MobileNav
 - Google Calendar integration module using service account credentials.
 - Interval timer PWA (standalone):
   - `/timer` route with timer engine, presets, and UI shell.
@@ -313,6 +320,9 @@ Seed script run completed successfully. Test admin, coach, and client accounts c
   - `/client/health` with daily check-in form and history
 - `/settings` user profile settings with name, email, password management
 - `/admin/settings` system settings with feature flags and configuration
+- Role Switcher:
+  - `src/contexts/ViewModeContext.tsx` (context + provider + useViewMode hook)
+  - `src/components/layouts/ViewModeSwitcher.tsx` (UI dropdown)
 - Timer PWA:
   - `src/app/timer/page.tsx`
   - `src/app/timer/TimerSwRegister.tsx`

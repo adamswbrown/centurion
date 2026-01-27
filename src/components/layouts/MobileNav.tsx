@@ -21,6 +21,8 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { Role } from "@prisma/client"
+import { useViewMode } from "@/contexts/ViewModeContext"
+import { ViewModeSwitcher } from "./ViewModeSwitcher"
 
 interface MobileNavProps {
   userRole: Role
@@ -68,7 +70,8 @@ const navigation = {
 
 export function MobileNav({ userRole, isOpen, onClose }: MobileNavProps) {
   const pathname = usePathname()
-  const navItems = navigation[userRole] || navigation.CLIENT
+  const { effectiveNavRole } = useViewMode()
+  const navItems = navigation[effectiveNavRole] || navigation.CLIENT
 
   if (!isOpen) return null
 
@@ -88,6 +91,9 @@ export function MobileNav({ userRole, isOpen, onClose }: MobileNavProps) {
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-6 w-6" />
             </Button>
+          </div>
+          <div className="px-4 pt-3">
+            <ViewModeSwitcher />
           </div>
           <nav className="flex-1 space-y-1 px-2 py-4 overflow-y-auto">
             {navItems.map((item) => {

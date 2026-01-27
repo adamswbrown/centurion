@@ -1,4 +1,33 @@
 # 2026-01-27
+
+## Role Switcher Implementation
+
+Implemented admin/coach view mode switcher (from CoachFit's RoleContext pattern).
+
+### Changes
+- **Created `src/contexts/ViewModeContext.tsx`**: React Context providing `viewMode` (admin/coach), `effectiveNavRole`, `canSwitch`, and `setViewMode`. Persists selection in localStorage under `centurion-view-mode`. Only ADMIN users can switch.
+- **Created `src/components/layouts/ViewModeSwitcher.tsx`**: Select dropdown with Shield/Users icons for "Admin View" / "Coach View". Only renders when `canSwitch` is true.
+- **Modified `src/components/layouts/AppLayout.tsx`**: Wrapped layout in `ViewModeProvider` passing `session.user.role`.
+- **Modified `src/components/layouts/Sidebar.tsx`**: Uses `effectiveNavRole` from context for nav item selection. Renders `ViewModeSwitcher` below heading.
+- **Modified `src/components/layouts/MobileNav.tsx`**: Same changes as Sidebar.
+
+### Coach Analytics Admin-Awareness
+- Updated `getCoachInsights()` and `getCoachCohortMembers()` in `coach-analytics.ts`: admin sees all active cohorts, coach sees only assigned cohorts.
+- Dashboard shows CoachDashboard for both admin and coach roles.
+
+### Member Detail Tabbed Interface
+- Rewrote `src/features/members/MemberDetail.tsx` with tabbed interface (Overview, Check-Ins, Questionnaires, Appointments).
+- Added questionnaire response viewer dialog with human-readable labels.
+
+### Seed Data Enhancement
+- Expanded check-in entries from 14 days/2 clients to 42+ days/4 clients with realistic patterns (88 entries total).
+
+### Build Verification
+- `npm run build` passes successfully with no errors.
+
+---
+
+# 2026-01-27
 ## Cross-Platform Feature Audit: CoachFit + PTP vs Centurion
 
 Ran comprehensive 3-way audit using parallel Explore agents against CoachFit, PTP (Personal Trainer Planner), and Centurion codebases.

@@ -6,6 +6,7 @@ import { Header } from "./Header"
 import { MobileNav } from "./MobileNav"
 import type { Session } from "next-auth"
 import { ToastProvider } from "@/components/providers/ToastProvider"
+import { ViewModeProvider } from "@/contexts/ViewModeContext"
 
 interface AppLayoutProps {
   session: Session
@@ -16,24 +17,26 @@ export function AppLayout({ session, children }: AppLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar userRole={session.user.role} />
-      <MobileNav
-        userRole={session.user.role}
-        isOpen={mobileMenuOpen}
-        onClose={() => setMobileMenuOpen(false)}
-      />
-      <div className="flex flex-1 flex-col overflow-hidden md:pl-64">
-        <Header
-          session={session}
-          onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
+    <ViewModeProvider userRole={session.user.role}>
+      <div className="flex h-screen overflow-hidden">
+        <Sidebar userRole={session.user.role} />
+        <MobileNav
+          userRole={session.user.role}
+          isOpen={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(false)}
         />
-        <ToastProvider>
-          <main className="flex-1 overflow-y-auto bg-muted/50 p-4">
-            {children}
-          </main>
-        </ToastProvider>
+        <div className="flex flex-1 flex-col overflow-hidden md:pl-64">
+          <Header
+            session={session}
+            onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
+          />
+          <ToastProvider>
+            <main className="flex-1 overflow-y-auto bg-muted/50 p-4">
+              {children}
+            </main>
+          </ToastProvider>
+        </div>
       </div>
-    </div>
+    </ViewModeProvider>
   )
 }
