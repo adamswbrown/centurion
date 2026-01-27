@@ -83,6 +83,7 @@ describe("Appointments Server Actions", () => {
 
       const result = await createAppointment({
         memberId: 10,
+        title: "Test Session",
         date: dateStr,
         startTime: "09:00",
         endTime: "10:00",
@@ -103,6 +104,7 @@ describe("Appointments Server Actions", () => {
       await expect(
         createAppointment({
           memberId: 1,
+          title: "Test Session",
           date: "2024-02-01",
           startTime: "09:00",
           endTime: "10:00",
@@ -117,6 +119,7 @@ describe("Appointments Server Actions", () => {
       await expect(
         createAppointment({
           memberId: 1,
+          title: "Test Session",
           date: "2024-02-01",
           startTime: "09:00",
           endTime: "10:00",
@@ -131,6 +134,7 @@ describe("Appointments Server Actions", () => {
       await expect(
         createAppointment({
           memberId: 1,
+          title: "Test Session",
           date: "2024-02-01",
           startTime: "10:00",
           endTime: "09:00", // End before start
@@ -143,6 +147,7 @@ describe("Appointments Server Actions", () => {
       await expect(
         createAppointment({
           memberId: 0, // Invalid: must be positive
+          title: "Test Session",
           date: "2024-02-01",
           startTime: "09:00",
           endTime: "10:00",
@@ -168,6 +173,7 @@ describe("Appointments Server Actions", () => {
       await expect(
         createAppointment({
           memberId: 1,
+          title: "Test Session",
           date: dateStr,
           startTime: "09:30", // Overlaps with existing
           endTime: "10:30",
@@ -195,6 +201,7 @@ describe("Appointments Server Actions", () => {
       const weekday = new Date(dateStr).getDay()
       const result = await createAppointment({
         memberId: 10,
+        title: "Test Session",
         date: dateStr,
         startTime: "09:00",
         endTime: "10:00",
@@ -223,6 +230,7 @@ describe("Appointments Server Actions", () => {
 
       const result = await createAppointment({
         memberId: 10,
+        title: "Test Session",
         date: dateStr,
         startTime: "09:00",
         endTime: "10:00",
@@ -257,6 +265,7 @@ describe("Appointments Server Actions", () => {
 
       await createAppointment({
         memberId: 10,
+        title: "Test Session",
         date: dateStr,
         startTime: "09:00",
         endTime: "10:00",
@@ -291,6 +300,7 @@ describe("Appointments Server Actions", () => {
 
       const result = await updateAppointment({
         id: 1,
+        title: "Updated Session",
         startTime: "10:00",
         endTime: "11:00",
         fee: 100,
@@ -306,6 +316,7 @@ describe("Appointments Server Actions", () => {
       await expect(
         updateAppointment({
           id: 999,
+          title: "Test Session",
           startTime: "10:00",
           endTime: "11:00",
           fee: 50,
@@ -334,6 +345,7 @@ describe("Appointments Server Actions", () => {
       await expect(
         updateAppointment({
           id: 1,
+          title: "Test Session",
           startTime: "10:00",
           endTime: "11:00",
           fee: 50,
@@ -359,6 +371,7 @@ describe("Appointments Server Actions", () => {
 
       const result = await updateAppointment({
         id: 1,
+        title: "Test Session",
         startTime: "09:00",
         endTime: "10:00",
         fee: 50,
@@ -387,6 +400,7 @@ describe("Appointments Server Actions", () => {
 
       await updateAppointment({
         id: 1,
+        title: "Test Session",
         startTime: "10:00",
         endTime: "11:00",
         fee: 50,
@@ -482,7 +496,17 @@ describe("Appointments Server Actions", () => {
       expect(result.user).toBeDefined()
       expect(mockPrisma.appointment.findUnique).toHaveBeenCalledWith({
         where: { id: 1 },
-        include: { user: { select: { id: true, name: true, email: true } } },
+        select: {
+          id: true,
+          title: true,
+          startTime: true,
+          endTime: true,
+          fee: true,
+          status: true,
+          notes: true,
+          googleEventId: true,
+          user: { select: { id: true, name: true, email: true } },
+        },
       })
     })
 

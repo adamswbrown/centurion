@@ -25,7 +25,7 @@ export async function getMembers() {
       createdAt: true,
       _count: {
         select: {
-          appointments: true,
+          appointmentsAsClient: true,
           cohortMemberships: true,
         },
       },
@@ -40,7 +40,7 @@ export async function getMemberById(id: number) {
   return await prisma.user.findUnique({
     where: { id, role: "CLIENT" },
     include: {
-      appointments: {
+      appointmentsAsClient: {
         orderBy: { startTime: "desc" },
         take: 5,
       },

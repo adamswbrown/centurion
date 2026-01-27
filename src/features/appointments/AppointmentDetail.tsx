@@ -18,7 +18,7 @@ import { extractTimeString } from "@/lib/calendar"
 interface AppointmentDetailProps {
   appointment: {
     id: number
-    title: string
+    title: string | null
     startTime: Date
     endTime: Date
     fee: any
@@ -45,7 +45,7 @@ export function AppointmentDetail({ appointment }: AppointmentDetailProps) {
 
   function handleUpdate(payload: {
     id: number
-    title: string
+    title?: string
     startTime: string
     endTime: string
     fee: number
@@ -54,7 +54,7 @@ export function AppointmentDetail({ appointment }: AppointmentDetailProps) {
   }) {
     setError(null)
     setMessage(null)
-    updateAppointment.mutate(payload, {
+    updateAppointment.mutate({ ...payload, title: payload.title ?? appointment.title ?? "" }, {
       onSuccess: () => setMessage("Appointment updated"),
       onError: (err) =>
         setError(err instanceof Error ? err.message : "Failed to update appointment"),
@@ -69,7 +69,7 @@ export function AppointmentDetail({ appointment }: AppointmentDetailProps) {
           <Input
             id="title"
             type="text"
-            defaultValue={appointment.title}
+            defaultValue={appointment.title ?? ""}
             onBlur={(event) =>
               handleUpdate({
                 id: appointment.id,

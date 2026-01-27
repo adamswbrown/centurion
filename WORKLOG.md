@@ -1,23 +1,58 @@
-# 2026-01-26
-Seed script completed successfully. Test accounts created:
+# 2026-01-27
+## Cross-Platform Feature Audit: CoachFit + PTP vs Centurion
 
-ADMIN:
-  Email: admin@centurion.test
-  Password: password123
+Ran comprehensive 3-way audit using parallel Explore agents against CoachFit, PTP (Personal Trainer Planner), and Centurion codebases.
 
-COACHES:
-  Email: coach@centurion.test (Sarah Coach)
-  Email: coach2@centurion.test (Mike Coach)
-  Password: password123
+### Audit Results Summary
+- **~65 features fully implemented** in Centurion
+- **~10 features where Centurion exceeds** source apps (Google OAuth, 3 roles, conflict detection, Stripe payments, capacity enforcement)
+- **~23 feature gaps** identified
 
-CLIENTS:
-  Email: client1@centurion.test (Alice - Active, many check-ins)
-  Email: client2@centurion.test (Bob - Active, few check-ins)
-  Email: client3@centurion.test (Charlie - Paused)
-  Email: client4@centurion.test (Diana - New)
-  Password: password123
+### Critical Gaps (HIGH Priority)
+1. **Password reset flow (email token)** - PTP has forgot/reset token flow; Centurion only has in-settings password change
+2. **User goals/targets** - CoachFit has UserGoals model (target weight, calories, macros, steps, workout mins); Centurion missing
+3. **User preferences** - CoachFit has weight unit (lbs/kg), date format; Centurion missing
+4. **Extended system settings** - CoachFit has 50+ configurable params (calorie limits, macro defaults, body fat categories, step categories, protein ranges); Centurion has basic settings
+5. **Email template admin editor** - CoachFit has DB-stored templates with admin CRUD UI + preview; Centurion has code-defined templates
+6. **Account deletion + data export (GDPR)** - CoachFit has both; Centurion missing
+7. **Consent management** - CoachFit has UserConsent model (terms, privacy, DPA, marketing opt-in); Centurion missing
+8. **Cohort types** - CoachFit has 4 enum types (TIMED/ONGOING/CHALLENGE/CUSTOM) + admin-created custom types; Centurion partial
+9. **Check-in frequency (3-level override)** - CoachFit supports global default → cohort override → user override; Centurion partial
 
-Appointments and bootcamps seeded from TeamUp and test data. All flows verified. Bootcamps are now multi-week programs, not appointments.
+### Medium Gaps
+1. **Workout CRUD** (PTP) - Standalone exercise tracking separate from appointments
+2. **Billing email** (PTP) - Separate billingEmail field for invoicing
+3. **Body fat percentage** (CoachFit) - Missing from entry fields
+4. **Fitness Wrapped / Year-in-Review** (CoachFit) - Annual stats with fun conversions
+5. **Role switcher** (CoachFit) - Multi-role users can't switch views
+6. **Apple OAuth** (CoachFit) - Missing sign-in provider
+7. **Entry height storage** (CoachFit) - Per-entry height tracking
+8. **BMI calculation + unit conversions** (CoachFit)
+
+### Low Gaps
+1. Appointment video URL (PTP)
+2. Dynamic forms / Contentful CMS (PTP)
+3. Sentry error monitoring (PTP)
+4. Vercel Analytics (PTP)
+5. Health check endpoint (PTP)
+6. Fetch retry with exponential backoff (CoachFit)
+7. HealthKit profile ingestion (CoachFit)
+8. Cohort migration tracking (CoachFit)
+
+### Where Centurion Exceeds Source Apps
+- Google OAuth (PTP has none)
+- 3 roles (PTP only has admin/user)
+- Appointment conflict/overlap detection (PTP lacks this)
+- Bootcamp capacity enforcement (PTP lacks this)
+- Stripe payment integration for invoices (PTP has plain email only)
+- Invoice payment status tracking (UNPAID/PAID/OVERDUE/CANCELLED)
+- CSV + JSON export (PTP has CSV only)
+- Week 6 questionnaire template (CoachFit has 1-5 only)
+- 14 email template types (CoachFit has 7)
+- Decimal precision for fees (PTP uses integer pence)
+
+---
+
 # 2026-01-26
 Seed script completed successfully. Test accounts created:
 

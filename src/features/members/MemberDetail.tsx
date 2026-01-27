@@ -28,7 +28,7 @@ interface MemberDetailProps {
     image: string | null
     createdAt: Date
     emailVerified: boolean
-    appointments: Array<{
+    appointmentsAsClient: Array<{
       id: number
       startTime: Date
       status: string
@@ -90,11 +90,11 @@ export function MemberDetail({ member }: MemberDetailProps) {
         <CardHeader>
           <CardTitle>Recent Appointments</CardTitle>
           <CardDescription>
-            {member.appointments.length} appointment(s)
+            {member.appointmentsAsClient.length} appointment(s)
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {member.appointments.length === 0 ? (
+          {member.appointmentsAsClient.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               No appointments yet
             </p>
@@ -108,7 +108,7 @@ export function MemberDetail({ member }: MemberDetailProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {member.appointments.map((apt) => (
+                {member.appointmentsAsClient.map((apt) => (
                   <TableRow key={apt.id}>
                     <TableCell>
                       {format(new Date(apt.startTime), "MMM dd, yyyy")}

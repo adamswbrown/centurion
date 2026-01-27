@@ -18,7 +18,7 @@ import Link from "next/link"
 interface AppointmentListProps {
   appointments: Array<{
     id: number
-    title: string
+    title: string | null
     startTime: Date
     endTime: Date
     fee: string

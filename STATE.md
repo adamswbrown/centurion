@@ -112,7 +112,29 @@ Seed script run completed successfully. Test admin, coach, and client accounts c
   - React Query hook: `useDeleteEntry()` with cache invalidation
   - Only entry owner can delete their own entries
 
-### Features Next Up
+### Features Next Up (from Cross-Platform Audit 2026-01-27)
+
+**Critical Gaps (HIGH Priority):**
+- Password reset flow with email token (PTP has it, Centurion missing)
+- User goals/targets model (target weight, calories, macros, steps, workout mins) - from CoachFit
+- User preferences (weight unit lbs/kg, date format) - from CoachFit
+- Extended system settings (calorie limits, macro defaults, body fat categories, step categories, protein ranges) - from CoachFit
+- Email template admin editor with DB storage, CRUD UI, and preview - from CoachFit
+- GDPR compliance: account deletion + data export - from CoachFit
+- Consent management (terms, privacy, DPA, marketing opt-in) - from CoachFit
+- Cohort types enum (TIMED/ONGOING/CHALLENGE/CUSTOM) + admin-created custom types - from CoachFit
+- Check-in frequency 3-level override (global → cohort → user) - from CoachFit
+
+**Medium Gaps:**
+- Workout CRUD (standalone exercise tracking) - from PTP
+- Billing email field (separate from login email) - from PTP
+- Body fat percentage in entries - from CoachFit
+- Fitness Wrapped / Year-in-Review - from CoachFit
+- Role switcher for multi-role users - from CoachFit
+- Apple OAuth provider - from CoachFit
+- BMI calculation + unit conversions - from CoachFit
+
+**Existing TODOs:**
 - Database migration for CreditTransaction and isTestUser fields
 - Cron job for weekly review queue reminders
 ## Project Summary
@@ -339,12 +361,19 @@ Seed script run completed successfully. Test admin, coach, and client accounts c
 - React Query provider registered in `src/app/layout.tsx` via `src/app/providers.tsx`.
 - Environment variables: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` (for production deployments).
 
+## Cross-Platform Audit (2026-01-27)
+- **~65 features implemented** from CoachFit + PTP
+- **~10 features where Centurion exceeds** source apps
+- **~23 feature gaps** identified (9 critical, 8 medium, 6 low)
+- Full audit details in WORKLOG.md entry for 2026-01-27
+
 ## Open TODOs
 - Consider adding global toast notifications for feedback (currently inline messages).
 - Run database migration for CreditTransaction and isTestUser fields (`npx prisma migrate dev`).
 - Add cron job for weekly review queue reminder notifications.
 - Consider adding print/PDF export for reports.
 - iOS app development for HealthKit sync.
+- Address 9 critical gaps from cross-platform audit (see Features Next Up).
 
 ## How to Run
 - `npm run dev` - Start development server

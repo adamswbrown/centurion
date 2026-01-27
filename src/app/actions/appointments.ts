@@ -77,7 +77,7 @@ export type CreateAppointmentResult = {
 export async function createAppointment(
   input: CreateAppointmentInput,
 ): Promise<CreateAppointmentResult> {
-  await requireCoach()
+  const coach = await requireCoach()
 
   const result = createAppointmentSchema.safeParse(input)
   if (!result.success) {
@@ -157,6 +157,7 @@ export async function createAppointment(
       prisma.appointment.create({
         data: {
           userId: memberId,
+          coachId: Number(coach.id),
           title,
           startTime: appointment.start,
           endTime: appointment.end,

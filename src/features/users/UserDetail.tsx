@@ -26,10 +26,29 @@ interface UserDetailProps {
     role: string
     credits: number
     createdAt: Date
-    appointments: Array<{ id: number; startTime: Date; endTime: Date }>
+    appointmentsAsClient: Array<{
+      id: number
+      title: string | null
+      startTime: Date
+      endTime: Date
+      status: string
+      notes: string | null
+      fee: any
+      coach: { id: number; name: string | null }
+    }>
     cohortMemberships: Array<{ id: number; cohort: { id: number; name: string } }>
     invoices: Array<{ id: number; month: Date; totalAmount: any; paymentStatus: string }>
     bootcampAttendees: Array<{ id: number; bootcamp: { id: number; name: string } }>
+    entries: Array<{
+      id: number
+      date: Date
+      weight: number | null
+      steps: number | null
+      calories: number | null
+      sleepQuality: number | null
+      perceivedStress: number | null
+      notes: string | null
+    }>
   }
 }
 
@@ -185,22 +204,94 @@ export function UserDetail({ user }: UserDetailProps) {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-md border p-4">
-          <h2 className="font-semibold mb-2">Recent Appointments</h2>
-          {user.appointments.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No appointments</p>
-          ) : (
-            <ul className="text-sm space-y-1">
-              {user.appointments.map((appt) => (
-                <li key={appt.id}>
-                  {format(new Date(appt.startTime), "MMM dd, yyyy h:mm a")}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+      {/* Appointments */}
+      <div className="rounded-md border p-4">
+        <h2 className="font-semibold mb-3">Appointments ({user.appointmentsAsClient.length})</h2>
+        {user.appointmentsAsClient.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No appointments</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Time</TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead>Coach</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Fee</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {user.appointmentsAsClient.map((appt) => {
+                const isPast = new Date(appt.endTime) < new Date()
+                const statusLabel = appt.status === "ATTENDED"
+                  ? "Attended"
+                  : isPast
+                    ? "Not Attended"
+                    : "Scheduled"
+                const statusVariant = appt.status === "ATTENDED"
+                  ? "default"
+                  : isPast
+                    ? "secondary"
+                    : "outline"
+                return (
+                  <TableRow key={appt.id}>
+                    <TableCell>{format(new Date(appt.startTime), "MMM dd, yyyy")}</TableCell>
+                    <TableCell>
+                      {format(new Date(appt.startTime), "h:mm a")} – {format(new Date(appt.endTime), "h:mm a")}
+                    </TableCell>
+                    <TableCell>{appt.title || "—"}</TableCell>
+                    <TableCell>{appt.coach?.name || "—"}</TableCell>
+                    <TableCell>
+                      <Badge variant={statusVariant as "default" | "destructive" | "secondary" | "outline"}>
+                        {statusLabel}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>${Number(appt.fee || 0).toFixed(2)}</TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        )}
+      </div>
 
+      {/* Check-In History */}
+      <div className="rounded-md border p-4">
+        <h2 className="font-semibold mb-3">Check-In History ({user.entries?.length || 0})</h2>
+        {!user.entries || user.entries.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No check-in data</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Weight</TableHead>
+                <TableHead>Steps</TableHead>
+                <TableHead>Calories</TableHead>
+                <TableHead>Sleep</TableHead>
+                <TableHead>Stress</TableHead>
+                <TableHead>Notes</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {user.entries.map((entry) => (
+                <TableRow key={entry.id}>
+                  <TableCell>{format(new Date(entry.date), "MMM dd, yyyy")}</TableCell>
+                  <TableCell>{entry.weight != null ? `${entry.weight} lbs` : "—"}</TableCell>
+                  <TableCell>{entry.steps != null ? entry.steps.toLocaleString() : "—"}</TableCell>
+                  <TableCell>{entry.calories != null ? entry.calories.toLocaleString() : "—"}</TableCell>
+                  <TableCell>{entry.sleepQuality != null ? `${entry.sleepQuality}/10` : "—"}</TableCell>
+                  <TableCell>{entry.perceivedStress != null ? `${entry.perceivedStress}/10` : "—"}</TableCell>
+                  <TableCell className="max-w-[200px] truncate">{entry.notes || "—"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
         <div className="rounded-md border p-4">
           <h2 className="font-semibold mb-2">Cohorts</h2>
           {user.cohortMemberships.length === 0 ? (
@@ -209,6 +300,19 @@ export function UserDetail({ user }: UserDetailProps) {
             <ul className="text-sm space-y-1">
               {user.cohortMemberships.map((membership) => (
                 <li key={membership.id}>{membership.cohort.name}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="rounded-md border p-4">
+          <h2 className="font-semibold mb-2">Bootcamps</h2>
+          {user.bootcampAttendees.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No bootcamps</p>
+          ) : (
+            <ul className="text-sm space-y-1">
+              {user.bootcampAttendees.map((att) => (
+                <li key={att.id}>{att.bootcamp.name}</li>
               ))}
             </ul>
           )}

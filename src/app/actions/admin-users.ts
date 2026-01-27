@@ -47,7 +47,7 @@ export async function getAdminUsers(params?: { query?: string }) {
       createdAt: true,
       _count: {
         select: {
-          appointments: true,
+          appointmentsAsClient: true,
           cohortMemberships: true,
           invoices: true,
         },
@@ -64,10 +64,17 @@ export async function getAdminUserById(id: number) {
   const user = await prisma.user.findUnique({
     where: { id },
     include: {
-      appointments: { orderBy: { startTime: "desc" }, take: 10 },
+      appointmentsAsClient: {
+        orderBy: { startTime: "desc" },
+        take: 20,
+        include: {
+          coach: { select: { id: true, name: true } },
+        },
+      },
       cohortMemberships: { include: { cohort: true } },
       invoices: { orderBy: { month: "desc" }, take: 10 },
       bootcampAttendees: { include: { bootcamp: true } },
+      entries: { orderBy: { date: "desc" }, take: 30 },
     },
   })
 

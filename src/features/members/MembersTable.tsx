@@ -29,7 +29,7 @@ interface Member {
   image: string | null
   createdAt: Date
   _count: {
-    appointments: number
+    appointmentsAsClient: number
     cohortMemberships: number
   }
 }
@@ -84,7 +84,7 @@ export function MembersTable({ members }: MembersTableProps) {
             </TableCell>
             <TableCell>
               <Badge variant="outline">
-                {member._count.appointments}
+                {member._count.appointmentsAsClient}
               </Badge>
             </TableCell>
             <TableCell>

@@ -26,7 +26,7 @@ interface UserTableProps {
     createdAt: Date
     credits: number
     _count: {
-      appointments: number
+      appointmentsAsClient: number
       cohortMemberships: number
       invoices: number
     }
@@ -150,7 +150,7 @@ export function UserTable({ users }: UserTableProps) {
                 <Badge variant="outline">{user.role}</Badge>
               </TableCell>
               <TableCell>{format(new Date(user.createdAt), "MMM dd, yyyy")}</TableCell>
-              <TableCell>{user._count.appointments}</TableCell>
+              <TableCell>{user._count.appointmentsAsClient}</TableCell>
               <TableCell>{user._count.cohortMemberships}</TableCell>
               <TableCell>{user.credits}</TableCell>
               <TableCell>{user._count.invoices}</TableCell>

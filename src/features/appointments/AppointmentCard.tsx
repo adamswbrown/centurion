@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 interface AppointmentCardProps {
   appointment: {
     id: number
-    title: string
+    title: string | null
     startTime: Date | string
     endTime: Date | string
     status: string
