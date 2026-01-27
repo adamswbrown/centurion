@@ -29,6 +29,7 @@ const createAppointmentSchema = z.object({
   endTime: z.string().min(1, "End time is required"),
   fee: z.number().min(0),
   notes: z.string().optional(),
+  videoUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   weeksToRepeat: z.number().int().min(0).max(52).default(0),
   selectedDays: z.array(z.number().int().min(0).max(6)).default([]),
 })
@@ -40,6 +41,7 @@ const updateAppointmentSchema = z.object({
   endTime: z.string().min(1, "End time is required"),
   fee: z.number().min(0),
   notes: z.string().optional(),
+  videoUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   status: z.nativeEnum(AttendanceStatus).optional(),
 })
 
@@ -92,6 +94,7 @@ export async function createAppointment(
     endTime,
     fee,
     notes,
+    videoUrl,
     weeksToRepeat,
   } = result.data
 
@@ -163,6 +166,7 @@ export async function createAppointment(
           endTime: appointment.end,
           fee: new Prisma.Decimal(fee),
           notes: notes || null,
+          videoUrl: videoUrl || null,
         },
         select: {
           id: true,
@@ -172,6 +176,7 @@ export async function createAppointment(
           fee: true,
           status: true,
           notes: true,
+          videoUrl: true,
           googleEventId: true,
         },
       }),
@@ -285,7 +290,7 @@ export async function updateAppointment(input: UpdateAppointmentInput) {
     throw new Error(result.error.errors[0].message)
   }
 
-  const { id, title, startTime, endTime, fee, notes, status } = result.data
+  const { id, title, startTime, endTime, fee, notes, videoUrl, status } = result.data
 
   const appointment = await prisma.appointment.findUnique({
     where: { id },
@@ -332,6 +337,7 @@ export async function updateAppointment(input: UpdateAppointmentInput) {
       endTime: endDateTime,
       fee: new Prisma.Decimal(fee),
       notes: notes ?? null,
+      videoUrl: videoUrl || null,
       ...(status ? { status } : {}),
     },
   })
@@ -435,6 +441,7 @@ export async function getAppointmentById(id: number) {
       fee: true,
       status: true,
       notes: true,
+      videoUrl: true,
       googleEventId: true,
       user: { select: { id: true, name: true, email: true } },
     },
@@ -472,6 +479,7 @@ export async function getAppointments(options?: {
       fee: true,
       status: true,
       notes: true,
+      videoUrl: true,
       googleEventId: true,
       user: { select: { id: true, name: true, email: true } },
     },

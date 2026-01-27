@@ -17,6 +17,7 @@ import {
   Settings,
   BarChart,
   ClipboardList,
+  Sparkles,
 } from "lucide-react"
 import type { Role } from "@prisma/client"
 import { useViewMode } from "@/contexts/ViewModeContext"
@@ -34,6 +35,7 @@ const navigation = {
     { name: "Appointments", href: "/appointments", icon: Calendar },
     { name: "Calendar", href: "/calendar", icon: Calendar },
     { name: "Bootcamps", href: "/bootcamps", icon: Dumbbell },
+    { name: "Workouts", href: "/workouts", icon: Dumbbell },
     { name: "Cohorts", href: "/cohorts", icon: Heart },
     { name: "Billing", href: "/billing", icon: CreditCard },
     { name: "Reports", href: "/reports", icon: BarChart },
@@ -48,6 +50,7 @@ const navigation = {
     { name: "Appointments", href: "/appointments", icon: Calendar },
     { name: "Calendar", href: "/calendar", icon: Calendar },
     { name: "Bootcamps", href: "/bootcamps", icon: Dumbbell },
+    { name: "Workouts", href: "/workouts", icon: Dumbbell },
     { name: "Cohorts", href: "/cohorts", icon: Heart },
     { name: "Review Queue", href: "/coach/review-queue", icon: ClipboardList },
     { name: "Reports", href: "/reports", icon: BarChart },
@@ -58,9 +61,11 @@ const navigation = {
     { name: "Dashboard", href: "/client/dashboard", icon: LayoutDashboard },
     { name: "My Appointments", href: "/client/appointments", icon: Calendar },
     { name: "My Bootcamps", href: "/client/bootcamps", icon: Dumbbell },
+    { name: "My Workouts", href: "/client/workouts", icon: Dumbbell },
     { name: "My Cohorts", href: "/client/cohorts", icon: Heart },
     { name: "Health Data", href: "/client/health", icon: Heart },
     { name: "Invoices", href: "/client/invoices", icon: CreditCard },
+    { name: "Fitness Wrapped", href: "/client/wrapped", icon: Sparkles },
   ],
 }
 

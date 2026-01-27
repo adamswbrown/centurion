@@ -19,6 +19,7 @@ const formSchema = z.object({
   endTime: z.string().min(1, "End time is required"),
   fee: z.coerce.number().min(0),
   notes: z.string().optional(),
+  videoUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   weeksToRepeat: z.coerce.number().min(0).max(52).optional(),
   selectedDays: z.array(z.number().int().min(0).max(6)).optional(),
 })
@@ -59,6 +60,7 @@ export function AppointmentForm({ members, initialDate }: AppointmentFormProps) 
       endTime: "10:00",
       fee: 0,
       notes: "",
+      videoUrl: "",
       weeksToRepeat: 0,
       selectedDays: [],
     },
@@ -89,6 +91,7 @@ export function AppointmentForm({ members, initialDate }: AppointmentFormProps) 
         endTime: values.endTime,
         fee: values.fee,
         notes: values.notes,
+        videoUrl: values.videoUrl,
         weeksToRepeat: values.weeksToRepeat ?? 0,
         selectedDays: values.selectedDays ?? [],
       })
@@ -101,6 +104,7 @@ export function AppointmentForm({ members, initialDate }: AppointmentFormProps) 
         ...values,
         title: "",
         notes: "",
+        videoUrl: "",
         weeksToRepeat: 0,
         selectedDays: [],
       })
@@ -154,6 +158,19 @@ export function AppointmentForm({ members, initialDate }: AppointmentFormProps) 
       <div className="space-y-2">
         <Label htmlFor="notes">Notes</Label>
         <Textarea id="notes" rows={3} {...form.register("notes")} />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="videoUrl">Video URL (optional)</Label>
+        <Input
+          id="videoUrl"
+          type="url"
+          placeholder="https://zoom.us/j/... or https://meet.google.com/..."
+          {...form.register("videoUrl")}
+        />
+        {form.formState.errors.videoUrl && (
+          <p className="text-xs text-destructive">{form.formState.errors.videoUrl.message}</p>
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

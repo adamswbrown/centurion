@@ -168,6 +168,7 @@ const systemSettingsSchema = coachManagementSchema
 const updateUserProfileSchema = z.object({
   name: z.string().min(2, "Name is required").optional(),
   email: z.string().email("Valid email required").optional(),
+  billingEmail: z.string().email("Valid billing email required").optional().nullable(),
   password: z.string().min(8, "Password must be at least 8 characters").optional(),
 })
 
@@ -243,6 +244,7 @@ export async function getUserSettings(userId: number) {
       id: true,
       name: true,
       email: true,
+      billingEmail: true,
       credits: true,
       creditsExpiry: true,
     },
@@ -263,7 +265,7 @@ export async function updateUserProfile(input: z.infer<typeof updateUserProfileS
     throw new Error(result.error.errors[0].message)
   }
 
-  const { name, email, password } = result.data
+  const { name, email, billingEmail, password } = result.data
   const hashed = password ? await bcrypt.hash(password, 10) : undefined
   const userId = Number.parseInt(session.id, 10)
 
@@ -272,6 +274,7 @@ export async function updateUserProfile(input: z.infer<typeof updateUserProfileS
     data: {
       ...(name !== undefined ? { name } : {}),
       ...(email !== undefined ? { email } : {}),
+      ...(billingEmail !== undefined ? { billingEmail: billingEmail || null } : {}),
       ...(hashed !== undefined ? { password: hashed } : {}),
     },
   })
@@ -281,7 +284,7 @@ export async function updateUserProfile(input: z.infer<typeof updateUserProfileS
     actorId: userId,
     targetId: user.id,
     targetType: "User",
-    details: { name, email },
+    details: { name, email, billingEmail },
   })
 
   return user

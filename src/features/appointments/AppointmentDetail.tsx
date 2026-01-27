@@ -24,6 +24,7 @@ interface AppointmentDetailProps {
     fee: any
     status: AttendanceStatus
     notes: string | null
+    videoUrl: string | null
     user: {
       id: number
       name: string | null
@@ -50,6 +51,7 @@ export function AppointmentDetail({ appointment }: AppointmentDetailProps) {
     endTime: string
     fee: number
     notes: string
+    videoUrl?: string
     status?: AttendanceStatus
   }) {
     setError(null)
@@ -187,6 +189,36 @@ export function AppointmentDetail({ appointment }: AppointmentDetailProps) {
             })
           }
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="videoUrl">Video URL</Label>
+        <Input
+          id="videoUrl"
+          type="url"
+          placeholder="https://zoom.us/j/... or https://meet.google.com/..."
+          defaultValue={appointment.videoUrl ?? ""}
+          onBlur={(event) =>
+            handleUpdate({
+              id: appointment.id,
+              startTime: extractTimeString(new Date(appointment.startTime)),
+              endTime: extractTimeString(new Date(appointment.endTime)),
+              fee: defaultFee,
+              notes: appointment.notes ?? "",
+              videoUrl: event.target.value,
+            })
+          }
+        />
+        {appointment.videoUrl && (
+          <a
+            href={appointment.videoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
+          >
+            Open video link
+          </a>
+        )}
       </div>
 
       {error && (

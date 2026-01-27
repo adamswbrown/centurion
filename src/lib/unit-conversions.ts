@@ -87,3 +87,69 @@ export function formatDate(date: Date | string, dateFormat: string): string {
   const d = typeof date === "string" ? new Date(date) : date
   return formatDateFns(d, dateFormat)
 }
+
+// ============================================
+// BMI Calculations (M7/M8)
+// ============================================
+
+/**
+ * Calculate BMI from weight (lbs) and height (inches).
+ * Formula: BMI = (weight in lbs / (height in inches)^2) * 703
+ */
+export function calculateBMI(weightLbs: number, heightInches: number): number {
+  if (heightInches <= 0 || weightLbs <= 0) return 0
+  return (weightLbs / (heightInches * heightInches)) * 703
+}
+
+/**
+ * Calculate BMI from metric units.
+ * Formula: BMI = weight (kg) / (height (m))^2
+ */
+export function calculateBMIMetric(weightKg: number, heightCm: number): number {
+  if (heightCm <= 0 || weightKg <= 0) return 0
+  const heightM = heightCm / 100
+  return weightKg / (heightM * heightM)
+}
+
+/**
+ * Get BMI category label.
+ */
+export function getBMICategory(bmi: number): string {
+  if (bmi <= 0) return "N/A"
+  if (bmi < 18.5) return "Underweight"
+  if (bmi < 25) return "Normal"
+  if (bmi < 30) return "Overweight"
+  return "Obese"
+}
+
+// ============================================
+// Temperature Conversions
+// ============================================
+
+export function fahrenheitToCelsius(f: number): number {
+  return (f - 32) * (5 / 9)
+}
+
+export function celsiusToFahrenheit(c: number): number {
+  return c * (9 / 5) + 32
+}
+
+// ============================================
+// Distance Conversions
+// ============================================
+
+export function milesToKm(miles: number): number {
+  return miles * 1.60934
+}
+
+export function kmToMiles(km: number): number {
+  return km / 1.60934
+}
+
+export function metersToFeet(meters: number): number {
+  return meters * 3.28084
+}
+
+export function feetToMeters(feet: number): number {
+  return feet / 3.28084
+}

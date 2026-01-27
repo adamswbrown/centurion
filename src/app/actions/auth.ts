@@ -105,3 +105,9 @@ export async function signInWithGoogle() {
     redirectTo: "/dashboard",
   })
 }
+
+export async function signInWithApple() {
+  await signIn("apple", {
+    redirectTo: "/dashboard",
+  })
+}

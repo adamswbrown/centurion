@@ -8,6 +8,8 @@ import { startOfDay, endOfDay } from "date-fns"
 const upsertEntrySchema = z.object({
   date: z.string().min(1),
   weight: z.number().optional().nullable(),
+  bodyFatPercentage: z.number().min(1).max(70).optional().nullable(),
+  heightInches: z.number().min(20).max(108).optional().nullable(),
   steps: z.number().int().optional().nullable(),
   calories: z.number().int().optional().nullable(),
   sleepQuality: z.number().int().min(1).max(10).optional().nullable(),
@@ -106,6 +108,16 @@ export async function upsertEntry(input: UpsertEntryInput) {
   if (validated.weight !== undefined) {
     data.weight = validated.weight
     if (validated.weight !== null) dataSources.weight = "manual"
+  }
+
+  // Body fat percentage (M3)
+  if (validated.bodyFatPercentage !== undefined) {
+    data.bodyFatPercentage = validated.bodyFatPercentage
+  }
+
+  // Height in inches (M7)
+  if (validated.heightInches !== undefined) {
+    data.heightInches = validated.heightInches
   }
 
   // Steps: auto-populate from HealthKit workouts if not provided

@@ -18,6 +18,7 @@ datasource db {
 model User {
   id            Int       @id @default(autoincrement())
   email         String    @unique
+  billingEmail  String?   // Separate billing email (M2)
   password      String?   // Nullable for OAuth-only users
   name          String?
   image         String?
@@ -167,6 +168,7 @@ model Appointment {
   fee           Decimal          @db.Decimal(10, 2)
   status        AttendanceStatus @default(NOT_ATTENDED)
   notes         String?
+  videoUrl      String?          // Optional video call URL
   googleEventId String?          // For calendar sync
   invoiceId     Int?
   title         String?
@@ -230,9 +232,14 @@ model BootcampAttendee {
 model Workout {
   id          Int           @id @default(autoincrement())
   userId      Int
+  coachId     Int?          // Coach who assigned the workout (M1)
   title       String
   description String?
+  videoUrl    String?       // Instructional video link (M1)
   status      WorkoutStatus @default(NOT_STARTED)
+  scheduledAt DateTime?     // When the workout is scheduled for (M1)
+  completedAt DateTime?     // When the workout was completed (M1)
+  duration    Int?          // Duration in minutes (M1)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -241,7 +248,9 @@ model Workout {
 
   @@map("workouts")
   @@index([userId])
+  @@index([coachId])
   @@index([status])
+  @@index([scheduledAt])
 }
 
 enum WorkoutStatus {
@@ -374,6 +383,8 @@ model Entry {
 
   // Health metrics
   weight          Float?
+  bodyFatPercentage Float?   // Body fat % (M3)
+  heightInches    Float?     // Height in inches for BMI calculation (M7)
   steps           Int?
   calories        Int?
   sleepQuality    Int?     // 1-10 scale

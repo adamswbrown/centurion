@@ -29,6 +29,12 @@ export function CheckInForm({ initialData, onSuccess }: CheckInFormProps) {
   const today = format(new Date(), "yyyy-MM-dd")
   const [date, setDate] = useState(initialData?.date || today)
   const [weight, setWeight] = useState<string>(initialData?.weight?.toString() || "")
+  const [bodyFatPercentage, setBodyFatPercentage] = useState<string>(
+    initialData?.bodyFatPercentage?.toString() || ""
+  )
+  const [heightInches, setHeightInches] = useState<string>(
+    initialData?.heightInches?.toString() || ""
+  )
   const [steps, setSteps] = useState<string>(initialData?.steps?.toString() || "")
   const [calories, setCalories] = useState<string>(initialData?.calories?.toString() || "")
   const [sleepQuality, setSleepQuality] = useState<string>(
@@ -50,6 +56,8 @@ export function CheckInForm({ initialData, onSuccess }: CheckInFormProps) {
     const data: UpsertEntryInput = {
       date,
       weight: weight ? parseFloat(weight) : null,
+      bodyFatPercentage: bodyFatPercentage ? parseFloat(bodyFatPercentage) : null,
+      heightInches: heightInches ? parseFloat(heightInches) : null,
       steps: steps ? parseInt(steps) : null,
       calories: calories ? parseInt(calories) : null,
       sleepQuality: sleepQuality ? parseInt(sleepQuality) : null,
@@ -62,6 +70,8 @@ export function CheckInForm({ initialData, onSuccess }: CheckInFormProps) {
         onSuccess?.()
         // Clear form after successful submission
         setWeight("")
+        setBodyFatPercentage("")
+        setHeightInches("")
         setSteps("")
         setCalories("")
         setSleepQuality("")
@@ -97,6 +107,39 @@ export function CheckInForm({ initialData, onSuccess }: CheckInFormProps) {
             onChange={(e) => setWeight(e.target.value)}
             placeholder="Enter weight in lbs"
           />
+        </div>
+
+        <div>
+          <Label htmlFor="bodyFatPercentage">Body Fat % <span className="text-muted-foreground font-normal">(optional)</span></Label>
+          <Input
+            id="bodyFatPercentage"
+            type="number"
+            step="0.1"
+            min="1"
+            max="70"
+            value={bodyFatPercentage}
+            onChange={(e) => setBodyFatPercentage(e.target.value)}
+            placeholder="Enter body fat percentage"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="heightInches">Height (inches) <span className="text-muted-foreground font-normal">(optional)</span></Label>
+          <Input
+            id="heightInches"
+            type="number"
+            step="0.5"
+            min="20"
+            max="108"
+            value={heightInches}
+            onChange={(e) => setHeightInches(e.target.value)}
+            placeholder="Enter height in inches"
+          />
+          {weight && heightInches && (
+            <p className="text-xs text-muted-foreground mt-1">
+              BMI: {(parseFloat(weight) / (parseFloat(heightInches) * parseFloat(heightInches)) * 703).toFixed(1)}
+            </p>
+          )}
         </div>
 
         <div>

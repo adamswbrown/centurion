@@ -187,17 +187,18 @@ export async function generateInvoice(input: GenerateInvoiceInput) {
     return newInvoice
   })
 
-  // Fetch user info and send invoice email
+  // Fetch user info and send invoice email (M2: use billingEmail if available)
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { name: true, email: true, isTestUser: true },
+    select: { name: true, email: true, billingEmail: true, isTestUser: true },
   })
 
   if (user?.email) {
+    const recipientEmail = user.billingEmail || user.email
     const monthYear = format(monthDate, "MMMM yyyy")
     await sendSystemEmail({
       templateKey: EMAIL_TEMPLATE_KEYS.INVOICE_SENT,
-      to: user.email,
+      to: recipientEmail,
       variables: {
         userName: user.name || "Member",
         invoiceMonth: monthYear,
@@ -318,17 +319,18 @@ export async function updateInvoicePaymentStatus(
     data,
     include: {
       user: {
-        select: { name: true, email: true, isTestUser: true },
+        select: { name: true, email: true, billingEmail: true, isTestUser: true },
       },
     },
   })
 
-  // Send payment confirmation email when invoice is marked as paid
+  // Send payment confirmation email when invoice is marked as paid (M2: use billingEmail)
   if (status === PaymentStatus.PAID && updated.user?.email) {
+    const recipientEmail = updated.user.billingEmail || updated.user.email
     const monthYear = format(updated.month, "MMMM yyyy")
     await sendSystemEmail({
       templateKey: EMAIL_TEMPLATE_KEYS.INVOICE_PAID,
-      to: updated.user.email,
+      to: recipientEmail,
       variables: {
         userName: updated.user.name || "Member",
         invoiceMonth: monthYear,

@@ -1,6 +1,6 @@
 "use client"
 
-import { Shield, Users } from "lucide-react"
+import { Shield, Users, User } from "lucide-react"
 import { useViewMode } from "@/contexts/ViewModeContext"
 import {
   Select,
@@ -16,7 +16,7 @@ export function ViewModeSwitcher() {
   if (!canSwitch) return null
 
   return (
-    <Select value={viewMode} onValueChange={(v) => setViewMode(v as "admin" | "coach")}>
+    <Select value={viewMode} onValueChange={(v) => setViewMode(v as "admin" | "coach" | "client")}>
       <SelectTrigger className="w-full h-8 text-xs">
         <SelectValue />
       </SelectTrigger>
@@ -31,6 +31,12 @@ export function ViewModeSwitcher() {
           <span className="flex items-center gap-2">
             <Users className="h-3.5 w-3.5" />
             Coach View
+          </span>
+        </SelectItem>
+        <SelectItem value="client">
+          <span className="flex items-center gap-2">
+            <User className="h-3.5 w-3.5" />
+            Client View
           </span>
         </SelectItem>
       </SelectContent>

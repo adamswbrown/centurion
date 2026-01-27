@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import type { Role } from "@prisma/client"
 
-type ViewMode = "admin" | "coach"
+type ViewMode = "admin" | "coach" | "client"
 
 interface ViewModeContextValue {
   viewMode: ViewMode
@@ -28,7 +28,7 @@ export function ViewModeProvider({ userRole, children }: ViewModeProviderProps) 
     if (!canSwitch) return userRole === "COACH" ? "coach" : "admin"
     if (typeof window === "undefined") return "admin"
     const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored === "admin" || stored === "coach") return stored
+    if (stored === "admin" || stored === "coach" || stored === "client") return stored
     return "admin"
   })
 
@@ -42,13 +42,13 @@ export function ViewModeProvider({ userRole, children }: ViewModeProviderProps) 
   useEffect(() => {
     if (!canSwitch) return
     const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored === "admin" || stored === "coach") {
+    if (stored === "admin" || stored === "coach" || stored === "client") {
       setViewModeState(stored)
     }
   }, [canSwitch])
 
   const effectiveNavRole: Role = canSwitch
-    ? (viewMode === "admin" ? "ADMIN" : "COACH")
+    ? (viewMode === "admin" ? "ADMIN" : viewMode === "coach" ? "COACH" : "CLIENT")
     : userRole
 
   return (

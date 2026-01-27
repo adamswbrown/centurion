@@ -28,6 +28,7 @@ interface ClientAppointmentDetailProps {
     fee: any
     status: AttendanceStatus
     notes: string | null
+    videoUrl: string | null
     googleEventId: string | null
   }
 }
@@ -148,6 +149,20 @@ export function ClientAppointmentDetail({
               <p className="text-sm text-muted-foreground">Location</p>
               <p className="font-medium">Training Facility</p>
             </div>
+
+            {appointment.videoUrl && (
+              <div>
+                <p className="text-sm text-muted-foreground">Video Call</p>
+                <a
+                  href={appointment.videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:underline"
+                >
+                  Join Video Call
+                </a>
+              </div>
+            )}
 
             {appointment.googleEventId && (
               <div>
