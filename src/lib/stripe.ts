@@ -13,7 +13,7 @@ export const stripe = stripeSecretKey
     })
   : null
 
-function ensureStripe() {
+export function ensureStripe() {
   if (!stripe) {
     throw new Error("STRIPE_SECRET_KEY environment variable is not configured")
   }
