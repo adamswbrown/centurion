@@ -44,7 +44,7 @@ export function UserCheckInFrequency({ userId, currentFrequency }: UserCheckInFr
       return
     }
     const result = await updateUserCheckInFrequency(userId, value)
-    if ("error" in result) {
+    if ("error" in result && typeof result.error === "string") {
       setError(result.error)
     } else {
       const updated = await getCheckInFrequencyConfig(userId)

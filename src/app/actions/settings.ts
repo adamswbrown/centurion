@@ -11,7 +11,7 @@ import type { Prisma } from "@prisma/client"
 // SYSTEM SETTINGS DEFAULTS
 // ============================================
 
-export const SYSTEM_SETTINGS_DEFAULTS: Record<string, unknown> = {
+const SYSTEM_SETTINGS_DEFAULTS: Record<string, unknown> = {
   // Coach management
   maxClientsPerCoach: 50,
   minClientsPerCoach: 10,
