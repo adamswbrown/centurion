@@ -64,3 +64,6 @@ Thumbs.db
 # Reference codebases (not part of project)
 /personal-trainer-planner/
 /CoachFit/
+
+#Loki
+loki-mode
