@@ -70,6 +70,11 @@ model User {
   preferences        UserPreference?
   checkInFrequencyDays Int?  // Override cohort and system default
 
+  // Session Booking Relations
+  coachSessions      ClassSession[]           @relation("CoachSessions")
+  sessionRegistrations SessionRegistration[]  @relation("SessionRegistrations")
+  memberships        UserMembership[]         @relation("UserMemberships")
+
   // Cohort Types (Phase 3 - C8)
   customCohortTypes  CustomCohortType[]
 
@@ -316,6 +321,7 @@ model Cohort {
   bundles     QuestionnaireBundle[]
   config      CohortCheckInConfig?
   insights    AdminInsight[]
+  sessions    ClassSession[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -766,4 +772,195 @@ model CustomCohortType {
   @@map("custom_cohort_types")
   @@index([createdBy])
   @@index([createdAt])
+}
+
+// ============================================
+// SESSION BOOKING SYSTEM (Replaces Bootcamp)
+// ============================================
+
+enum SessionStatus {
+  SCHEDULED
+  CANCELLED
+  COMPLETED
+}
+
+enum RegistrationStatus {
+  REGISTERED
+  WAITLISTED
+  CANCELLED
+  LATE_CANCELLED
+  ATTENDED
+  NO_SHOW
+}
+
+enum MembershipTierStatus {
+  ACTIVE
+  PAUSED
+  EXPIRED
+  CANCELLED
+}
+
+enum MembershipPlanType {
+  RECURRING
+  PACK
+  PREPAID
+}
+
+model ClassType {
+  id                 Int      @id @default(autoincrement())
+  name               String
+  description        String?
+  color              String?  // Hex color for calendar UI
+  defaultCapacity    Int      @default(12)
+  defaultDurationMins Int     @default(60)
+  isActive           Boolean  @default(true)
+
+  sessions           ClassSession[]
+  allowances         MembershipClassTypeAllowance[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("class_types")
+  @@index([name])
+  @@index([isActive])
+}
+
+model ClassSession {
+  id            Int           @id @default(autoincrement())
+  classTypeId   Int?          // FK to ClassType (null = ad-hoc)
+  cohortId      Int?          // FK to Cohort (null = standalone)
+  coachId       Int           // FK to User (coach)
+  title         String
+  startTime     DateTime
+  endTime       DateTime
+  maxOccupancy  Int
+  location      String?
+  notes         String?
+  status        SessionStatus @default(SCHEDULED)
+  googleEventId String?       // Google Calendar sync
+
+  classType     ClassType?    @relation(fields: [classTypeId], references: [id], onDelete: SetNull)
+  cohort        Cohort?       @relation(fields: [cohortId], references: [id], onDelete: SetNull)
+  coach         User          @relation("CoachSessions", fields: [coachId], references: [id], onDelete: Cascade)
+  registrations SessionRegistration[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("class_sessions")
+  @@index([coachId])
+  @@index([cohortId])
+  @@index([startTime])
+  @@index([status])
+  @@index([classTypeId])
+  @@index([coachId, startTime])
+  @@index([status, startTime])
+}
+
+model SessionRegistration {
+  id                    Int                @id @default(autoincrement())
+  sessionId             Int
+  userId                Int
+  status                RegistrationStatus @default(REGISTERED)
+  waitlistPosition      Int?               // Queue order (WAITLISTED only)
+  registeredAt          DateTime           @default(now())
+  cancelledAt           DateTime?
+  promotedFromWaitlistAt DateTime?
+
+  session ClassSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User         @relation("SessionRegistrations", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, userId])
+  @@map("session_registrations")
+  @@index([sessionId])
+  @@index([userId])
+  @@index([status])
+  @@index([sessionId, status])
+  @@index([userId, status])
+}
+
+// ============================================
+// MEMBERSHIP & BILLING
+// ============================================
+
+model MembershipPlan {
+  id                    Int                @id @default(autoincrement())
+  name                  String
+  description           String?
+  type                  MembershipPlanType
+
+  // RECURRING fields
+  sessionsPerWeek       Int?               // Weekly session limit
+  commitmentMonths      Int?               // Minimum commitment
+  monthlyPrice          Decimal?           @db.Decimal(10, 2)
+
+  // PACK fields
+  totalSessions         Int?               // Total sessions in bundle
+  packPrice             Decimal?           @db.Decimal(10, 2)
+
+  // PREPAID fields
+  durationDays          Int?               // Access period in days
+  prepaidPrice          Decimal?           @db.Decimal(10, 2)
+
+  // Common fields
+  lateCancelCutoffHours Int                @default(2)
+  allowRepeatPurchase   Boolean            @default(true)
+  purchasableByClient   Boolean            @default(true)
+  isActive              Boolean            @default(true)
+  penaltySystemEnabled  Boolean            @default(false)
+
+  // Stripe fields
+  stripeProductId       String?
+  stripePriceId         String?
+
+  allowances            MembershipClassTypeAllowance[]
+  userMemberships       UserMembership[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("membership_plans")
+  @@index([type])
+  @@index([isActive])
+  @@index([type, isActive])
+}
+
+model MembershipClassTypeAllowance {
+  id               Int @id @default(autoincrement())
+  membershipPlanId Int
+  classTypeId      Int
+
+  membershipPlan MembershipPlan @relation(fields: [membershipPlanId], references: [id], onDelete: Cascade)
+  classType      ClassType      @relation(fields: [classTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([membershipPlanId, classTypeId])
+  @@map("membership_class_type_allowances")
+  @@index([membershipPlanId])
+  @@index([classTypeId])
+}
+
+model UserMembership {
+  id                      Int                  @id @default(autoincrement())
+  userId                  Int
+  planId                  Int
+  startDate               DateTime
+  endDate                 DateTime?            // Null if ongoing recurring
+  status                  MembershipTierStatus @default(ACTIVE)
+  sessionsRemaining       Int?                 // PACK: decremented on booking
+  stripeSubscriptionId    String?              // RECURRING: Stripe Subscription ID
+  stripeCheckoutSessionId String?              // PACK/PREPAID: Stripe Checkout ID
+
+  user User           @relation("UserMemberships", fields: [userId], references: [id], onDelete: Cascade)
+  plan MembershipPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_memberships")
+  @@index([userId])
+  @@index([planId])
+  @@index([status])
+  @@index([userId, status])
+  @@index([stripeSubscriptionId])
 }
