@@ -79,8 +79,19 @@ export async function getSessions(params?: {
   if (params?.coachId) {
     where.coachId = params.coachId
   }
+  // If cohortId is provided, filter sessions by classTypeIds accessible to that cohort
+  let classTypeIds: number[] | undefined
   if (params?.cohortId) {
-    where.cohortId = params.cohortId
+    const access = await prisma.cohortSessionAccess.findMany({
+      where: { cohortId: params.cohortId },
+      select: { classTypeId: true },
+    })
+    classTypeIds = access.map((a) => a.classTypeId)
+    if (classTypeIds.length === 0) {
+      // No access, return empty
+      return []
+    }
+    where.classTypeId = { in: classTypeIds }
   }
   if (params?.classTypeId) {
     where.classTypeId = params.classTypeId
@@ -127,8 +138,17 @@ export async function getSessionById(id: number) {
 export async function getCohortSessions(cohortId: number) {
   await requireCoach()
 
-  return prisma.classSession.findMany({
+  // Find all classTypeIds accessible to this cohort
+  const access = await prisma.cohortSessionAccess.findMany({
     where: { cohortId },
+    select: { classTypeId: true },
+  })
+  const classTypeIds = access.map((a) => a.classTypeId)
+  if (classTypeIds.length === 0) {
+    return []
+  }
+  return prisma.classSession.findMany({
+    where: { classTypeId: { in: classTypeIds } },
     include: {
       classType: true,
       coach: { select: { id: true, name: true, email: true } },

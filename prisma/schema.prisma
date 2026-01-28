@@ -265,6 +265,7 @@ enum PaymentStatus {
 // ============================================
 
 model Cohort {
+    sessionAccess CohortSessionAccess[]
   id          Int          @id @default(autoincrement())
   name        String
   description String?
@@ -285,7 +286,7 @@ model Cohort {
   bundles     QuestionnaireBundle[]
   config      CohortCheckInConfig?
   insights    AdminInsight[]
-  sessions    ClassSession[]
+    // sessions removed: Cohorts do not own sessions
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -771,6 +772,8 @@ enum MembershipPlanType {
 }
 
 model ClassType {
+    membershipClassTypeAllowances MembershipClassTypeAllowance[]
+  cohortSessionAccess CohortSessionAccess[]
   id                 Int      @id @default(autoincrement())
   name               String
   description        String?
@@ -780,7 +783,6 @@ model ClassType {
   isActive           Boolean  @default(true)
 
   sessions           ClassSession[]
-  allowances         MembershipClassTypeAllowance[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -805,7 +807,6 @@ model ClassSession {
   googleEventId String?       // Google Calendar sync
 
   classType     ClassType?    @relation(fields: [classTypeId], references: [id], onDelete: SetNull)
-  cohort        Cohort?       @relation(fields: [cohortId], references: [id], onDelete: SetNull)
   coach         User          @relation("CoachSessions", fields: [coachId], references: [id], onDelete: Cascade)
   registrations SessionRegistration[]
 
@@ -849,6 +850,8 @@ model SessionRegistration {
 // ============================================
 
 model MembershipPlan {
+    userMemberships UserMembership[]
+    allowances MembershipClassTypeAllowance[]
   id                    Int                @id @default(autoincrement())
   name                  String
   description           String?
@@ -878,8 +881,6 @@ model MembershipPlan {
   stripeProductId       String?
   stripePriceId         String?
 
-  allowances            MembershipClassTypeAllowance[]
-  userMemberships       UserMembership[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -894,9 +895,8 @@ model MembershipClassTypeAllowance {
   id               Int @id @default(autoincrement())
   membershipPlanId Int
   classTypeId      Int
-
-  membershipPlan MembershipPlan @relation(fields: [membershipPlanId], references: [id], onDelete: Cascade)
-  classType      ClassType      @relation(fields: [classTypeId], references: [id], onDelete: Cascade)
+  membershipPlan   MembershipPlan @relation(fields: [membershipPlanId], references: [id], onDelete: Cascade)
+  classType        ClassType      @relation(fields: [classTypeId], references: [id], onDelete: Cascade)
 
   @@unique([membershipPlanId, classTypeId])
   @@map("membership_class_type_allowances")
@@ -927,4 +927,18 @@ model UserMembership {
   @@index([status])
   @@index([userId, status])
   @@index([stripeSubscriptionId])
+}
+
+// New join table for cohort session visibility
+model CohortSessionAccess {
+  cohortId     Int
+  classTypeId  Int
+  constraints  Json?
+
+  cohort       Cohort     @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  classType    ClassType  @relation(fields: [classTypeId], references: [id], onDelete: Cascade)
+
+  @@id([cohortId, classTypeId])
+  @@map("cohort_session_access")
+  @@index([classTypeId])
 }
