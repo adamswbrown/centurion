@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma"
 import { requireAdmin, requireCoach } from "@/lib/auth"
 import { sendSystemEmail } from "@/lib/email"
 import { EMAIL_TEMPLATE_KEYS } from "@/lib/email-templates"
+import { DEFAULT_TEMPLATES, getAvailableWeeks } from "@/lib/default-questionnaire-templates"
 
 const createCohortSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -125,17 +126,40 @@ export async function createCohort(input: CreateCohortInput) {
     throw new Error("A cohort with this name already exists")
   }
 
-  const cohort = await prisma.cohort.create({
-    data: {
-      name,
-      description: description || null,
-      startDate: start,
-      endDate: end,
-      status: "ACTIVE",
-      type: type || null,
-      customCohortTypeId: type === "CUSTOM" ? customCohortTypeId : null,
-      membershipDurationMonths: type === "ONGOING" ? membershipDurationMonths : null,
-    },
+  // Create cohort and questionnaire bundles in a transaction
+  const cohort = await prisma.$transaction(async (tx) => {
+    // Create the cohort
+    const newCohort = await tx.cohort.create({
+      data: {
+        name,
+        description: description || null,
+        startDate: start,
+        endDate: end,
+        status: "ACTIVE",
+        type: type || null,
+        customCohortTypeId: type === "CUSTOM" ? customCohortTypeId : null,
+        membershipDurationMonths: type === "ONGOING" ? membershipDurationMonths : null,
+      },
+    })
+
+    // Auto-create questionnaire bundles for all available weeks
+    const weeks = getAvailableWeeks()
+    const bundleData = weeks.map((weekNumber) => {
+      const templateKey = `week${weekNumber}` as keyof typeof DEFAULT_TEMPLATES
+      const template = DEFAULT_TEMPLATES[templateKey]
+      return {
+        cohortId: newCohort.id,
+        weekNumber,
+        questions: template,
+        isActive: true,
+      }
+    })
+
+    await tx.questionnaireBundle.createMany({
+      data: bundleData,
+    })
+
+    return newCohort
   })
 
   return cohort

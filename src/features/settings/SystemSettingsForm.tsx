@@ -113,6 +113,38 @@ function SettingText({
   )
 }
 
+function SettingTextarea({
+  id,
+  label,
+  description,
+  value,
+  onChange,
+  rows = 10,
+}: {
+  id: string
+  label: string
+  description?: string
+  value: string
+  onChange: (v: string) => void
+  rows?: number
+}) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id}>{label}</Label>
+      <textarea
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        rows={rows}
+        className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-mono"
+      />
+      {description && (
+        <p className="text-sm text-muted-foreground">{description}</p>
+      )}
+    </div>
+  )
+}
+
 function SaveButton({
   loading,
   onSave,
@@ -210,6 +242,12 @@ export function SystemSettingsForm({ initialSettings }: SystemSettingsFormProps)
   // Admin
   const [adminOverrideEmail, setAdminOverrideEmail] = useState(s<string>("adminOverrideEmail", ""))
 
+  // Legal Content
+  const [termsContentHtml, setTermsContentHtml] = useState(s<string>("termsContentHtml", ""))
+  const [privacyContentHtml, setPrivacyContentHtml] = useState(s<string>("privacyContentHtml", ""))
+  const [dataProcessingContentHtml, setDataProcessingContentHtml] = useState(s<string>("dataProcessingContentHtml", ""))
+  const [consentVersion, setConsentVersion] = useState(s<string>("consentVersion", "1.0.0"))
+
   async function handleSave(settings: Record<string, unknown>) {
     setError(null)
     setSuccess(false)
@@ -235,6 +273,7 @@ export function SystemSettingsForm({ initialSettings }: SystemSettingsFormProps)
         <TabsTrigger value="activity">Activity</TabsTrigger>
         <TabsTrigger value="checkin">Check-in</TabsTrigger>
         <TabsTrigger value="adherence">Adherence</TabsTrigger>
+        <TabsTrigger value="legal">Legal</TabsTrigger>
         <TabsTrigger value="admin">Admin</TabsTrigger>
       </TabsList>
 
@@ -738,6 +777,65 @@ export function SystemSettingsForm({ initialSettings }: SystemSettingsFormProps)
                   bodyFatMediumPercent,
                   bodyFatHighPercent,
                   bodyFatVeryHighPercent,
+                })
+              }
+            />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Legal Content Tab */}
+      <TabsContent value="legal">
+        <Card>
+          <CardHeader>
+            <CardTitle>Legal Content</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <SettingText
+              id="consentVersion"
+              label="Consent Version"
+              description="Version string for consent tracking (e.g., 1.0.0). Bump when legal content changes."
+              value={consentVersion}
+              onChange={setConsentVersion}
+            />
+
+            <SettingTextarea
+              id="termsContentHtml"
+              label="Terms of Service (HTML)"
+              description="HTML content for the Terms of Service page"
+              value={termsContentHtml}
+              onChange={setTermsContentHtml}
+              rows={12}
+            />
+
+            <SettingTextarea
+              id="privacyContentHtml"
+              label="Privacy Policy (HTML)"
+              description="HTML content for the Privacy Policy page"
+              value={privacyContentHtml}
+              onChange={setPrivacyContentHtml}
+              rows={12}
+            />
+
+            <SettingTextarea
+              id="dataProcessingContentHtml"
+              label="Data Processing Agreement (HTML)"
+              description="HTML content for the Data Processing Agreement page"
+              value={dataProcessingContentHtml}
+              onChange={setDataProcessingContentHtml}
+              rows={12}
+            />
+
+            <SaveButton
+              loading={loading}
+              success={success}
+              error={error}
+              onSave={() =>
+                handleSave({
+                  consentVersion,
+                  termsContentHtml,
+                  privacyContentHtml,
+                  dataProcessingContentHtml,
                 })
               }
             />

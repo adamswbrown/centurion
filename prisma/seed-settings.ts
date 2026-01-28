@@ -23,6 +23,9 @@ const SYSTEM_SETTINGS_DEFAULTS: Record<string, unknown> = {
   healthkitEnabled: true,
   iosIntegrationEnabled: true,
   showPersonalizedPlan: true,
+  appointmentsEnabled: false,
+  sessionsEnabled: true,
+  cohortsEnabled: true,
 
   // Admin
   adminOverrideEmail: "",
