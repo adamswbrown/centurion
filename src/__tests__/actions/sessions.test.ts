@@ -958,4 +958,74 @@ describe("Sessions Server Actions", () => {
       expect(deleteGoogleCalendarEvent).not.toHaveBeenCalled()
     })
   })
+
+  // -------------------------------------------------------------------------
+  // Authorization: ownership checks
+  // -------------------------------------------------------------------------
+
+  describe("ownership authorization", () => {
+    it("should block a coach from updating another coach's session", async () => {
+      // Auth returns coach with id "1", but session belongs to coach id 99
+      mockPrisma.classSession.findUnique.mockResolvedValue(
+        mockSession({ id: 1, coachId: 99 })
+      )
+
+      await expect(
+        updateSession({ id: 1, title: "Hijack" })
+      ).rejects.toThrow("Not authorized to update this session")
+    })
+
+    it("should allow admin to update any coach's session", async () => {
+      // Mock admin auth
+      vi.mocked(requireCoach).mockResolvedValueOnce({
+        id: "1",
+        role: "ADMIN",
+        name: "Admin",
+        email: "admin@test.com",
+      })
+      mockPrisma.classSession.findUnique.mockResolvedValue(
+        mockSession({ id: 1, coachId: 99 })
+      )
+      mockPrisma.classSession.update.mockResolvedValue(
+        mockSession({ id: 1, title: "Admin Updated" })
+      )
+
+      const result = await updateSession({ id: 1, title: "Admin Updated" })
+      expect(result.title).toBe("Admin Updated")
+    })
+
+    it("should block a coach from cancelling another coach's session", async () => {
+      mockPrisma.classSession.findUnique.mockResolvedValue(
+        mockSession({ id: 1, coachId: 99 })
+      )
+
+      await expect(cancelSession(1)).rejects.toThrow(
+        "Not authorized to cancel this session"
+      )
+    })
+
+    it("should block a coach from syncing another coach's session", async () => {
+      mockPrisma.classSession.findUnique.mockResolvedValue(
+        mockSession({ id: 1, coachId: 99 })
+      )
+
+      await expect(syncSessionToGoogleCalendar(1)).rejects.toThrow(
+        "Not authorized to sync this session"
+      )
+    })
+
+    it("should throw when updating a non-existent session", async () => {
+      mockPrisma.classSession.findUnique.mockResolvedValue(null)
+
+      await expect(
+        updateSession({ id: 999, title: "Ghost" })
+      ).rejects.toThrow("Session not found")
+    })
+
+    it("should throw when cancelling a non-existent session", async () => {
+      mockPrisma.classSession.findUnique.mockResolvedValue(null)
+
+      await expect(cancelSession(999)).rejects.toThrow("Session not found")
+    })
+  })
 })

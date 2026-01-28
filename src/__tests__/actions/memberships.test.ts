@@ -833,4 +833,56 @@ describe("Memberships Server Actions", () => {
       await expect(cancelMembership(1)).rejects.toThrow()
     })
   })
+
+  // ============================================
+  // State transition validation
+  // ============================================
+
+  describe("state transition validation", () => {
+    it("should reject pausing a non-active membership", async () => {
+      mockPrisma.userMembership.findUnique.mockResolvedValue(
+        createMockUserMembership({ id: 1, status: "PAUSED" })
+      )
+
+      await expect(pauseMembership(1)).rejects.toThrow(
+        "Can only pause active memberships"
+      )
+    })
+
+    it("should reject resuming a non-paused membership", async () => {
+      mockPrisma.userMembership.findUnique.mockResolvedValue(
+        createMockUserMembership({ id: 1, status: "ACTIVE" })
+      )
+
+      await expect(resumeMembership(1)).rejects.toThrow(
+        "Can only resume paused memberships"
+      )
+    })
+
+    it("should reject resuming a cancelled membership", async () => {
+      mockPrisma.userMembership.findUnique.mockResolvedValue(
+        createMockUserMembership({ id: 1, status: "CANCELLED" })
+      )
+
+      await expect(resumeMembership(1)).rejects.toThrow(
+        "Can only resume paused memberships"
+      )
+    })
+
+    it("should reject cancelling an already cancelled membership", async () => {
+      mockPrisma.userMembership.findUnique.mockResolvedValue(
+        createMockUserMembership({ id: 1, status: "CANCELLED" })
+      )
+
+      await expect(cancelMembership(1)).rejects.toThrow(
+        "Membership is already cancelled"
+      )
+    })
+
+    it("should reject pausing a non-existent membership", async () => {
+      mockPrisma.userMembership.findUnique.mockResolvedValue(null)
+
+      await expect(pauseMembership(999)).rejects.toThrow("Membership not found")
+    })
+  })
 })
