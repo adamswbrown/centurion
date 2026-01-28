@@ -23,6 +23,9 @@ export const EMAIL_TEMPLATE_KEYS = {
   WEEKLY_QUESTIONNAIRE_REMINDER: "weekly_questionnaire_reminder",
   WEEKLY_REVIEW_READY: "weekly_review_ready",
   COACH_NOTE_RECEIVED: "coach_note_received",
+
+  // Session registration
+  SESSION_WAITLIST_PROMOTED: "session_waitlist_promoted",
 } as const
 
 export type EmailTemplateKey = (typeof EMAIL_TEMPLATE_KEYS)[keyof typeof EMAIL_TEMPLATE_KEYS]
@@ -47,6 +50,9 @@ const TOKEN_WHITELIST = [
   "paymentUrl",
   "loomUrl",
   "resetUrl",
+  "sessionTitle",
+  "sessionDate",
+  "sessionTime",
 ] as const
 
 export type EmailToken = (typeof TOKEN_WHITELIST)[number]
@@ -70,6 +76,9 @@ export interface EmailVariables {
   paymentUrl?: string
   loomUrl?: string
   resetUrl?: string
+  sessionTitle?: string
+  sessionDate?: string
+  sessionTime?: string
 }
 
 export interface RenderedEmail {
@@ -295,6 +304,24 @@ const DEFAULT_TEMPLATES: Record<EmailTemplateKey, { subject: string; body: strin
       <p>Best regards,<br>The Centurion Team</p>
     `,
     text: "New note from {{coachName}}. View at: {{loginUrl}}",
+  },
+
+  // Session registration
+  session_waitlist_promoted: {
+    subject: "You're Off the Waitlist - {{sessionTitle}}",
+    body: `
+      <h1>You're Registered!</h1>
+      <p>Hi {{userName}},</p>
+      <p>Great news! A spot has opened up and you've been promoted from the waitlist to registered status.</p>
+      <ul>
+        <li><strong>Session:</strong> {{sessionTitle}}</li>
+        <li><strong>Date:</strong> {{sessionDate}}</li>
+        <li><strong>Time:</strong> {{sessionTime}}</li>
+      </ul>
+      <p>We look forward to seeing you there!</p>
+      <p>Best regards,<br>The Centurion Team</p>
+    `,
+    text: "You're off the waitlist for {{sessionTitle}} on {{sessionDate}} at {{sessionTime}}. See you there!",
   },
 }
 

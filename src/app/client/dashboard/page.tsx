@@ -24,7 +24,7 @@ export default async function ClientDashboardPage() {
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
-            Use the navigation to view appointments, bootcamps, and cohorts.
+            Use the navigation to view appointments, sessions, and cohorts.
           </CardContent>
         </Card>
       </div>

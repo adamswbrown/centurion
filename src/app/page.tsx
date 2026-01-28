@@ -31,7 +31,7 @@ export default function Home() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center gap-2"><Calendar className="h-5 w-5 text-primary" /> Appointment scheduling & calendar sync</div>
-              <div className="flex items-center gap-2"><Dumbbell className="h-5 w-5 text-primary" /> Bootcamp & group class management</div>
+              <div className="flex items-center gap-2"><Dumbbell className="h-5 w-5 text-primary" /> Session & group class management</div>
               <div className="flex items-center gap-2"><Users className="h-5 w-5 text-primary" /> Member & cohort management</div>
               <div className="flex items-center gap-2"><ClipboardList className="h-5 w-5 text-primary" /> Review queue & progress tracking</div>
               <div className="flex items-center gap-2"><CreditCard className="h-5 w-5 text-primary" /> Invoicing, payments, and revenue analytics</div>

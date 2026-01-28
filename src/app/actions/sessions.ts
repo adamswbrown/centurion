@@ -5,6 +5,12 @@ import { prisma } from "@/lib/prisma"
 import { requireCoach } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import { addWeeks, setDay, parseISO, set } from "date-fns"
+import {
+  addEventToGoogleCalendar,
+  updateGoogleCalendarEvent,
+  deleteGoogleCalendarEvent,
+  type CalendarEvent,
+} from "@/lib/google-calendar"
 
 // ---------------------------------------------------------------------------
 // Schemas
@@ -189,14 +195,73 @@ export async function updateSession(input: UpdateSessionInput) {
 export async function cancelSession(id: number) {
   await requireCoach()
 
-  const session = await prisma.classSession.update({
+  const session = await prisma.classSession.findUnique({
+    where: { id },
+  })
+
+  if (session?.googleEventId) {
+    try {
+      await deleteGoogleCalendarEvent(session.googleEventId)
+    } catch (error) {
+      console.error("Error deleting Google Calendar event:", error)
+    }
+  }
+
+  const updatedSession = await prisma.classSession.update({
     where: { id },
     data: { status: "CANCELLED" },
   })
 
   revalidatePath("/sessions")
 
-  return session
+  return updatedSession
+}
+
+export async function syncSessionToGoogleCalendar(id: number) {
+  await requireCoach()
+
+  const session = await prisma.classSession.findUnique({
+    where: { id },
+    include: { classType: true },
+  })
+
+  if (!session) {
+    throw new Error("Session not found")
+  }
+
+  const calendarEvent: CalendarEvent = {
+    title: session.title,
+    description: session.notes || "",
+    startDate: session.startTime,
+    endDate: session.endTime,
+    location: session.location || "",
+    isAllDay: false,
+  }
+
+  try {
+    if (session.googleEventId) {
+      await updateGoogleCalendarEvent(session.googleEventId, calendarEvent)
+      return { success: true, message: "Google Calendar event updated" }
+    }
+
+    const googleEvent = await addEventToGoogleCalendar(calendarEvent)
+    if (googleEvent.id) {
+      await prisma.classSession.update({
+        where: { id },
+        data: { googleEventId: googleEvent.id },
+      })
+      return { success: true, message: "Synced to Google Calendar" }
+    }
+
+    throw new Error("Failed to create Google Calendar event")
+  } catch (error) {
+    console.error("Error syncing session to Google Calendar:", error)
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : "Failed to sync with Google Calendar",
+    }
+  }
 }
 
 export async function generateRecurringSessions(

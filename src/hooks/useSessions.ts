@@ -10,6 +10,7 @@ import {
   updateSession,
   cancelSession,
   generateRecurringSessions,
+  syncSessionToGoogleCalendar,
   type CreateSessionInput,
   type UpdateSessionInput,
   type GenerateRecurringSessionsInput,
@@ -84,6 +85,17 @@ export function useGenerateRecurringSessions() {
   return useMutation({
     mutationFn: (input: GenerateRecurringSessionsInput) =>
       generateRecurringSessions(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["sessions"] })
+    },
+  })
+}
+
+export function useSyncSession() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: number) => syncSessionToGoogleCalendar(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sessions"] })
     },

@@ -18,6 +18,7 @@ import {
   BarChart,
   ClipboardList,
   Sparkles,
+  Ticket,
 } from "lucide-react"
 import type { Role } from "@prisma/client"
 import { useViewMode } from "@/contexts/ViewModeContext"
@@ -33,8 +34,9 @@ const navigation = {
     { name: "Members", href: "/members", icon: Users },
     { name: "Users", href: "/admin/users", icon: UserCog },
     { name: "Appointments", href: "/appointments", icon: Calendar },
+    { name: "Sessions", href: "/sessions", icon: Dumbbell },
     { name: "Calendar", href: "/calendar", icon: Calendar },
-    { name: "Bootcamps", href: "/bootcamps", icon: Dumbbell },
+    { name: "Memberships", href: "/admin/memberships", icon: Ticket },
     { name: "Workouts", href: "/workouts", icon: Dumbbell },
     { name: "Cohorts", href: "/cohorts", icon: Heart },
     { name: "Billing", href: "/billing", icon: CreditCard },
@@ -48,8 +50,8 @@ const navigation = {
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Members", href: "/members", icon: Users },
     { name: "Appointments", href: "/appointments", icon: Calendar },
+    { name: "Sessions", href: "/sessions", icon: Dumbbell },
     { name: "Calendar", href: "/calendar", icon: Calendar },
-    { name: "Bootcamps", href: "/bootcamps", icon: Dumbbell },
     { name: "Workouts", href: "/workouts", icon: Dumbbell },
     { name: "Cohorts", href: "/cohorts", icon: Heart },
     { name: "Review Queue", href: "/coach/review-queue", icon: ClipboardList },
@@ -60,7 +62,8 @@ const navigation = {
   CLIENT: [
     { name: "Dashboard", href: "/client/dashboard", icon: LayoutDashboard },
     { name: "My Appointments", href: "/client/appointments", icon: Calendar },
-    { name: "My Bootcamps", href: "/client/bootcamps", icon: Dumbbell },
+    { name: "My Sessions", href: "/client/sessions", icon: Dumbbell },
+    { name: "My Membership", href: "/client/membership", icon: Ticket },
     { name: "My Workouts", href: "/client/workouts", icon: Dumbbell },
     { name: "My Cohorts", href: "/client/cohorts", icon: Heart },
     { name: "Health Data", href: "/client/health", icon: Heart },

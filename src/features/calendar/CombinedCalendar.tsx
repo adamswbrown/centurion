@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { DateFilter, generateCalendarMonth, getPrismaDateFilter } from "@/lib/calendar"
 import { useAppointments } from "@/hooks/useAppointments"
-import { useBootcamps } from "@/hooks/useBootcamps"
+import { useSessions } from "@/hooks/useSessions"
 
 const viewOptions = ["month", "week"] as const
 
@@ -30,32 +30,32 @@ export function CombinedCalendar() {
     from: dateFilter.gte,
     to: dateFilter.lt,
   })
-  const { data: bootcamps } = useBootcamps({
-    from: dateFilter.gte,
-    to: dateFilter.lt,
+  const { data: sessions } = useSessions({
+    startDate: dateFilter.gte?.toISOString(),
+    endDate: dateFilter.lt?.toISOString(),
   })
 
   const appointmentList = appointments ?? []
-  const bootcampList = bootcamps ?? []
+  const sessionList = sessions ?? []
 
   const monthDays = useMemo(() => generateCalendarMonth(dateFilter), [dateFilter])
 
   const eventsByDay = useMemo(() => {
-    const map = new Map<string, { appointments: typeof appointmentList; bootcamps: typeof bootcampList }>()
+    const map = new Map<string, { appointments: typeof appointmentList; sessions: typeof sessionList }>()
     appointmentList.forEach((appointment) => {
       const dayKey = format(new Date(appointment.startTime), "yyyy-MM-dd")
-      const entry = map.get(dayKey) || { appointments: [], bootcamps: [] }
+      const entry = map.get(dayKey) || { appointments: [], sessions: [] }
       entry.appointments.push(appointment)
       map.set(dayKey, entry)
     })
-    bootcampList.forEach((bootcamp) => {
-      const dayKey = format(new Date(bootcamp.startTime), "yyyy-MM-dd")
-      const entry = map.get(dayKey) || { appointments: [], bootcamps: [] }
-      entry.bootcamps.push(bootcamp)
+    sessionList.forEach((session) => {
+      const dayKey = format(new Date(session.startTime), "yyyy-MM-dd")
+      const entry = map.get(dayKey) || { appointments: [], sessions: [] }
+      entry.sessions.push(session)
       map.set(dayKey, entry)
     })
     return map
-  }, [appointmentList, bootcampList])
+  }, [appointmentList, sessionList])
 
   const startWeek = startOfWeek(cursor)
   const weekDays = Array.from({ length: 7 }, (_, index) => addDays(startWeek, index))
@@ -81,7 +81,7 @@ export function CombinedCalendar() {
               : `Week of ${format(startWeek, "MMM dd")}`}
           </h2>
           <p className="text-sm text-muted-foreground">
-            {appointmentList.length} appointments · {bootcampList.length} bootcamps
+            {appointmentList.length} appointments · {sessionList.length} sessions
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -117,7 +117,7 @@ export function CombinedCalendar() {
           <span className="h-2 w-2 rounded-full bg-blue-500" /> Appointments
         </div>
         <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-orange-500" /> Bootcamps
+          <span className="h-2 w-2 rounded-full bg-emerald-500" /> Sessions
         </div>
       </div>
 
@@ -126,7 +126,7 @@ export function CombinedCalendar() {
           {monthDays.map((day) => {
             const dayDate = new Date(day.year, day.month, day.day)
             const dayKey = format(dayDate, "yyyy-MM-dd")
-            const events = eventsByDay.get(dayKey) || { appointments: [], bootcamps: [] }
+            const events = eventsByDay.get(dayKey) || { appointments: [], sessions: [] }
             const isToday = isSameDay(dayDate, new Date())
 
             return (
@@ -141,9 +141,9 @@ export function CombinedCalendar() {
                   <span className="text-xs font-medium">
                     {format(dayDate, "EEE dd")}
                   </span>
-                  {(events.appointments.length + events.bootcamps.length) > 0 && (
+                  {(events.appointments.length + events.sessions.length) > 0 && (
                     <Badge variant="secondary" className="text-[10px]">
-                      {events.appointments.length + events.bootcamps.length}
+                      {events.appointments.length + events.sessions.length}
                     </Badge>
                   )}
                 </div>
@@ -153,14 +153,14 @@ export function CombinedCalendar() {
                       {format(new Date(appointment.startTime), "h:mm a")}
                     </div>
                   ))}
-                  {events.bootcamps.slice(0, 2).map((bootcamp) => (
-                    <div key={`bootcamp-${bootcamp.id}`} className="rounded-md border border-orange-400/40 bg-orange-500/10 px-2 py-1 text-xs">
-                      {bootcamp.name}
+                  {events.sessions.slice(0, 2).map((session) => (
+                    <div key={`session-${session.id}`} className="rounded-md border border-emerald-400/40 bg-emerald-500/10 px-2 py-1 text-xs">
+                      {session.title}
                     </div>
                   ))}
-                  {(events.appointments.length + events.bootcamps.length) > 4 && (
+                  {(events.appointments.length + events.sessions.length) > 4 && (
                     <p className="text-[10px] text-muted-foreground">
-                      +{events.appointments.length + events.bootcamps.length - 4} more
+                      +{events.appointments.length + events.sessions.length - 4} more
                     </p>
                   )}
                 </div>
@@ -172,16 +172,16 @@ export function CombinedCalendar() {
         <div className="grid gap-3 md:grid-cols-7">
           {weekDays.map((day) => {
             const dayKey = format(day, "yyyy-MM-dd")
-            const events = eventsByDay.get(dayKey) || { appointments: [], bootcamps: [] }
+            const events = eventsByDay.get(dayKey) || { appointments: [], sessions: [] }
             return (
               <div key={dayKey} className="rounded-md border p-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium">
                     {format(day, "EEE dd")}
                   </span>
-                  {(events.appointments.length + events.bootcamps.length) > 0 && (
+                  {(events.appointments.length + events.sessions.length) > 0 && (
                     <Badge variant="secondary" className="text-[10px]">
-                      {events.appointments.length + events.bootcamps.length}
+                      {events.appointments.length + events.sessions.length}
                     </Badge>
                   )}
                 </div>
@@ -191,12 +191,12 @@ export function CombinedCalendar() {
                       {format(new Date(appointment.startTime), "h:mm a")}
                     </div>
                   ))}
-                  {events.bootcamps.map((bootcamp) => (
-                    <div key={`bootcamp-${bootcamp.id}`} className="rounded-md border border-orange-400/40 bg-orange-500/10 px-2 py-1 text-xs">
-                      {bootcamp.name}
+                  {events.sessions.map((session) => (
+                    <div key={`session-${session.id}`} className="rounded-md border border-emerald-400/40 bg-emerald-500/10 px-2 py-1 text-xs">
+                      {session.title}
                     </div>
                   ))}
-                  {events.appointments.length + events.bootcamps.length === 0 && (
+                  {events.appointments.length + events.sessions.length === 0 && (
                     <p className="text-xs text-muted-foreground">No events</p>
                   )}
                 </div>

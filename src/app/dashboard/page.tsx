@@ -13,7 +13,7 @@ async function getAdminDashboardStats() {
   const weekEnd = endOfWeek(now, { weekStartsOn: 1 })
   const monthStart = startOfMonth(now)
 
-  const [totalMembers, appointmentsThisWeek, activeBootcamps, revenueResult] =
+  const [totalMembers, appointmentsThisWeek, activeSessions, revenueResult] =
     await Promise.all([
       prisma.user.count({
         where: { role: "CLIENT" },
@@ -23,10 +23,10 @@ async function getAdminDashboardStats() {
           startTime: { gte: weekStart, lte: weekEnd },
         },
       }),
-      prisma.bootcamp.count({
+      prisma.classSession.count({
         where: {
-          startTime: { lte: now },
-          endTime: { gte: now },
+          status: "SCHEDULED",
+          startTime: { gte: weekStart, lte: weekEnd },
         },
       }),
       prisma.invoice.aggregate({
@@ -40,7 +40,7 @@ async function getAdminDashboardStats() {
 
   const revenue = Number(revenueResult._sum.totalAmount || 0)
 
-  return { totalMembers, appointmentsThisWeek, activeBootcamps, revenue }
+  return { totalMembers, appointmentsThisWeek, activeSessions, revenue }
 }
 
 export default async function DashboardPage() {
@@ -97,13 +97,13 @@ export default async function DashboardPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Bootcamps</CardTitle>
+                <CardTitle className="text-sm font-medium">Sessions This Week</CardTitle>
                 <Dumbbell className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats?.activeBootcamps ?? 0}</div>
+                <div className="text-2xl font-bold">{stats?.activeSessions ?? 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  Running now
+                  Scheduled
                 </p>
               </CardContent>
             </Card>

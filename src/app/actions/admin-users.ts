@@ -73,7 +73,7 @@ export async function getAdminUserById(id: number) {
       },
       cohortMemberships: { include: { cohort: true } },
       invoices: { orderBy: { month: "desc" }, take: 10 },
-      bootcampAttendees: { include: { bootcamp: true } },
+      sessionRegistrations: { include: { session: { include: { classType: true } } }, take: 20 },
       entries: { orderBy: { date: "desc" }, take: 30 },
     },
   })

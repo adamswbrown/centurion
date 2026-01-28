@@ -12,7 +12,7 @@ type ViewMode = (typeof viewOptions)[number]
 
 type UnifiedEvent = {
   id: number
-  type: "appointment" | "bootcamp"
+  type: "appointment" | "session"
   title: string
   startTime: string
   endTime: string
@@ -43,15 +43,15 @@ export function UnifiedCalendar({ selectedDate, onSelectDate }: { selectedDate?:
       endTime: a.endTime,
       color: "#2563eb", // blue
     }))
-    const bootcamps = (data.bootcamps || []).map((b: any) => ({
-      id: b.id,
-      type: "bootcamp" as const,
-      title: b.name || "Bootcamp",
-      startTime: b.startTime,
-      endTime: b.endTime,
-      color: "#f59e42", // orange
+    const sessions = (data.sessions || []).map((s: any) => ({
+      id: s.id,
+      type: "session" as const,
+      title: s.title || "Session",
+      startTime: s.startTime,
+      endTime: s.endTime,
+      color: s.classType?.color || "#10b981", // emerald
     }))
-    return [...appts, ...bootcamps]
+    return [...appts, ...sessions]
   }, [data])
 
   const monthDays = useMemo(() => generateCalendarMonth(dateFilter), [dateFilter])

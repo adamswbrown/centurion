@@ -20,7 +20,7 @@ export default auth((req) => {
   )
 
   // Coach routes (accessible by ADMIN and COACH)
-  const coachRoutes = ["/dashboard", "/members", "/appointments", "/bootcamps", "/cohorts", "/invoices"]
+  const coachRoutes = ["/dashboard", "/members", "/appointments", "/sessions", "/cohorts", "/invoices"]
   const isCoachRoute = coachRoutes.some((route) =>
     nextUrl.pathname.startsWith(route)
   )

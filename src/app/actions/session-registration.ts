@@ -10,7 +10,9 @@ import {
 import { prisma } from "@/lib/prisma"
 import { requireAuth, requireCoach } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
-import { startOfWeek, endOfWeek, differenceInDays } from "date-fns"
+import { startOfWeek, endOfWeek, differenceInDays, format } from "date-fns"
+import { sendSystemEmail } from "@/lib/email"
+import { EMAIL_TEMPLATE_KEYS } from "@/lib/email-templates"
 
 // ============================================
 // SCHEMAS
@@ -285,7 +287,7 @@ export async function cancelRegistration(input: CancelRegistrationInput) {
     (sessionStart.getTime() - now.getTime()) / (1000 * 60 * 60)
   const isLateCancellation = hoursUntilSession < cutoffHours
 
-  await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     await tx.sessionRegistration.update({
       where: { id: data.registrationId },
       data: {
@@ -317,6 +319,8 @@ export async function cancelRegistration(input: CancelRegistrationInput) {
       orderBy: { waitlistPosition: "asc" },
     })
 
+    let promotedUserId: number | null = null
+
     if (nextWaitlisted) {
       await tx.sessionRegistration.update({
         where: { id: nextWaitlisted.id },
@@ -326,8 +330,38 @@ export async function cancelRegistration(input: CancelRegistrationInput) {
           promotedFromWaitlistAt: new Date(),
         },
       })
+      promotedUserId = nextWaitlisted.userId
     }
+
+    return { promotedUserId }
   })
+
+  // Send waitlist promotion email (outside transaction, fire-and-forget)
+  if (result.promotedUserId) {
+    try {
+      const promotedUser = await prisma.user.findUnique({
+        where: { id: result.promotedUserId },
+        select: { email: true, name: true, isTestUser: true },
+      })
+
+      if (promotedUser?.email) {
+        await sendSystemEmail({
+          templateKey: EMAIL_TEMPLATE_KEYS.SESSION_WAITLIST_PROMOTED,
+          to: promotedUser.email,
+          variables: {
+            userName: promotedUser.name ?? "Member",
+            sessionTitle: registration.session.title,
+            sessionDate: format(registration.session.startTime, "EEEE, MMMM d, yyyy"),
+            sessionTime: format(registration.session.startTime, "h:mm a"),
+          },
+          isTestUser: promotedUser.isTestUser,
+        })
+      }
+    } catch (error) {
+      console.error("Failed to send waitlist promotion email:", error)
+      // Don't throw - email failure should not block cancellation
+    }
+  }
 
   revalidatePath("/client/sessions")
   revalidatePath("/sessions")

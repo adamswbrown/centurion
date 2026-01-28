@@ -98,20 +98,18 @@ export async function POST(req: NextRequest) {
 
       case "invoice.paid": {
         const invoice = event.data.object
+        const sub = invoice.parent?.subscription_details?.subscription
         const subscriptionId =
-          typeof invoice.subscription === "string"
-            ? invoice.subscription
-            : invoice.subscription?.toString() ?? null
+          typeof sub === "string" ? sub : sub?.toString() ?? null
         await handleInvoicePaid(subscriptionId)
         break
       }
 
       case "invoice.payment_failed": {
         const invoice = event.data.object
+        const sub = invoice.parent?.subscription_details?.subscription
         const subscriptionId =
-          typeof invoice.subscription === "string"
-            ? invoice.subscription
-            : invoice.subscription?.toString() ?? null
+          typeof sub === "string" ? sub : sub?.toString() ?? null
         await handleInvoicePaymentFailed(subscriptionId)
         break
       }

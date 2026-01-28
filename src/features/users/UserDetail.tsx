@@ -40,7 +40,7 @@ interface UserDetailProps {
     }>
     cohortMemberships: Array<{ id: number; cohort: { id: number; name: string } }>
     invoices: Array<{ id: number; month: Date; totalAmount: any; paymentStatus: string }>
-    bootcampAttendees: Array<{ id: number; bootcamp: { id: number; name: string } }>
+    sessionRegistrations: Array<{ id: number; session: { id: number; title: string; classType: { name: string } | null } }>
     entries: Array<{
       id: number
       date: Date
@@ -314,13 +314,13 @@ export function UserDetail({ user }: UserDetailProps) {
         </div>
 
         <div className="rounded-md border p-4">
-          <h2 className="font-semibold mb-2">Bootcamps</h2>
-          {user.bootcampAttendees.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No bootcamps</p>
+          <h2 className="font-semibold mb-2">Sessions</h2>
+          {user.sessionRegistrations.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No sessions</p>
           ) : (
             <ul className="text-sm space-y-1">
-              {user.bootcampAttendees.map((att) => (
-                <li key={att.id}>{att.bootcamp.name}</li>
+              {user.sessionRegistrations.map((reg) => (
+                <li key={reg.id}>{reg.session.title}{reg.session.classType ? ` (${reg.session.classType.name})` : ""}</li>
               ))}
             </ul>
           )}

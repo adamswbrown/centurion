@@ -16,7 +16,7 @@ export default async function CalendarPage() {
         <div>
           <h1 className="text-3xl font-bold">Calendar</h1>
           <p className="text-muted-foreground">
-            Combined view of appointments and bootcamps
+            Combined view of appointments and sessions
           </p>
         </div>
 
