@@ -12,6 +12,8 @@
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "test:e2e:setup": "tsx e2e/setup/seed-test-data.ts",
+    "test:e2e:full": "npm run test:e2e:setup && npm run test:e2e",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
