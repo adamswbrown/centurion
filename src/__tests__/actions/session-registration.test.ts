@@ -104,6 +104,15 @@ describe("Session Registration Server Actions", () => {
       }
       return Promise.all(fn as Promise<unknown>[])
     })
+
+    // Default: user is in a cohort with access to classTypeId 10
+    mockPrisma.cohortMembership.findMany.mockResolvedValue([
+      { cohortId: 1 },
+    ])
+    mockPrisma.cohortSessionAccess.findFirst.mockResolvedValue({
+      cohortId: 1,
+      classTypeId: 10,
+    })
   })
 
   // ============================================
@@ -162,6 +171,49 @@ describe("Session Registration Server Actions", () => {
       await expect(registerForSession({ sessionId: 1 })).rejects.toThrow(
         "Session is not available for registration"
       )
+    })
+
+    it("should throw if user is not a member of any cohort", async () => {
+      const classSession = createMockClassSession()
+      mockPrisma.classSession.findUnique.mockResolvedValue(classSession)
+      mockPrisma.cohortMembership.findMany.mockResolvedValue([])
+
+      await expect(registerForSession({ sessionId: 1 })).rejects.toThrow(
+        "You are not a member of any cohort"
+      )
+    })
+
+    it("should throw if cohort does not have access to session class type", async () => {
+      const classSession = createMockClassSession()
+      mockPrisma.classSession.findUnique.mockResolvedValue(classSession)
+      mockPrisma.cohortMembership.findMany.mockResolvedValue([{ cohortId: 1 }])
+      mockPrisma.cohortSessionAccess.findFirst.mockResolvedValue(null)
+
+      await expect(registerForSession({ sessionId: 1 })).rejects.toThrow(
+        "You do not have access to register for this session"
+      )
+    })
+
+    it("should skip cohort access check for sessions without classTypeId", async () => {
+      const classSession = createMockClassSession({ classTypeId: null, classType: null })
+      const membership = createMockMembership({ userId: 3 })
+      const newReg = createMockRegistration({
+        userId: 3,
+        sessionId: 1,
+        status: "REGISTERED",
+      })
+
+      mockPrisma.classSession.findUnique.mockResolvedValue(classSession)
+      mockPrisma.sessionRegistration.findUnique.mockResolvedValue(null)
+      mockPrisma.userMembership.findFirst.mockResolvedValue(membership)
+      mockPrisma.sessionRegistration.count.mockResolvedValue(0)
+      mockPrisma.sessionRegistration.create.mockResolvedValue(newReg)
+
+      const result = await registerForSession({ sessionId: 1 })
+
+      expect(result.waitlisted).toBe(false)
+      // Cohort access check should NOT have been called
+      expect(mockPrisma.cohortMembership.findMany).not.toHaveBeenCalled()
     })
 
     it("should throw if already registered", async () => {

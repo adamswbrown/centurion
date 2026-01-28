@@ -30,6 +30,7 @@ import { MemberManagement } from "./MemberManagement"
 import { CohortAnalytics } from "./CohortAnalytics"
 import { CheckInConfigEditor } from "./CheckInConfigEditor"
 import { CohortCheckInFrequency } from "./CohortCheckInFrequency"
+import { SessionAccessManager } from "./SessionAccessManager"
 import { CohortStatus } from "@prisma/client"
 
 interface CohortDetailProps {
@@ -274,6 +275,8 @@ export function CohortDetail({ cohort }: CohortDetailProps) {
       />
 
       <CheckInConfigEditor cohortId={cohort.id} />
+
+      <SessionAccessManager cohortId={cohort.id} />
 
       <div className="grid gap-6 md:grid-cols-2">
         <CoachAssignment cohortId={cohort.id} currentCoaches={cohort.coaches} />

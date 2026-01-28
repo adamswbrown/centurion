@@ -24,11 +24,10 @@ const sessionFormSchema = z.object({
 type SessionFormValues = z.infer<typeof sessionFormSchema>
 
 interface SessionFormProps {
-  cohorts?: Array<{ id: number; name: string }>
   onSuccess?: () => void
 }
 
-export function SessionForm({ cohorts, onSuccess }: SessionFormProps) {
+export function SessionForm({ onSuccess }: SessionFormProps) {
   const createSession = useCreateSession()
   const { data: classTypes } = useClassTypes({ activeOnly: true })
   const [error, setError] = useState<string | null>(null)
@@ -44,8 +43,7 @@ export function SessionForm({ cohorts, onSuccess }: SessionFormProps) {
       maxOccupancy: 12,
       location: "",
       notes: "",
-      // cohortId removed
-    },
+},
   })
 
   const onSubmit = form.handleSubmit(async (values) => {
@@ -157,7 +155,6 @@ export function SessionForm({ cohorts, onSuccess }: SessionFormProps) {
             {...form.register("location")}
           />
         </div>
-        {/* Cohort select removed: session is now global, access controlled elsewhere */}
       </div>
 
       <div className="space-y-2">

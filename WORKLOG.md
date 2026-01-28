@@ -1,6 +1,26 @@
-## 2026-01-28 — API/Business Logic Refactor Complete
+## 2026-01-28 — Session/Cohort Decoupling UI Refactor Complete
 
-All API endpoints and backend business logic for session creation, update, and recurring sessions have been refactored to remove cohort-session coupling. SessionForm and related UI logic no longer reference cohorts directly; session access is now managed via CohortSessionAccess. No errors remain after migration and code updates. Next step: refactor UI components for session browsing and calendar to fully use the decoupled model.
+Completed the full session/cohort decoupling refactor:
+
+**Bug Fix:**
+- Fixed critical ordering bug in `registerForSession()` where cohort access check referenced `userId` and `classSession` before they were defined (moved check after auth + session fetch)
+- Added null classTypeId bypass (sessions without a class type are open to all)
+
+**UI Refactor:**
+- Removed unused `cohorts` prop from `SessionForm.tsx`
+- Created `SessionAccessManager` component for admin cohort detail page (checkbox list of class types)
+- Created `cohort-session-access.ts` server actions (`getCohortSessionAccess`, `setCohortSessionAccess`)
+- Created `useCohortSessionAccess.ts` React Query hook
+- Wired `SessionAccessManager` into `CohortDetail.tsx`
+
+**Data Migration:**
+- Created `scripts/backfill-cohort-session-access.ts` to populate join table from historical `ClassSession.cohortId` data
+
+**Testing:**
+- Updated `sessions.test.ts`: Fixed cohortId filter test to use CohortSessionAccess mock, removed cohortId from create/update/recurring tests
+- Updated `session-registration.test.ts`: Added 3 new cohort access tests (no cohort membership, no access, null classTypeId bypass)
+- Added `cohortSessionAccess` model to Prisma mock
+- All 1632 tests passing, build clean
 # 2026-01-28
 
 ## Session & Cohort Decoupling Architecture Refactor

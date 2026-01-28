@@ -122,16 +122,33 @@ describe("Sessions Server Actions", () => {
       )
     })
 
-    it("should filter by cohortId", async () => {
+    it("should filter by cohortId via CohortSessionAccess", async () => {
+      mockPrisma.cohortSessionAccess.findMany.mockResolvedValue([
+        { cohortId: 3, classTypeId: 10 },
+        { cohortId: 3, classTypeId: 20 },
+      ])
       mockPrisma.classSession.findMany.mockResolvedValue([])
 
       await getSessions({ cohortId: 3 })
 
+      expect(mockPrisma.cohortSessionAccess.findMany).toHaveBeenCalledWith({
+        where: { cohortId: 3 },
+        select: { classTypeId: true },
+      })
       expect(mockPrisma.classSession.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ cohortId: 3 }),
+          where: expect.objectContaining({ classTypeId: { in: [10, 20] } }),
         })
       )
+    })
+
+    it("should return empty array when cohort has no session access", async () => {
+      mockPrisma.cohortSessionAccess.findMany.mockResolvedValue([])
+
+      const result = await getSessions({ cohortId: 3 })
+
+      expect(result).toEqual([])
+      expect(mockPrisma.classSession.findMany).not.toHaveBeenCalled()
     })
 
     it("should filter by classTypeId", async () => {
@@ -225,7 +242,6 @@ describe("Sessions Server Actions", () => {
         ...mockSession({ id: 5 }),
         classType: { id: 1, name: "HIIT" },
         coach: { id: 1, name: "Coach", email: "coach@test.com" },
-        cohort: null,
         registrations: [
           { id: 1, user: { id: 10, name: "Member", email: "member@test.com" } },
         ],
@@ -241,7 +257,6 @@ describe("Sessions Server Actions", () => {
         include: {
           classType: true,
           coach: { select: { id: true, name: true, email: true } },
-          cohort: true,
           registrations: {
             include: {
               user: { select: { id: true, name: true, email: true } },
@@ -265,10 +280,14 @@ describe("Sessions Server Actions", () => {
   // -------------------------------------------------------------------------
 
   describe("getCohortSessions", () => {
-    it("should return sessions for a specific cohort", async () => {
+    it("should return sessions for a specific cohort via CohortSessionAccess", async () => {
+      mockPrisma.cohortSessionAccess.findMany.mockResolvedValue([
+        { cohortId: 7, classTypeId: 10 },
+        { cohortId: 7, classTypeId: 20 },
+      ])
       const sessions = [
-        mockSessionWithRelations({ id: 1, cohortId: 7 }),
-        mockSessionWithRelations({ id: 2, cohortId: 7 }),
+        mockSessionWithRelations({ id: 1, classTypeId: 10 }),
+        mockSessionWithRelations({ id: 2, classTypeId: 20 }),
       ]
       mockPrisma.classSession.findMany.mockResolvedValue(sessions)
 
@@ -276,8 +295,12 @@ describe("Sessions Server Actions", () => {
 
       expect(result).toHaveLength(2)
       expect(requireCoach).toHaveBeenCalled()
-      expect(mockPrisma.classSession.findMany).toHaveBeenCalledWith({
+      expect(mockPrisma.cohortSessionAccess.findMany).toHaveBeenCalledWith({
         where: { cohortId: 7 },
+        select: { classTypeId: true },
+      })
+      expect(mockPrisma.classSession.findMany).toHaveBeenCalledWith({
+        where: { classTypeId: { in: [10, 20] } },
         include: {
           classType: true,
           coach: { select: { id: true, name: true, email: true } },
@@ -285,6 +308,15 @@ describe("Sessions Server Actions", () => {
         },
         orderBy: { startTime: "desc" },
       })
+    })
+
+    it("should return empty array when cohort has no access", async () => {
+      mockPrisma.cohortSessionAccess.findMany.mockResolvedValue([])
+
+      const result = await getCohortSessions(7)
+
+      expect(result).toEqual([])
+      expect(mockPrisma.classSession.findMany).not.toHaveBeenCalled()
     })
   })
 
@@ -312,7 +344,6 @@ describe("Sessions Server Actions", () => {
       expect(mockPrisma.classSession.create).toHaveBeenCalledWith({
         data: {
           classTypeId: 1,
-          cohortId: undefined,
           coachId: 1, // parsed from user.id "1"
           title: "New Session",
           startTime: new Date("2024-06-15T09:00:00Z"),
@@ -323,25 +354,6 @@ describe("Sessions Server Actions", () => {
         },
       })
       expect(revalidatePath).toHaveBeenCalledWith("/sessions")
-    })
-
-    it("should create a session with cohortId", async () => {
-      const created = mockSession({ id: 11, cohortId: 3 })
-      mockPrisma.classSession.create.mockResolvedValue(created)
-
-      await createSession({
-        cohortId: 3,
-        title: "Cohort Session",
-        startTime: "2024-06-15T09:00:00Z",
-        endTime: "2024-06-15T10:00:00Z",
-        maxOccupancy: 10,
-      })
-
-      expect(mockPrisma.classSession.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          cohortId: 3,
-        }),
-      })
     })
 
     it("should create a session without optional fields", async () => {
@@ -359,7 +371,6 @@ describe("Sessions Server Actions", () => {
         data: expect.objectContaining({
           title: "Minimal Session",
           classTypeId: undefined,
-          cohortId: undefined,
           location: undefined,
           notes: undefined,
         }),
@@ -471,7 +482,7 @@ describe("Sessions Server Actions", () => {
       expect(callArgs.data.endTime).toEqual(new Date("2024-07-01T15:00:00Z"))
     })
 
-    it("should allow setting classTypeId and cohortId to null", async () => {
+    it("should allow setting classTypeId to null", async () => {
       const updated = mockSession({ id: 1 })
       mockPrisma.classSession.findUnique.mockResolvedValue(mockSession({ id: 1, coachId: 1 }))
       mockPrisma.classSession.update.mockResolvedValue(updated)
@@ -479,12 +490,10 @@ describe("Sessions Server Actions", () => {
       await updateSession({
         id: 1,
         classTypeId: null,
-        cohortId: null,
       })
 
       const callArgs = mockPrisma.classSession.update.mock.calls[0][0]
       expect(callArgs.data.classTypeId).toBeNull()
-      expect(callArgs.data.cohortId).toBeNull()
     })
 
     it("should reject when id is not a positive integer", async () => {
@@ -616,24 +625,6 @@ describe("Sessions Server Actions", () => {
         expect(session.endTime.getHours()).toBe(15)
         expect(session.endTime.getMinutes()).toBe(45)
       }
-    })
-
-    it("should include cohortId when provided", async () => {
-      mockPrisma.classSession.createMany.mockResolvedValue({ count: 1 })
-
-      await generateRecurringSessions({
-        cohortId: 5,
-        title: "Cohort Recurring",
-        startTime: "09:00",
-        endTime: "10:00",
-        maxOccupancy: 10,
-        dayOfWeek: 1,
-        weeks: 1,
-        startDate: "2024-06-03",
-      })
-
-      const createManyCall = mockPrisma.classSession.createMany.mock.calls[0][0]
-      expect(createManyCall.data[0].cohortId).toBe(5)
     })
 
     it("should use the authenticated coach's id", async () => {

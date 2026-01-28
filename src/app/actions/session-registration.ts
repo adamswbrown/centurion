@@ -40,26 +40,6 @@ export type MarkAttendanceInput = z.infer<typeof markAttendanceSchema>
 // ============================================
 
 export async function registerForSession(input: RegisterInput) {
-    // --- COHORT ACCESS CHECK ---
-    // Find all cohortIds for this user
-    const userCohorts = await prisma.cohortMembership.findMany({
-      where: { userId, status: "ACTIVE" },
-      select: { cohortId: true },
-    })
-    const cohortIds = userCohorts.map((c) => c.cohortId)
-    if (cohortIds.length === 0) {
-      throw new Error("You are not a member of any cohort")
-    }
-    // Check if any of user's cohorts have access to this session's classTypeId
-    const access = await prisma.cohortSessionAccess.findFirst({
-      where: {
-        cohortId: { in: cohortIds },
-        classTypeId: classSession.classTypeId ?? -1,
-      },
-    })
-    if (!access) {
-      throw new Error("You do not have access to register for this session")
-    }
   const session = await requireAuth()
   const data = registerSchema.parse(input)
   const userId = Number.parseInt(session.id, 10)
@@ -92,6 +72,27 @@ export async function registerForSession(input: RegisterInput) {
 
   if (classSession.status !== SessionStatus.SCHEDULED) {
     throw new Error("Session is not available for registration")
+  }
+
+  // 2. Cohort access check (only for sessions with a classTypeId)
+  if (classSession.classTypeId) {
+    const userCohorts = await prisma.cohortMembership.findMany({
+      where: { userId, status: "ACTIVE" },
+      select: { cohortId: true },
+    })
+    const cohortIds = userCohorts.map((c) => c.cohortId)
+    if (cohortIds.length === 0) {
+      throw new Error("You are not a member of any cohort")
+    }
+    const access = await prisma.cohortSessionAccess.findFirst({
+      where: {
+        cohortId: { in: cohortIds },
+        classTypeId: classSession.classTypeId,
+      },
+    })
+    if (!access) {
+      throw new Error("You do not have access to register for this session")
+    }
   }
 
   // Check if already registered
