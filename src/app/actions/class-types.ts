@@ -6,10 +6,10 @@ import { requireAdmin, requireCoach } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 
 // ---------------------------------------------------------------------------
-// Schemas
+// Schemas (not exported - "use server" files can only export async functions)
 // ---------------------------------------------------------------------------
 
-export const createClassTypeSchema = z.object({
+const createClassTypeSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   color: z.string().optional(),
@@ -17,7 +17,7 @@ export const createClassTypeSchema = z.object({
   defaultDurationMins: z.number().int().min(1).default(60),
 })
 
-export const updateClassTypeSchema = z.object({
+const updateClassTypeSchema = z.object({
   id: z.number().int(),
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
@@ -28,11 +28,11 @@ export const updateClassTypeSchema = z.object({
 })
 
 // ---------------------------------------------------------------------------
-// Types
+// Types (inferred from schemas)
 // ---------------------------------------------------------------------------
 
-export type CreateClassTypeInput = z.infer<typeof createClassTypeSchema>
-export type UpdateClassTypeInput = z.infer<typeof updateClassTypeSchema>
+type CreateClassTypeInput = z.infer<typeof createClassTypeSchema>
+type UpdateClassTypeInput = z.infer<typeof updateClassTypeSchema>
 
 // ---------------------------------------------------------------------------
 // Queries

@@ -10,6 +10,6 @@ test.describe("Centurion E2E Tests", () => {
   test("login page is accessible", async ({ page }) => {
     await page.goto("/login")
     // Check that login page elements are present
-    await expect(page.locator("text=Sign in")).toBeVisible()
+    await expect(page.getByRole("heading", { name: /sign in/i })).toBeVisible()
   })
 })

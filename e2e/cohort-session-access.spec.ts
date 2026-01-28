@@ -13,7 +13,7 @@ test.describe("Cohort Session Access - Admin Management", () => {
     await adminPage.goto("/cohorts")
 
     // Click on the test cohort
-    await adminPage.click("text=Spring 2026")
+    await adminPage.locator("text=Spring 2026").first().click()
 
     // Wait for cohort detail to load
     await expect(adminPage.locator("text=Spring 2026").first()).toBeVisible({ timeout: 5000 })
@@ -26,7 +26,7 @@ test.describe("Cohort Session Access - Admin Management", () => {
 
   test("should show class types with checkboxes", async ({ adminPage }) => {
     await adminPage.goto("/cohorts")
-    await adminPage.click("text=Spring 2026")
+    await adminPage.locator("text=Spring 2026").first().click()
 
     // Should see class type checkboxes
     await expect(adminPage.locator("text=HIIT")).toBeVisible({ timeout: 5000 })
@@ -35,7 +35,7 @@ test.describe("Cohort Session Access - Admin Management", () => {
 
   test("should have HIIT checked (from seed data)", async ({ adminPage }) => {
     await adminPage.goto("/cohorts")
-    await adminPage.click("text=Spring 2026")
+    await adminPage.locator("text=Spring 2026").first().click()
 
     // Wait for class types to load
     await expect(adminPage.locator("text=HIIT")).toBeVisible({ timeout: 5000 })
@@ -55,7 +55,7 @@ test.describe("Cohort Session Access - Admin Management", () => {
 
   test("should save changes to session access", async ({ adminPage }) => {
     await adminPage.goto("/cohorts")
-    await adminPage.click("text=Spring 2026")
+    await adminPage.locator("text=Spring 2026").first().click()
 
     // Wait for class types to load
     await expect(adminPage.locator("text=HIIT")).toBeVisible({ timeout: 5000 })
@@ -81,10 +81,10 @@ test.describe("Cohort Session Access - Coach View", () => {
     await coachPage.goto("/cohorts")
 
     // Coach should see the cohort they're assigned to
-    await expect(coachPage.locator("text=Spring 2026")).toBeVisible({ timeout: 5000 })
+    await expect(coachPage.locator("text=Spring 2026").first()).toBeVisible({ timeout: 5000 })
 
     // Click on cohort
-    await coachPage.click("text=Spring 2026")
+    await coachPage.locator("text=Spring 2026").first().click()
 
     // Should see cohort details
     await expect(coachPage.locator("text=Spring 2026").first()).toBeVisible({ timeout: 5000 })

@@ -27,6 +27,7 @@ test.describe("Appointments", () => {
         adminPage.locator("[data-testid=calendar]")
           .or(adminPage.locator("text=Appointments"))
           .or(adminPage.locator("text=Calendar"))
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
@@ -42,6 +43,7 @@ test.describe("Appointments", () => {
         await expect(
           adminPage.locator("[data-testid=calendar]")
             .or(adminPage.locator("text=Appointments"))
+            .first()
         ).toBeVisible({ timeout: 5000 })
       }
     })

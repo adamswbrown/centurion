@@ -36,6 +36,7 @@ test.describe("Cohorts", () => {
         adminPage.locator("[data-testid=cohort-list]")
           .or(adminPage.locator("text=Cohorts"))
           .or(adminPage.locator("text=Spring 2026"))
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
@@ -66,7 +67,7 @@ test.describe("Cohorts", () => {
 
         // Form should be visible
         await expect(
-          adminPage.getByLabel(/name/i)
+          adminPage.getByLabel(/name/i).first()
             .or(adminPage.locator("text=Create Cohort"))
             .or(adminPage.locator("text=New Cohort"))
         ).toBeVisible({ timeout: 5000 })
@@ -98,7 +99,7 @@ test.describe("Cohorts", () => {
       await adminPage.goto("/cohorts")
 
       // Click on test cohort
-      await adminPage.click("text=Spring 2026")
+      await adminPage.locator("text=Spring 2026").first().click()
 
       // Member list or member section should be visible
       await expect(
@@ -112,7 +113,7 @@ test.describe("Cohorts", () => {
       await adminPage.goto("/cohorts")
 
       // Click on test cohort
-      await adminPage.click("text=Spring 2026")
+      await adminPage.locator("text=Spring 2026").first().click()
 
       // Click add member button
       const addButton = adminPage.getByRole("button", { name: /add member/i })

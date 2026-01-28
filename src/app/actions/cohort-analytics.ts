@@ -1,15 +1,19 @@
+"use server"
+
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import { startOfDay } from "date-fns"
 
-export const getCohortCheckInAnalyticsSchema = z.object({
+// Schema (not exported - "use server" files can only export async functions)
+const getCohortCheckInAnalyticsSchema = z.object({
   cohortId: z.number(),
   from: z.date().optional(),
   to: z.date().optional(),
 })
 
-export type CohortCheckInAnalytics = {
+// Type (not exported - "use server" files can only export async functions)
+type CohortCheckInAnalytics = {
   memberId: number
   name: string | null
   email: string | null
