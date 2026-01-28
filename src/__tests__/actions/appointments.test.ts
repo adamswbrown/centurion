@@ -504,6 +504,7 @@ describe("Appointments Server Actions", () => {
           fee: true,
           status: true,
           notes: true,
+          videoUrl: true,
           googleEventId: true,
           user: { select: { id: true, name: true, email: true } },
         },
