@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import { requireAdmin, requireCoach } from "@/lib/auth"
 import { startOfMonth, endOfMonth, subMonths, subDays, startOfWeek, endOfWeek, format as formatDate } from "date-fns"
-import { PaymentStatus, CohortStatus, MembershipStatus } from "@prisma/client"
+import { PaymentStatus, CohortStatus, MembershipStatus, SessionStatus, RegistrationStatus, MembershipTierStatus, MembershipPlanType } from "@prisma/client"
 
 /**
  * Reports Server Actions
@@ -103,6 +103,31 @@ export interface DashboardOverview {
   memberGrowth: number
   revenueGrowth: number
   attentionRequired: number
+}
+
+export interface SessionAttendanceReport {
+  totalSessions: number
+  completedSessions: number
+  cancelledSessions: number
+  upcomingSessions: number
+  totalRegistrations: number
+  attendanceRate: number
+  noShowRate: number
+  lateCancelRate: number
+  averageOccupancy: number
+  sessionsByStatus: { status: string; count: number }[]
+  attendanceTrend: { date: string; attended: number; noShow: number; total: number }[]
+  popularClassTypes: { name: string; sessionCount: number; avgAttendance: number }[]
+}
+
+export interface MembershipReport {
+  totalActiveMemberships: number
+  totalPausedMemberships: number
+  totalCancelledMemberships: number
+  membershipsByType: { type: string; count: number }[]
+  planPopularity: { planName: string; activeCount: number; type: string }[]
+  churnRate: number
+  averageSessionsPerMember: number
 }
 
 // ==========================================
@@ -831,4 +856,308 @@ function convertToCSV(data: unknown, reportType: string): string {
   }
 
   return lines.join("\n")
+}
+
+// ==========================================
+// SESSION ATTENDANCE REPORT
+// ==========================================
+
+export async function getSessionAttendanceReport(): Promise<SessionAttendanceReport> {
+  const { userId, isAdmin } = await requireCoachOrAdmin()
+
+  const now = new Date()
+  const twelveWeeksAgo = subDays(now, 84) // 12 weeks
+
+  // Build coach filter
+  const coachFilter = isAdmin ? {} : { coachId: userId }
+
+  // Parallel queries for performance
+  const [
+    allSessions,
+    allRegistrations,
+    classTypes,
+  ] = await Promise.all([
+    // All sessions
+    prisma.classSession.findMany({
+      where: coachFilter,
+      select: {
+        id: true,
+        status: true,
+        startTime: true,
+        maxOccupancy: true,
+        classType: {
+          select: { name: true },
+        },
+      },
+    }),
+
+    // All registrations
+    prisma.sessionRegistration.findMany({
+      where: {
+        session: coachFilter,
+      },
+      select: {
+        status: true,
+        sessionId: true,
+      },
+    }),
+
+    // Class types with session counts
+    prisma.classType.findMany({
+      where: {
+        sessions: {
+          some: coachFilter,
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        sessions: {
+          where: {
+            ...coachFilter,
+            status: SessionStatus.COMPLETED,
+          },
+          select: {
+            id: true,
+            registrations: {
+              where: {
+                status: RegistrationStatus.ATTENDED,
+              },
+            },
+          },
+        },
+      },
+    }),
+  ])
+
+  // Count sessions by status
+  const totalSessions = allSessions.length
+  const completedSessions = allSessions.filter(s => s.status === SessionStatus.COMPLETED).length
+  const cancelledSessions = allSessions.filter(s => s.status === SessionStatus.CANCELLED).length
+  const upcomingSessions = allSessions.filter(s => s.status === SessionStatus.SCHEDULED && s.startTime > now).length
+
+  // Session status breakdown
+  const statusCounts: Record<string, number> = {}
+  allSessions.forEach(s => {
+    statusCounts[s.status] = (statusCounts[s.status] || 0) + 1
+  })
+  const sessionsByStatus = Object.entries(statusCounts).map(([status, count]) => ({
+    status,
+    count,
+  }))
+
+  // Count registrations by status
+  const totalRegistrations = allRegistrations.length
+  const attendedCount = allRegistrations.filter(r => r.status === RegistrationStatus.ATTENDED).length
+  const noShowCount = allRegistrations.filter(r => r.status === RegistrationStatus.NO_SHOW).length
+  const lateCancelCount = allRegistrations.filter(r => r.status === RegistrationStatus.LATE_CANCELLED).length
+
+  const attendanceRate = totalRegistrations > 0 ? (attendedCount / totalRegistrations) * 100 : 0
+  const noShowRate = totalRegistrations > 0 ? (noShowCount / totalRegistrations) * 100 : 0
+  const lateCancelRate = totalRegistrations > 0 ? (lateCancelCount / totalRegistrations) * 100 : 0
+
+  // Calculate average occupancy
+  const sessionsWithCapacity = allSessions.filter(s => s.maxOccupancy > 0)
+  let totalOccupancyPercentage = 0
+
+  sessionsWithCapacity.forEach(session => {
+    const sessionRegs = allRegistrations.filter(r => r.sessionId === session.id)
+    const registeredOrAttended = sessionRegs.filter(
+      r => r.status === RegistrationStatus.REGISTERED || r.status === RegistrationStatus.ATTENDED
+    ).length
+    const occupancyPercent = (registeredOrAttended / session.maxOccupancy) * 100
+    totalOccupancyPercentage += occupancyPercent
+  })
+
+  const averageOccupancy = sessionsWithCapacity.length > 0
+    ? totalOccupancyPercentage / sessionsWithCapacity.length
+    : 0
+
+  // Attendance trend (last 12 weeks, grouped by week)
+  const weeklyData: Record<string, { attended: number; noShow: number; total: number }> = {}
+
+  // Get sessions from last 12 weeks with registrations
+  const recentSessions = await prisma.classSession.findMany({
+    where: {
+      ...coachFilter,
+      startTime: { gte: twelveWeeksAgo, lte: now },
+      status: SessionStatus.COMPLETED,
+    },
+    include: {
+      registrations: {
+        select: { status: true },
+      },
+    },
+    orderBy: { startTime: "asc" },
+  })
+
+  recentSessions.forEach(session => {
+    const weekStart = startOfWeek(session.startTime)
+    const weekKey = formatDate(weekStart, "yyyy-MM-dd")
+
+    if (!weeklyData[weekKey]) {
+      weeklyData[weekKey] = { attended: 0, noShow: 0, total: 0 }
+    }
+
+    const attended = session.registrations.filter(r => r.status === RegistrationStatus.ATTENDED).length
+    const noShow = session.registrations.filter(r => r.status === RegistrationStatus.NO_SHOW).length
+    const total = session.registrations.length
+
+    weeklyData[weekKey].attended += attended
+    weeklyData[weekKey].noShow += noShow
+    weeklyData[weekKey].total += total
+  })
+
+  const attendanceTrend = Object.entries(weeklyData)
+    .map(([date, data]) => ({ date, ...data }))
+    .sort((a, b) => a.date.localeCompare(b.date))
+
+  // Popular class types
+  const popularClassTypes = classTypes.map(ct => {
+    const sessionCount = ct.sessions.length
+    const totalAttendance = ct.sessions.reduce(
+      (sum, s) => sum + s.registrations.length,
+      0
+    )
+    const avgAttendance = sessionCount > 0 ? totalAttendance / sessionCount : 0
+
+    return {
+      name: ct.name,
+      sessionCount,
+      avgAttendance,
+    }
+  }).sort((a, b) => b.sessionCount - a.sessionCount)
+
+  return {
+    totalSessions,
+    completedSessions,
+    cancelledSessions,
+    upcomingSessions,
+    totalRegistrations,
+    attendanceRate,
+    noShowRate,
+    lateCancelRate,
+    averageOccupancy,
+    sessionsByStatus,
+    attendanceTrend,
+    popularClassTypes,
+  }
+}
+
+// ==========================================
+// MEMBERSHIP REPORT (Admin Only)
+// ==========================================
+
+export async function getMembershipReport(): Promise<MembershipReport> {
+  await requireAdmin()
+
+  const now = new Date()
+  const thirtyDaysAgo = subDays(now, 30)
+
+  // Parallel queries for performance
+  const [
+    allMemberships,
+    activeMemberships,
+    pausedMemberships,
+    cancelledMemberships,
+    planStats,
+    recentRegistrations,
+  ] = await Promise.all([
+    // All memberships
+    prisma.userMembership.findMany({
+      select: {
+        status: true,
+        plan: {
+          select: {
+            type: true,
+          },
+        },
+      },
+    }),
+
+    // Active memberships count
+    prisma.userMembership.count({
+      where: { status: MembershipTierStatus.ACTIVE },
+    }),
+
+    // Paused memberships count
+    prisma.userMembership.count({
+      where: { status: MembershipTierStatus.PAUSED },
+    }),
+
+    // Cancelled memberships count
+    prisma.userMembership.count({
+      where: { status: MembershipTierStatus.CANCELLED },
+    }),
+
+    // Plan popularity
+    prisma.membershipPlan.findMany({
+      where: { isActive: true },
+      select: {
+        name: true,
+        type: true,
+        userMemberships: {
+          where: { status: MembershipTierStatus.ACTIVE },
+        },
+      },
+    }),
+
+    // Recent registrations (last 30 days)
+    prisma.sessionRegistration.count({
+      where: {
+        registeredAt: { gte: thirtyDaysAgo },
+        status: {
+          in: [RegistrationStatus.REGISTERED, RegistrationStatus.ATTENDED],
+        },
+      },
+    }),
+  ])
+
+  // Memberships by type
+  const typeCounts: Record<string, number> = {}
+  allMemberships.forEach(m => {
+    const type = m.plan.type
+    typeCounts[type] = (typeCounts[type] || 0) + 1
+  })
+  const membershipsByType = Object.entries(typeCounts).map(([type, count]) => ({
+    type,
+    count,
+  }))
+
+  // Plan popularity
+  const planPopularity = planStats
+    .map(plan => ({
+      planName: plan.name,
+      activeCount: plan.userMemberships.length,
+      type: plan.type,
+    }))
+    .sort((a, b) => b.activeCount - a.activeCount)
+
+  // Churn rate (cancelled in last 30 days / total active at start of period)
+  const cancelledInLast30Days = await prisma.userMembership.count({
+    where: {
+      status: MembershipTierStatus.CANCELLED,
+      updatedAt: { gte: thirtyDaysAgo },
+    },
+  })
+
+  const activeAtStartOfPeriod = activeMemberships + cancelledInLast30Days
+  const churnRate = activeAtStartOfPeriod > 0
+    ? (cancelledInLast30Days / activeAtStartOfPeriod) * 100
+    : 0
+
+  // Average sessions per member (last 30 days)
+  const averageSessionsPerMember = activeMemberships > 0
+    ? recentRegistrations / activeMemberships
+    : 0
+
+  return {
+    totalActiveMemberships: activeMemberships,
+    totalPausedMemberships: pausedMemberships,
+    totalCancelledMemberships: cancelledMemberships,
+    membershipsByType,
+    planPopularity,
+    churnRate,
+    averageSessionsPerMember,
+  }
 }

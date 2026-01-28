@@ -7,6 +7,8 @@ import {
   getCohortReport,
   getRevenueReport,
   getComplianceReport,
+  getSessionAttendanceReport,
+  getMembershipReport,
   exportReportData,
   type ReportDateRange,
   type ExportOptions,
@@ -79,5 +81,23 @@ export function useExportReport() {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
     },
+  })
+}
+
+// Session Attendance Report
+export function useSessionAttendanceReport() {
+  return useQuery({
+    queryKey: ["reports", "session-attendance"],
+    queryFn: getSessionAttendanceReport,
+    staleTime: 1000 * 60 * 5,
+  })
+}
+
+// Membership Analytics Report
+export function useMembershipReport() {
+  return useQuery({
+    queryKey: ["reports", "membership-analytics"],
+    queryFn: getMembershipReport,
+    staleTime: 1000 * 60 * 5,
   })
 }
