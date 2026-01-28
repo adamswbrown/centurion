@@ -8,6 +8,7 @@ import {
   cancelRegistration,
   getMyRegistrations,
   getSessionUsage,
+  getAvailableSessions,
   markAttendance,
   getSessionRegistrations,
   type RegisterInput,
@@ -29,6 +30,16 @@ export function useSessionUsage(userId?: number) {
   return useQuery({
     queryKey: ["sessionUsage", userId],
     queryFn: () => getSessionUsage(userId),
+  })
+}
+
+export function useAvailableSessions(params?: {
+  startDate?: string
+  endDate?: string
+}) {
+  return useQuery({
+    queryKey: ["availableSessions", params],
+    queryFn: () => getAvailableSessions(params),
   })
 }
 

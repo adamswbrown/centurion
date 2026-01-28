@@ -432,6 +432,101 @@ export async function getMyRegistrations(params?: {
   })
 }
 
+/**
+ * Get sessions available for the current user to book
+ * (respects cohort access and membership allowances)
+ */
+export async function getAvailableSessions(params?: {
+  startDate?: string
+  endDate?: string
+}) {
+  const session = await requireAuth()
+  const userId = Number.parseInt(session.id, 10)
+
+  // Get user's active cohort memberships
+  const userCohorts = await prisma.cohortMembership.findMany({
+    where: { userId, status: "ACTIVE" },
+    select: { cohortId: true },
+  })
+  const cohortIds = userCohorts.map((c) => c.cohortId)
+
+  // Get classTypeIds accessible via cohorts
+  let accessibleClassTypeIds: number[] = []
+  if (cohortIds.length > 0) {
+    const access = await prisma.cohortSessionAccess.findMany({
+      where: { cohortId: { in: cohortIds } },
+      select: { classTypeId: true },
+    })
+    accessibleClassTypeIds = [...new Set(access.map((a) => a.classTypeId))]
+  }
+
+  // Get user's membership allowances (if any)
+  const membership = await prisma.userMembership.findFirst({
+    where: { userId, status: MembershipTierStatus.ACTIVE },
+    include: {
+      plan: {
+        include: { allowances: true },
+      },
+    },
+  })
+
+  let membershipAllowedClassTypeIds: number[] | null = null
+  if (membership?.plan.allowances && membership.plan.allowances.length > 0) {
+    membershipAllowedClassTypeIds = membership.plan.allowances.map((a) => a.classTypeId)
+  }
+
+  // Build the where clause
+  const where: Record<string, unknown> = {
+    status: SessionStatus.SCHEDULED,
+    startTime: { gte: new Date() },
+  }
+
+  // Filter by date range if provided
+  if (params?.startDate || params?.endDate) {
+    where.startTime = {
+      gte: params?.startDate ? new Date(params.startDate) : new Date(),
+      ...(params?.endDate ? { lte: new Date(params.endDate) } : {}),
+    }
+  }
+
+  // Combine cohort access and membership allowances
+  // If both exist, use the intersection; if only one exists, use that
+  if (accessibleClassTypeIds.length > 0 && membershipAllowedClassTypeIds) {
+    const intersection = accessibleClassTypeIds.filter((id) =>
+      membershipAllowedClassTypeIds!.includes(id)
+    )
+    if (intersection.length > 0) {
+      where.classTypeId = { in: intersection }
+    } else {
+      // No sessions accessible - return empty
+      return []
+    }
+  } else if (accessibleClassTypeIds.length > 0) {
+    where.classTypeId = { in: accessibleClassTypeIds }
+  } else if (membershipAllowedClassTypeIds) {
+    where.classTypeId = { in: membershipAllowedClassTypeIds }
+  }
+  // If neither restriction exists, show all scheduled sessions
+
+  return prisma.classSession.findMany({
+    where,
+    include: {
+      classType: true,
+      coach: { select: { id: true, name: true, email: true, image: true } },
+      _count: {
+        select: {
+          registrations: {
+            where: {
+              status: { in: [RegistrationStatus.REGISTERED, RegistrationStatus.ATTENDED] },
+            },
+          },
+        },
+      },
+    },
+    orderBy: { startTime: "asc" },
+  })
+}
+
 export async function getSessionUsage(userId?: number) {
   const session = await requireAuth()
   const requestingUserId = Number.parseInt(session.id, 10)

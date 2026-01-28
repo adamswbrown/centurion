@@ -1,9 +1,9 @@
 "use client"
 
-import { useSessions } from "@/hooks/useSessions"
 import {
   useMyRegistrations,
   useSessionUsage,
+  useAvailableSessions,
   useRegisterForSession,
   useCancelRegistration,
 } from "@/hooks/useSessionRegistration"
@@ -75,9 +75,7 @@ function SessionUsageBar() {
 }
 
 export function ClientSessionBrowser() {
-  const { data: sessions, isLoading: sessionsLoading } = useSessions({
-    status: "SCHEDULED",
-  })
+  const { data: sessions, isLoading: sessionsLoading } = useAvailableSessions()
   const { data: registrations, isLoading: registrationsLoading } =
     useMyRegistrations({ upcoming: true })
   const registerMutation = useRegisterForSession()

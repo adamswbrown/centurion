@@ -3,7 +3,7 @@
 import { z } from "zod"
 import { MembershipPlanType, MembershipTierStatus } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
-import { requireAdmin, requireCoach } from "@/lib/auth"
+import { requireAdmin, requireCoach, requireAuth } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import { addDays } from "date-fns"
 
@@ -238,7 +238,13 @@ export async function assignMembership(input: AssignMembershipInput) {
 }
 
 export async function getUserActiveMembership(userId: number) {
-  await requireCoach()
+  const session = await requireAuth()
+  const requesterId = Number.parseInt(session.id, 10)
+
+  // Clients can only view their own membership; coaches/admins can view anyone's
+  if (session.role === "CLIENT" && requesterId !== userId) {
+    throw new Error("Not authorized to view this membership")
+  }
 
   return prisma.userMembership.findFirst({
     where: {
@@ -260,7 +266,13 @@ export async function getUserActiveMembership(userId: number) {
 }
 
 export async function getUserMembershipHistory(userId: number) {
-  await requireCoach()
+  const session = await requireAuth()
+  const requesterId = Number.parseInt(session.id, 10)
+
+  // Clients can only view their own history; coaches/admins can view anyone's
+  if (session.role === "CLIENT" && requesterId !== userId) {
+    throw new Error("Not authorized to view this membership history")
+  }
 
   return prisma.userMembership.findMany({
     where: { userId },
