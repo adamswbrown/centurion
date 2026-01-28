@@ -128,6 +128,19 @@ describe("Stripe Billing Webhook Handlers", () => {
       expect(mockPrisma.userMembership.create).not.toHaveBeenCalled()
     })
 
+    it("should handle invalid metadata gracefully", async () => {
+      // Missing planId, userId - should return without throwing
+      await expect(
+        handleCheckoutCompleted(
+          { type: "membership", planId: "not-a-number", userId: "", planType: "INVALID" },
+          "cs_test_invalid"
+        )
+      ).resolves.toBeUndefined()
+
+      expect(mockPrisma.membershipPlan.findUnique).not.toHaveBeenCalled()
+      expect(mockPrisma.userMembership.create).not.toHaveBeenCalled()
+    })
+
     it("should skip if plan type is RECURRING (handled by subscription.created)", async () => {
       const plan = createMockPlan({ id: 1, type: "RECURRING" })
       mockPrisma.membershipPlan.findUnique.mockResolvedValue(plan)
@@ -270,6 +283,7 @@ describe("Stripe Billing Webhook Handlers", () => {
         type: "membership",
         planId: "3",
         userId: "10",
+        planType: "RECURRING",
       })
 
       expect(mockPrisma.userMembership.create).toHaveBeenCalledWith({
@@ -291,6 +305,7 @@ describe("Stripe Billing Webhook Handlers", () => {
         type: "membership",
         planId: "1",
         userId: "5",
+        planType: "RECURRING",
       })
 
       const createCall = mockPrisma.userMembership.create.mock.calls[0][0]

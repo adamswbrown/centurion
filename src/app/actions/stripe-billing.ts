@@ -6,6 +6,15 @@ import { requireAuth, requireAdmin } from "@/lib/auth"
 import { stripe, ensureStripe } from "@/lib/stripe"
 import { revalidatePath } from "next/cache"
 import { addDays } from "date-fns"
+import { z } from "zod"
+
+// Schema for validating webhook metadata
+const membershipMetadataSchema = z.object({
+  type: z.literal("membership"),
+  planId: z.string().transform((v) => parseInt(v, 10)).pipe(z.number().int().positive()),
+  userId: z.string().transform((v) => parseInt(v, 10)).pipe(z.number().int().positive()),
+  planType: z.nativeEnum(MembershipPlanType),
+})
 
 // ============================================
 // CHECKOUT SESSION CREATION
@@ -248,9 +257,13 @@ export async function handleCheckoutCompleted(
 ) {
   if (metadata.type !== "membership") return
 
-  const planId = parseInt(metadata.planId)
-  const userId = parseInt(metadata.userId)
-  const planType = metadata.planType as MembershipPlanType
+  const parsed = membershipMetadataSchema.safeParse(metadata)
+  if (!parsed.success) {
+    console.error("handleCheckoutCompleted: Invalid metadata", parsed.error.flatten())
+    return
+  }
+
+  const { planId, userId, planType } = parsed.data
 
   const plan = await prisma.membershipPlan.findUnique({
     where: { id: planId },
@@ -289,8 +302,13 @@ export async function handleSubscriptionCreated(
 ) {
   if (metadata.type !== "membership") return
 
-  const planId = parseInt(metadata.planId)
-  const userId = parseInt(metadata.userId)
+  const parsed = membershipMetadataSchema.safeParse(metadata)
+  if (!parsed.success) {
+    console.error("handleSubscriptionCreated: Invalid metadata", parsed.error.flatten())
+    return
+  }
+
+  const { planId, userId } = parsed.data
 
   await prisma.userMembership.create({
     data: {
