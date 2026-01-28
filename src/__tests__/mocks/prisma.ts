@@ -321,6 +321,20 @@ export const mockPrisma = {
     upsert: vi.fn(),
     groupBy: vi.fn(),
   },
+  creditTransaction: {
+    findMany: vi.fn(),
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    updateMany: vi.fn(),
+    deleteMany: vi.fn(),
+    count: vi.fn(),
+    upsert: vi.fn(),
+    groupBy: vi.fn(),
+    aggregate: vi.fn(),
+  },
   $transaction: vi.fn((operations) => {
     if (Array.isArray(operations)) {
       return Promise.all(operations)
