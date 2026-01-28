@@ -401,12 +401,13 @@ model QuestionnaireBundle {
 }
 
 model WeeklyQuestionnaireResponse {
-  id         Int            @id @default(autoincrement())
-  userId     Int
-  bundleId   Int
-  weekNumber Int
-  responses  Json           // User's answers
-  status     ResponseStatus @default(IN_PROGRESS)
+  id          Int            @id @default(autoincrement())
+  userId      Int
+  bundleId    Int
+  weekNumber  Int
+  responses   Json           // User's answers
+  status      ResponseStatus @default(IN_PROGRESS)
+  completedAt DateTime?      // When the questionnaire was submitted
 
   user   User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   bundle QuestionnaireBundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)

@@ -68,3 +68,6 @@ Thumbs.db
 #Loki
 loki-mode
 loki-mode
+
+#sources
+/sources/

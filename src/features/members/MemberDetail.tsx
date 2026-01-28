@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { EditMemberDialog } from "./EditMemberDialog"
+import { MemberMetricsCharts } from "./MemberMetricsCharts"
 
 interface MemberDetailProps {
   member: {
@@ -247,7 +248,11 @@ export function MemberDetail({ member }: MemberDetailProps) {
         </TabsContent>
 
         {/* Check-In History Tab */}
-        <TabsContent value="checkins">
+        <TabsContent value="checkins" className="space-y-4">
+          {/* Health Metrics Charts */}
+          <MemberMetricsCharts entries={member.entries || []} days={14} />
+
+          {/* Check-In Table */}
           <Card>
             <CardHeader>
               <CardTitle>Check-In History</CardTitle>

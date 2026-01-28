@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/auth"
 import { CheckInForm } from "@/features/entries/CheckInForm"
 import { CheckInHistory } from "@/features/entries/CheckInHistory"
 import { CheckInStats } from "@/features/entries/CheckInStats"
+import { CheckInChart } from "@/features/entries/CheckInChart"
 
 export default async function ClientHealthPage() {
   await requireAuth()
@@ -22,6 +23,7 @@ export default async function ClientHealthPage() {
         </div>
 
         <CheckInStats />
+        <CheckInChart days={30} />
         <CheckInForm />
         <CheckInHistory limit={30} />
       </div>
