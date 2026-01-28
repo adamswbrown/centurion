@@ -28,14 +28,13 @@ async function main() {
   await prisma.questionnaireBundle.deleteMany()
   await prisma.entry.deleteMany()
   await prisma.cohortCheckInConfig.deleteMany()
-  await prisma.bootcampAttendee.deleteMany()
-  await prisma.bootcamp.deleteMany()
   await prisma.invoice.deleteMany()
   await prisma.appointment.deleteMany()
   await prisma.cohortMembership.deleteMany()
   await prisma.coachCohortMembership.deleteMany()
   await prisma.cohort.deleteMany()
-  await prisma.session.deleteMany()
+  await prisma.sessionRegistration.deleteMany()
+  await prisma.classSession.deleteMany()
   await prisma.account.deleteMany()
   await prisma.user.deleteMany()
 
@@ -524,45 +523,6 @@ async function main() {
     createdAppointments++
   }
   console.log(`✅ Created ${createdAppointments} appointments from appointments.json`)
-
-  // Create bootcamps as multi-week programs
-  console.log("💪 Creating bootcamps...")
-  const bootcampPrograms = [
-    {
-      name: "Morning HIIT Bootcamp",
-      description: "High-intensity interval training for 6 weeks",
-      startDate: addDays(new Date(), 1),
-      weeks: 6,
-      location: "Main Gym",
-      attendees: [clients[0], clients[1], clients[2]],
-    },
-    {
-      name: "Strength & Conditioning Bootcamp",
-      description: "Full body strength training for 8 weeks",
-      startDate: addDays(new Date(), 3),
-      weeks: 8,
-      location: "Weight Room",
-      attendees: [clients[0]],
-    },
-  ]
-
-  for (const bootcamp of bootcampPrograms) {
-    const created = await prisma.bootcamp.create({
-      data: {
-        name: bootcamp.name,
-        description: bootcamp.description,
-        startTime: bootcamp.startDate,
-        endTime: addDays(bootcamp.startDate, bootcamp.weeks * 7),
-        location: bootcamp.location,
-        capacity: bootcamp.attendees.length,
-      },
-    })
-    // Register attendees
-    await prisma.bootcampAttendee.createMany({
-      data: bootcamp.attendees.map((user) => ({ bootcampId: created.id, userId: user.id })),
-    })
-  }
-  console.log("✅ Created bootcamp programs with attendees")
 
   // Create invoices
   console.log("💵 Creating invoices...")
