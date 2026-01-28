@@ -8,9 +8,26 @@ import {
   createClassType,
   updateClassType,
   deleteClassType,
-  type CreateClassTypeInput,
-  type UpdateClassTypeInput,
 } from "@/app/actions/class-types"
+
+// Types defined locally since "use server" files can only export async functions
+type CreateClassTypeInput = {
+  name: string
+  description?: string
+  color?: string
+  defaultCapacity: number
+  defaultDurationMins: number
+}
+
+type UpdateClassTypeInput = {
+  id: number
+  name: string
+  description?: string
+  color?: string
+  defaultCapacity: number
+  defaultDurationMins: number
+  isActive: boolean
+}
 
 export function useClassTypes(params?: { activeOnly?: boolean }) {
   return useQuery({
