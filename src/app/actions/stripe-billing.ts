@@ -7,6 +7,7 @@ import { stripe, ensureStripe } from "@/lib/stripe"
 import { revalidatePath } from "next/cache"
 import { addDays } from "date-fns"
 import { z } from "zod"
+import type Stripe from "stripe"
 
 // Schema for validating webhook metadata
 const membershipMetadataSchema = z.object({
@@ -108,7 +109,7 @@ async function createStripeProductAndPrice(plan: {
     metadata: { planId: plan.id.toString(), planType: plan.type },
   })
 
-  let priceParams: Record<string, unknown> = {
+  let priceParams: Stripe.PriceCreateParams = {
     product: product.id,
     currency: "gbp",
     metadata: { planId: plan.id.toString() },
@@ -119,7 +120,7 @@ async function createStripeProductAndPrice(plan: {
     priceParams = {
       ...priceParams,
       unit_amount: amount,
-      recurring: { interval: "month" as const },
+      recurring: { interval: "month" },
     }
   } else if (plan.type === MembershipPlanType.PACK) {
     const amount = Math.round(Number(plan.packPrice) * 100)
@@ -129,8 +130,7 @@ async function createStripeProductAndPrice(plan: {
     priceParams = { ...priceParams, unit_amount: amount }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const price = await stripeClient.prices.create(priceParams as any)
+  const price = await stripeClient.prices.create(priceParams)
 
   return { productId: product.id, priceId: price.id }
 }
