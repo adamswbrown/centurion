@@ -48,7 +48,15 @@ export async function getMemberById(id: number) {
         },
       },
       cohortMemberships: {
-        include: { cohort: true },
+        include: {
+          cohort: {
+            select: {
+              id: true,
+              name: true,
+              checkInFrequencyDays: true,
+            },
+          },
+        },
       },
       invoices: {
         orderBy: { month: "desc" },
@@ -166,4 +174,104 @@ export async function deleteMember(id: number) {
   })
 
   return { success: true }
+}
+
+/**
+ * Update a member's check-in frequency override
+ * This overrides the cohort default for this specific member
+ */
+const updateCheckInFrequencySchema = z.object({
+  memberId: z.number().int().positive(),
+  frequencyDays: z.number().int().min(1).max(7).nullable(),
+})
+
+export async function updateMemberCheckInFrequency(input: {
+  memberId: number
+  frequencyDays: number | null
+}) {
+  await requireCoach()
+
+  const result = updateCheckInFrequencySchema.safeParse(input)
+  if (!result.success) {
+    return {
+      error: result.error.errors[0].message,
+    }
+  }
+
+  const { memberId, frequencyDays } = result.data
+
+  const member = await prisma.user.findUnique({
+    where: { id: memberId },
+  })
+
+  if (!member || member.role !== "CLIENT") {
+    return {
+      error: "Member not found",
+    }
+  }
+
+  const updated = await prisma.user.update({
+    where: { id: memberId },
+    data: {
+      checkInFrequencyDays: frequencyDays,
+    },
+    select: {
+      id: true,
+      checkInFrequencyDays: true,
+    },
+  })
+
+  return { success: true, member: updated }
+}
+
+/**
+ * Get a member's effective check-in frequency
+ * Returns the user override, cohort default, or system default
+ */
+export async function getMemberEffectiveFrequency(memberId: number): Promise<{
+  frequencyDays: number
+  source: "user" | "cohort" | "system"
+}> {
+  await requireCoach()
+
+  const member = await prisma.user.findUnique({
+    where: { id: memberId },
+    select: {
+      checkInFrequencyDays: true,
+      cohortMemberships: {
+        where: { status: "ACTIVE" },
+        take: 1,
+        select: {
+          cohort: {
+            select: {
+              checkInFrequencyDays: true,
+            },
+          },
+        },
+      },
+    },
+  })
+
+  if (!member) {
+    return { frequencyDays: 1, source: "system" }
+  }
+
+  // User override takes precedence
+  if (member.checkInFrequencyDays !== null) {
+    return { frequencyDays: member.checkInFrequencyDays, source: "user" }
+  }
+
+  // Cohort default is second
+  const cohortFrequency = member.cohortMemberships[0]?.cohort?.checkInFrequencyDays
+  if (cohortFrequency !== null && cohortFrequency !== undefined) {
+    return { frequencyDays: cohortFrequency, source: "cohort" }
+  }
+
+  // System default is fallback
+  const systemSettings = await prisma.systemSettings.findUnique({
+    where: { key: "defaultCheckInFrequencyDays" },
+  })
+  const systemDefault = (systemSettings?.value as number) || 1
+
+  return { frequencyDays: systemDefault, source: "system" }
 }

@@ -29,6 +29,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { EditMemberDialog } from "./EditMemberDialog"
 import { MemberMetricsCharts } from "./MemberMetricsCharts"
+import { MemberAdherenceCard } from "./MemberAdherenceCard"
+import { CoachNotesSection } from "./CoachNotesSection"
+import { useClientAttention } from "@/hooks/useAttentionScores"
 
 interface MemberDetailProps {
   member: {
@@ -38,6 +41,7 @@ interface MemberDetailProps {
     image: string | null
     createdAt: Date
     emailVerified: boolean
+    checkInFrequencyDays?: number | null
     appointmentsAsClient: Array<{
       id: number
       title: string | null
@@ -55,6 +59,7 @@ interface MemberDetailProps {
       cohort: {
         id: number
         name: string
+        checkInFrequencyDays?: number | null
       }
     }>
     invoices: Array<{
@@ -115,6 +120,9 @@ export function MemberDetail({ member }: MemberDetailProps) {
     updatedAt: Date
   } | null>(null)
 
+  // Fetch attention score for this member
+  const { data: attentionScore } = useClientAttention(member.id)
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -168,7 +176,24 @@ export function MemberDetail({ member }: MemberDetailProps) {
 
         {/* Overview Tab (Cohorts & Invoices) */}
         <TabsContent value="overview">
-          <div className="grid gap-4 md:grid-cols-2">
+          {/* Adherence Card - Full Width */}
+          <MemberAdherenceCard
+            memberId={member.id}
+            entries={member.entries || []}
+            attentionScore={attentionScore ? {
+              priority: attentionScore.priority,
+              score: attentionScore.score,
+              reasons: attentionScore.reasons,
+              suggestedActions: attentionScore.suggestedActions,
+            } : null}
+            checkInFrequencyDays={member.checkInFrequencyDays}
+            cohortCheckInFrequency={member.cohortMemberships[0]?.cohort?.checkInFrequencyDays}
+          />
+
+          {/* Coach Notes - Full Width */}
+          <CoachNotesSection clientId={member.id} className="mt-4" />
+
+          <div className="grid gap-4 md:grid-cols-2 mt-4">
             <Card>
               <CardHeader>
                 <CardTitle>Active Cohorts</CardTitle>

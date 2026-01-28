@@ -22,6 +22,12 @@ import { EMAIL_TEMPLATE_KEYS } from "@/lib/email-templates"
 // TYPE DEFINITIONS
 // ==========================================
 
+export interface QuestionnaireStatus {
+  status: "completed" | "in_progress" | "not_started" | "no_questionnaire"
+  lastUpdated: Date | null
+  hoursSinceLastSave: number | null
+}
+
 export interface ClientWeeklySummary {
   clientId: number
   name: string | null
@@ -41,6 +47,7 @@ export interface ClientWeeklySummary {
   }
   lastCheckInDate: Date | null
   attentionScore: MemberAttentionScore | null
+  questionnaireStatus: QuestionnaireStatus
 }
 
 export interface WeeklySummariesResponse {
@@ -114,6 +121,7 @@ export async function getWeeklySummaries(
         select: {
           id: true,
           name: true,
+          startDate: true,
           members: {
             where: { status: MembershipStatus.ACTIVE },
             include: {
@@ -124,6 +132,13 @@ export async function getWeeklySummaries(
                   email: true,
                 },
               },
+            },
+          },
+          bundles: {
+            select: {
+              id: true,
+              weekNumber: true,
+              isActive: true,
             },
           },
         },
@@ -139,6 +154,8 @@ export async function getWeeklySummaries(
       email: m.user.email,
       cohortId: cc.cohort.id,
       cohortName: cc.cohort.name,
+      cohortStartDate: cc.cohort.startDate,
+      bundles: cc.cohort.bundles,
     }))
   )
 
@@ -192,6 +209,51 @@ export async function getWeeklySummaries(
     lastCheckIns.map((lc) => [lc.userId, lc._max.date])
   )
 
+  // Fetch questionnaire responses for all clients
+  // Calculate week number based on cohort start date
+  const cohortWeekNumbers = new Map<number, number>()
+  const cohortBundleIds = new Map<number, number | null>()
+
+  for (const cc of coachCohorts) {
+    const cohortStart = new Date(cc.cohort.startDate)
+    const weeksSinceStart = Math.floor(
+      (targetWeekStart.getTime() - cohortStart.getTime()) / (7 * 24 * 60 * 60 * 1000)
+    )
+    const currentWeek = Math.max(1, weeksSinceStart + 1)
+    cohortWeekNumbers.set(cc.cohort.id, currentWeek)
+
+    // Find the bundle for this week
+    const bundle = cc.cohort.bundles.find(
+      (b) => b.weekNumber === currentWeek && b.isActive
+    )
+    cohortBundleIds.set(cc.cohort.id, bundle?.id ?? null)
+  }
+
+  // Get all bundle IDs that have questionnaires for current week
+  const bundleIds = Array.from(cohortBundleIds.values()).filter(
+    (id): id is number => id !== null
+  )
+
+  // Fetch questionnaire responses for all clients
+  const questionnaireResponses = bundleIds.length > 0
+    ? await prisma.weeklyQuestionnaireResponse.findMany({
+        where: {
+          userId: { in: clientIds },
+          bundleId: { in: bundleIds },
+        },
+        select: {
+          userId: true,
+          bundleId: true,
+          status: true,
+          updatedAt: true,
+        },
+      })
+    : []
+
+  const responseMap = new Map(
+    questionnaireResponses.map((r) => [`${r.userId}-${r.bundleId}`, r])
+  )
+
   // Calculate expected check-ins based on week duration
   const today = new Date()
   const daysIntoWeek = Math.min(
@@ -236,6 +298,34 @@ export async function getWeeklySummaries(
         // Attention score calculation failed, continue without it
       }
 
+      // Get questionnaire status
+      const bundleId = cohortBundleIds.get(client.cohortId)
+      let questionnaireStatus: QuestionnaireStatus = {
+        status: "no_questionnaire",
+        lastUpdated: null,
+        hoursSinceLastSave: null,
+      }
+
+      if (bundleId) {
+        const response = responseMap.get(`${client.clientId}-${bundleId}`)
+        if (response) {
+          const hoursSinceLastSave = Math.floor(
+            (today.getTime() - response.updatedAt.getTime()) / (1000 * 60 * 60)
+          )
+          questionnaireStatus = {
+            status: response.status === "COMPLETED" ? "completed" : "in_progress",
+            lastUpdated: response.updatedAt,
+            hoursSinceLastSave,
+          }
+        } else {
+          questionnaireStatus = {
+            status: "not_started",
+            lastUpdated: null,
+            hoursSinceLastSave: null,
+          }
+        }
+      }
+
       return {
         clientId: client.clientId,
         name: client.name,
@@ -255,6 +345,7 @@ export async function getWeeklySummaries(
         },
         lastCheckInDate: lastCheckInMap.get(client.clientId) || null,
         attentionScore,
+        questionnaireStatus,
       }
     })
   )
@@ -508,3 +599,127 @@ export async function getCoachCohorts() {
 }
 
 // Email draft generation moved to @/lib/email-draft.ts (client-side utility)
+
+// ==========================================
+// SEND QUESTIONNAIRE REMINDER
+// ==========================================
+
+const sendQuestionnaireReminderSchema = z.object({
+  clientId: z.number().int().positive(),
+  cohortId: z.number().int().positive(),
+})
+
+export async function sendQuestionnaireReminder(input: {
+  clientId: number
+  cohortId: number
+}): Promise<{ success: boolean; message: string }> {
+  const user = await requireCoach()
+  const coachId = Number(user.id)
+
+  const result = sendQuestionnaireReminderSchema.safeParse(input)
+  if (!result.success) {
+    throw new Error(result.error.errors[0].message)
+  }
+
+  const { clientId, cohortId } = result.data
+
+  // Verify coach has access to this cohort
+  const membership = await prisma.coachCohortMembership.findFirst({
+    where: {
+      coachId,
+      cohortId,
+    },
+  })
+
+  if (!membership) {
+    throw new Error("Forbidden: You don't have access to this cohort")
+  }
+
+  // Only allow sending reminders for current week
+  const today = new Date()
+  const currentWeekStart = getMonday(today)
+  const currentWeekEnd = getSunday(currentWeekStart)
+
+  // Get the cohort to calculate week number
+  const cohort = await prisma.cohort.findUnique({
+    where: { id: cohortId },
+    select: {
+      startDate: true,
+      bundles: {
+        where: { isActive: true },
+        select: { id: true, weekNumber: true },
+      },
+    },
+  })
+
+  if (!cohort) {
+    throw new Error("Cohort not found")
+  }
+
+  // Calculate current week number
+  const weeksSinceStart = Math.floor(
+    (currentWeekStart.getTime() - cohort.startDate.getTime()) / (7 * 24 * 60 * 60 * 1000)
+  )
+  const currentWeekNumber = Math.max(1, weeksSinceStart + 1)
+
+  // Check if there's a questionnaire for this week
+  const bundle = cohort.bundles.find((b) => b.weekNumber === currentWeekNumber)
+  if (!bundle) {
+    return {
+      success: false,
+      message: "No questionnaire available for this week",
+    }
+  }
+
+  // Check if client has already completed the questionnaire
+  const existingResponse = await prisma.weeklyQuestionnaireResponse.findFirst({
+    where: {
+      userId: clientId,
+      bundleId: bundle.id,
+      status: "COMPLETED",
+    },
+  })
+
+  if (existingResponse) {
+    return {
+      success: false,
+      message: "Client has already completed this week's questionnaire",
+    }
+  }
+
+  // Get client and coach details for email
+  const client = await prisma.user.findUnique({
+    where: { id: clientId },
+    select: { name: true, email: true, isTestUser: true },
+  })
+
+  const coach = await prisma.user.findUnique({
+    where: { id: coachId },
+    select: { name: true },
+  })
+
+  if (!client?.email) {
+    return {
+      success: false,
+      message: "Client email not found",
+    }
+  }
+
+  // Send reminder email
+  await sendSystemEmail({
+    templateKey: EMAIL_TEMPLATE_KEYS.WEEKLY_QUESTIONNAIRE_REMINDER,
+    to: client.email,
+    variables: {
+      userName: client.name || "Member",
+      coachName: coach?.name || "Your Coach",
+      weekNumber: String(currentWeekNumber),
+      questionnaireUrl: `${process.env.NEXT_PUBLIC_APP_URL || ""}/client/questionnaires/${cohortId}/${currentWeekNumber}`,
+    },
+    isTestUser: client.isTestUser ?? false,
+  })
+
+  return {
+    success: true,
+    message: "Reminder sent successfully",
+  }
+}

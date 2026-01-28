@@ -7,6 +7,7 @@ import {
   saveWeeklyResponse,
   getReviewQueueSummary,
   getCoachCohorts,
+  sendQuestionnaireReminder,
 } from "@/app/actions/review-queue"
 
 /**
@@ -72,5 +73,21 @@ export function useCoachCohorts() {
     queryKey: ["coach-cohorts"],
     queryFn: getCoachCohorts,
     staleTime: 1000 * 60 * 10, // 10 minutes
+  })
+}
+
+// Send questionnaire reminder mutation
+export function useSendQuestionnaireReminder() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (input: { clientId: number; cohortId: number }) =>
+      sendQuestionnaireReminder(input),
+    onSuccess: () => {
+      // Invalidate summaries to refresh questionnaire status
+      queryClient.invalidateQueries({
+        queryKey: ["review-queue", "summaries"],
+      })
+    },
   })
 }

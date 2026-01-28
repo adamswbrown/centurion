@@ -622,6 +622,28 @@ model AuditLog {
 }
 
 // ============================================
+// ATTENTION SCORE SYSTEM (From CoachFit)
+// ============================================
+
+model AttentionScore {
+  id           Int       @id @default(autoincrement())
+  entityType   String    // "user" | "coach" | "cohort"
+  entityId     Int       // References User.id or Cohort.id
+  priority     String    // "red" | "amber" | "green"
+  score        Int       // 0-100
+  reasons      String[]
+  metadata     Json?
+  calculatedAt DateTime  @default(now())
+  expiresAt    DateTime?
+
+  @@unique([entityType, entityId])
+  @@map("attention_scores")
+  @@index([priority, score])
+  @@index([calculatedAt])
+  @@index([expiresAt])
+}
+
+// ============================================
 // WEEKLY REVIEW QUEUE (From CoachFit)
 // ============================================
 
