@@ -10,6 +10,8 @@ import {
   ComplianceReport,
   ExportButton,
   ExportAllButton,
+  SessionAttendanceAnalytics,
+  MembershipAnalytics,
 } from "./index"
 
 /**
@@ -45,10 +47,12 @@ export function ReportsDashboard({ userRole }: ReportsDashboardProps) {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:w-auto lg:inline-grid lg:grid-cols-7">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>
+          <TabsTrigger value="sessions">Sessions</TabsTrigger>
           <TabsTrigger value="cohorts">Cohorts</TabsTrigger>
+          {isAdmin && <TabsTrigger value="memberships">Memberships</TabsTrigger>}
           {isAdmin && <TabsTrigger value="revenue">Revenue</TabsTrigger>}
           <TabsTrigger value="compliance">Compliance</TabsTrigger>
         </TabsList>
@@ -77,6 +81,20 @@ export function ReportsDashboard({ userRole }: ReportsDashboardProps) {
           <MemberEngagementChart />
         </TabsContent>
 
+        {/* Sessions Tab */}
+        <TabsContent value="sessions" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-2xl font-bold">Session Attendance</h2>
+              <p className="text-muted-foreground">
+                Attendance rates, occupancy, and class popularity
+              </p>
+            </div>
+            <ExportButton reportType="session-attendance" />
+          </div>
+          <SessionAttendanceAnalytics />
+        </TabsContent>
+
         {/* Cohorts Tab */}
         <TabsContent value="cohorts" className="space-y-4">
           <div className="flex justify-between items-center">
@@ -90,6 +108,22 @@ export function ReportsDashboard({ userRole }: ReportsDashboardProps) {
           </div>
           <CohortAnalytics />
         </TabsContent>
+
+        {/* Memberships Tab (Admin Only) */}
+        {isAdmin && (
+          <TabsContent value="memberships" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold">Membership Analytics</h2>
+                <p className="text-muted-foreground">
+                  Plan popularity, churn, and member engagement
+                </p>
+              </div>
+              <ExportButton reportType="membership" />
+            </div>
+            <MembershipAnalytics />
+          </TabsContent>
+        )}
 
         {/* Revenue Tab (Admin Only) */}
         {isAdmin && (

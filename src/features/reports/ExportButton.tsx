@@ -19,7 +19,7 @@ import { Download, FileJson, FileText, Loader2 } from "lucide-react"
  */
 
 interface ExportButtonProps {
-  reportType: "members" | "cohorts" | "revenue" | "compliance"
+  reportType: "members" | "cohorts" | "revenue" | "compliance" | "session-attendance" | "membership"
   label?: string
 }
 
@@ -38,11 +38,13 @@ export function ExportButton({ reportType, label }: ExportButtonProps) {
     }
   }
 
-  const reportLabels = {
+  const reportLabels: Record<string, string> = {
     members: "Member Report",
     cohorts: "Cohort Report",
     revenue: "Revenue Report",
     compliance: "Compliance Report",
+    "session-attendance": "Session Attendance Report",
+    membership: "Membership Report",
   }
 
   return (
@@ -80,11 +82,13 @@ export function ExportAllButton() {
 
   const handleExportAll = async (format: "csv" | "json") => {
     setIsExporting(true)
-    const reportTypes: Array<"members" | "cohorts" | "revenue" | "compliance"> = [
+    const reportTypes: Array<"members" | "cohorts" | "revenue" | "compliance" | "session-attendance" | "membership"> = [
       "members",
       "cohorts",
       "revenue",
       "compliance",
+      "session-attendance",
+      "membership",
     ]
 
     try {

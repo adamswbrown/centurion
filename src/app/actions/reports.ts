@@ -739,7 +739,7 @@ export async function getComplianceReport(): Promise<ComplianceReport> {
 
 export interface ExportOptions {
   format: "csv" | "json"
-  reportType: "members" | "cohorts" | "revenue" | "compliance"
+  reportType: "members" | "cohorts" | "revenue" | "compliance" | "session-attendance" | "membership"
 }
 
 export async function exportReportData(options: ExportOptions) {
@@ -759,6 +759,12 @@ export async function exportReportData(options: ExportOptions) {
       break
     case "compliance":
       data = await getComplianceReport()
+      break
+    case "session-attendance":
+      data = await getSessionAttendanceReport()
+      break
+    case "membership":
+      data = await getMembershipReport()
       break
     default:
       throw new Error("Invalid report type")
@@ -850,6 +856,58 @@ function convertToCSV(data: unknown, reportType: string): string {
       lines.push("Cohort ID,Name,Members,Completion Rate")
       report.cohortCompliance.forEach((c) => {
         lines.push(`${c.cohortId},"${c.cohortName}",${c.memberCount},${c.avgCompletionRate.toFixed(1)}%`)
+      })
+      break
+    }
+    case "session-attendance": {
+      const report = data as SessionAttendanceReport
+      lines.push("Session Attendance Report")
+      lines.push("")
+      lines.push("Metric,Value")
+      lines.push(`Total Sessions,${report.totalSessions}`)
+      lines.push(`Completed Sessions,${report.completedSessions}`)
+      lines.push(`Cancelled Sessions,${report.cancelledSessions}`)
+      lines.push(`Upcoming Sessions,${report.upcomingSessions}`)
+      lines.push(`Total Registrations,${report.totalRegistrations}`)
+      lines.push(`Attendance Rate,${report.attendanceRate.toFixed(1)}%`)
+      lines.push(`No-Show Rate,${report.noShowRate.toFixed(1)}%`)
+      lines.push(`Late Cancel Rate,${report.lateCancelRate.toFixed(1)}%`)
+      lines.push(`Average Occupancy,${report.averageOccupancy.toFixed(1)}%`)
+      lines.push("")
+      lines.push("Attendance Trend (Weekly)")
+      lines.push("Week,Attended,No-Show,Total")
+      report.attendanceTrend.forEach((t) => {
+        lines.push(`${t.date},${t.attended},${t.noShow},${t.total}`)
+      })
+      lines.push("")
+      lines.push("Popular Class Types")
+      lines.push("Name,Sessions,Avg Attendance")
+      report.popularClassTypes.forEach((c) => {
+        lines.push(`"${c.name}",${c.sessionCount},${c.avgAttendance.toFixed(1)}`)
+      })
+      break
+    }
+    case "membership": {
+      const report = data as MembershipReport
+      lines.push("Membership Report")
+      lines.push("")
+      lines.push("Metric,Value")
+      lines.push(`Active Memberships,${report.totalActiveMemberships}`)
+      lines.push(`Paused Memberships,${report.totalPausedMemberships}`)
+      lines.push(`Cancelled Memberships,${report.totalCancelledMemberships}`)
+      lines.push(`Churn Rate (30d),${report.churnRate.toFixed(1)}%`)
+      lines.push(`Avg Sessions/Member,${report.averageSessionsPerMember.toFixed(1)}`)
+      lines.push("")
+      lines.push("Memberships by Type")
+      lines.push("Type,Count")
+      report.membershipsByType.forEach((m) => {
+        lines.push(`${m.type},${m.count}`)
+      })
+      lines.push("")
+      lines.push("Plan Popularity")
+      lines.push("Plan Name,Type,Active Members")
+      report.planPopularity.forEach((p) => {
+        lines.push(`"${p.planName}",${p.type},${p.activeCount}`)
       })
       break
     }
