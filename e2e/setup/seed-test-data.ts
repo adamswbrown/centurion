@@ -15,8 +15,28 @@ const prisma = new PrismaClient()
 async function main() {
   console.log("Starting E2E test data seeding...")
 
-  // Clean up existing test data
-  console.log("Cleaning up existing test users...")
+  // Clean up existing test data (order matters for foreign keys)
+  console.log("Cleaning up existing test data...")
+
+  // Clean up cohort session access, cohort memberships, and cohorts
+  await prisma.cohortSessionAccess.deleteMany({
+    where: { cohort: { name: "Spring 2026" } },
+  })
+  await prisma.cohort.deleteMany({
+    where: { name: "Spring 2026" },
+  })
+
+  // Clean up class sessions and class types
+  await prisma.classType.deleteMany({
+    where: { name: { in: ["HIIT", "Yoga"] } },
+  })
+
+  // Clean up membership plans
+  await prisma.membershipPlan.deleteMany({
+    where: { name: { in: ["Monthly Unlimited", "10 Class Pack", "3-Month Prepaid"] } },
+  })
+
+  // Clean up test users (cascades registrations, memberships, etc.)
   await prisma.user.deleteMany({
     where: {
       email: {
@@ -38,7 +58,7 @@ async function main() {
       name: "Test Admin",
       role: "ADMIN",
       isTestUser: true,
-      emailVerified: new Date(),
+      emailVerified: true,
     },
   })
   console.log(`✓ Created admin user (id: ${admin.id})`)
@@ -50,7 +70,7 @@ async function main() {
       name: "Test Coach",
       role: "COACH",
       isTestUser: true,
-      emailVerified: new Date(),
+      emailVerified: true,
     },
   })
   console.log(`✓ Created coach user (id: ${coach.id})`)
@@ -62,7 +82,7 @@ async function main() {
       name: "Test Client",
       role: "CLIENT",
       isTestUser: true,
-      emailVerified: new Date(),
+      emailVerified: true,
       credits: 10,
     },
   })
@@ -74,9 +94,8 @@ async function main() {
     data: {
       name: "HIIT",
       description: "High-intensity interval training",
-      duration: 45,
+      defaultDurationMins: 45,
       color: "#FF5733",
-      createdBy: coach.id,
     },
   })
   console.log(`✓ Created class type (id: ${classType.id})`)
@@ -96,6 +115,7 @@ async function main() {
     data: {
       classTypeId: classType.id,
       coachId: coach.id,
+      title: "HIIT Session",
       startTime: tomorrow,
       endTime: new Date(tomorrow.getTime() + 45 * 60 * 1000),
       maxOccupancy: 20,
@@ -108,6 +128,7 @@ async function main() {
     data: {
       classTypeId: classType.id,
       coachId: coach.id,
+      title: "HIIT Session - Next Week",
       startTime: nextWeek,
       endTime: new Date(nextWeek.getTime() + 45 * 60 * 1000),
       maxOccupancy: 20,
@@ -125,9 +146,8 @@ async function main() {
       description: "Unlimited classes per month",
       type: "RECURRING",
       monthlyPrice: 149,
-      maxSessionsPerWeek: 0, // Unlimited
+      sessionsPerWeek: 0, // Unlimited
       isActive: true,
-      createdBy: admin.id,
     },
   })
   console.log(`✓ Created recurring plan (id: ${recurringPlan.id})`)
@@ -138,10 +158,8 @@ async function main() {
       description: "10 classes, no expiration",
       type: "PACK",
       packPrice: 180,
-      packSessionCount: 10,
-      packNeverExpires: true,
+      totalSessions: 10,
       isActive: true,
-      createdBy: admin.id,
     },
   })
   console.log(`✓ Created pack plan (id: ${packPlan.id})`)
@@ -152,9 +170,8 @@ async function main() {
       description: "3 months of unlimited classes",
       type: "PREPAID",
       prepaidPrice: 399,
-      prepaidDurationMonths: 3,
+      durationDays: 90,
       isActive: true,
-      createdBy: admin.id,
     },
   })
   console.log(`✓ Created prepaid plan (id: ${prepaidPlan.id})`)
@@ -164,11 +181,9 @@ async function main() {
   const membership = await prisma.userMembership.create({
     data: {
       userId: client.id,
-      membershipPlanId: recurringPlan.id,
+      planId: recurringPlan.id,
       status: "ACTIVE",
       startDate: now,
-      weeklySessionsUsed: 2,
-      currentWeekStart: now,
     },
   })
   console.log(`✓ Created user membership (id: ${membership.id})`)
@@ -183,6 +198,79 @@ async function main() {
     },
   })
   console.log(`✓ Created session registration (id: ${registration.id})`)
+
+  // Create a second class type for session access testing
+  console.log("Creating second class type...")
+  const classType2 = await prisma.classType.create({
+    data: {
+      name: "Yoga",
+      description: "Vinyasa yoga flow",
+      defaultDurationMins: 60,
+      color: "#4CAF50",
+    },
+  })
+  console.log(`✓ Created class type 2 (id: ${classType2.id})`)
+
+  // Create test cohort
+  console.log("Creating test cohort...")
+  const cohort = await prisma.cohort.create({
+    data: {
+      name: "Spring 2026",
+      description: "Spring wellness cohort",
+      startDate: now,
+      status: "ACTIVE",
+      type: "TIMED",
+    },
+  })
+  console.log(`✓ Created cohort (id: ${cohort.id})`)
+
+  // Add client to cohort
+  await prisma.cohortMembership.create({
+    data: {
+      cohortId: cohort.id,
+      userId: client.id,
+      status: "ACTIVE",
+      joinedAt: now,
+    },
+  })
+  console.log(`✓ Added client to cohort`)
+
+  // Add coach to cohort
+  await prisma.coachCohortMembership.create({
+    data: {
+      cohortId: cohort.id,
+      coachId: coach.id,
+    },
+  })
+  console.log(`✓ Added coach to cohort`)
+
+  // Create CohortSessionAccess (cohort can access HIIT but not Yoga initially)
+  await prisma.cohortSessionAccess.create({
+    data: {
+      cohortId: cohort.id,
+      classTypeId: classType.id,
+    },
+  })
+  console.log(`✓ Created cohort session access (HIIT)`)
+
+  // Set feature flags (all enabled for testing)
+  console.log("Setting feature flags...")
+  await prisma.systemSettings.upsert({
+    where: { key: "appointmentsEnabled" },
+    update: { value: true },
+    create: { key: "appointmentsEnabled", value: true },
+  })
+  await prisma.systemSettings.upsert({
+    where: { key: "sessionsEnabled" },
+    update: { value: true },
+    create: { key: "sessionsEnabled", value: true },
+  })
+  await prisma.systemSettings.upsert({
+    where: { key: "cohortsEnabled" },
+    update: { value: true },
+    create: { key: "cohortsEnabled", value: true },
+  })
+  console.log(`✓ Set feature flags (all enabled)`)
 
   console.log("\nE2E test data seeding completed successfully!")
   console.log("\nTest user credentials:")
