@@ -79,11 +79,19 @@ export async function signInWithCredentials(formData: FormData) {
   const email = formData.get("email") as string
   const password = formData.get("password") as string
 
+  // Look up user role to determine redirect destination
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { role: true },
+  })
+
+  const redirectTo = user?.role === "CLIENT" ? "/client/dashboard" : "/dashboard"
+
   try {
     await signIn("credentials", {
       email,
       password,
-      redirectTo: "/dashboard",
+      redirectTo,
     })
 
     return { success: true }

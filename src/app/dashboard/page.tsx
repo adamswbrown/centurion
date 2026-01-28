@@ -6,6 +6,7 @@ import { CoachDashboard } from "@/components/coach/CoachDashboard"
 import { prisma } from "@/lib/prisma"
 import { startOfWeek, endOfWeek, startOfMonth } from "date-fns"
 import { Users, Calendar, Dumbbell, DollarSign } from "lucide-react"
+import { redirect } from "next/navigation"
 
 async function getAdminDashboardStats() {
   const now = new Date()
@@ -48,6 +49,11 @@ export default async function DashboardPage() {
   const session = await auth()
 
   if (!session) return null
+
+  // Redirect clients to their dashboard
+  if (session.user.role === "CLIENT") {
+    redirect("/client/dashboard")
+  }
 
   const isCoach = session.user.role === "COACH"
   const isAdmin = session.user.role === "ADMIN"
@@ -124,25 +130,8 @@ export default async function DashboardPage() {
             </Card>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Account Info</CardTitle>
-              <CardDescription>
-                Your account is set up and ready to use
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Role: <span className="font-medium capitalize">{session.user.role.toLowerCase()}</span>
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Email: <span className="font-medium">{session.user.email}</span>
-              </p>
-            </CardContent>
-          </Card>
-
           {/* Coach features for admin users */}
-          <CoachDashboard />
+          {isAdmin && <CoachDashboard />}
         </div>
       )}
     </AppLayout>
