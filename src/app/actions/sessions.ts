@@ -18,7 +18,6 @@ import {
 
 const createSessionSchema = z.object({
   classTypeId: z.number().int().positive().optional(),
-  cohortId: z.number().int().positive().optional(),
   title: z.string().min(1, "Title is required"),
   startTime: z.string().min(1, "Start time is required"),
   endTime: z.string().min(1, "End time is required"),
@@ -30,7 +29,6 @@ const createSessionSchema = z.object({
 const updateSessionSchema = z.object({
   id: z.number().int().positive(),
   classTypeId: z.number().int().positive().optional().nullable(),
-  cohortId: z.number().int().positive().optional().nullable(),
   title: z.string().min(1).optional(),
   startTime: z.string().optional(),
   endTime: z.string().optional(),
@@ -41,7 +39,6 @@ const updateSessionSchema = z.object({
 
 const generateRecurringSchema = z.object({
   classTypeId: z.number().int().positive().optional(),
-  cohortId: z.number().int().positive().optional(),
   title: z.string().min(1),
   startTime: z.string().min(1), // HH:mm format
   endTime: z.string().min(1), // HH:mm format
@@ -66,7 +63,7 @@ export type GenerateRecurringSessionsInput = z.infer<typeof generateRecurringSch
 
 export async function getSessions(params?: {
   coachId?: number
-  cohortId?: number
+  cohortId?: number // for access filtering only
   classTypeId?: number
   status?: string
   startDate?: string
@@ -125,7 +122,6 @@ export async function getSessionById(id: number) {
     include: {
       classType: true,
       coach: { select: { id: true, name: true, email: true } },
-      cohort: true,
       registrations: {
         include: {
           user: { select: { id: true, name: true, email: true } },
@@ -171,7 +167,6 @@ export async function createSession(input: CreateSessionInput) {
   const session = await prisma.classSession.create({
     data: {
       classTypeId: parsed.classTypeId,
-      cohortId: parsed.cohortId,
       coachId,
       title: parsed.title,
       startTime: new Date(parsed.startTime),
@@ -201,7 +196,6 @@ export async function updateSession(input: UpdateSessionInput) {
   const updateData: Record<string, unknown> = {}
 
   if (data.classTypeId !== undefined) updateData.classTypeId = data.classTypeId
-  if (data.cohortId !== undefined) updateData.cohortId = data.cohortId
   if (data.title !== undefined) updateData.title = data.title
   if (data.startTime !== undefined) updateData.startTime = new Date(data.startTime)
   if (data.endTime !== undefined) updateData.endTime = new Date(data.endTime)
@@ -334,7 +328,6 @@ export async function generateRecurringSessions(
 
     sessionsData.push({
       classTypeId: parsed.classTypeId,
-      cohortId: parsed.cohortId,
       coachId,
       title: parsed.title,
       startTime: startDateTime,

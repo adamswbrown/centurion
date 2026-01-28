@@ -1,3 +1,5 @@
+# 2026-01-28
+Session & Cohort decoupling refactor completed. Sessions are now global, cohort visibility is managed via CohortSessionAccess, and registration logic is fully decoupled. Schema migration applied and backend logic updated. API/business logic decoupling is complete. Next: UI refactor and join table backfill.
 # 2026-01-26
 Seed script run completed successfully. Test admin, coach, and client accounts created. Appointments are seeded from TeamUp data and assigned to clients and coaches. Bootcamps are now multi-week programs with attendees, not appointments. All major user flows (client booking, coach assignment, bootcamp creation) are covered and verified.
 # 2026-01-26

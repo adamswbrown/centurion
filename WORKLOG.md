@@ -1,3 +1,16 @@
+## 2026-01-28 — API/Business Logic Refactor Complete
+
+All API endpoints and backend business logic for session creation, update, and recurring sessions have been refactored to remove cohort-session coupling. SessionForm and related UI logic no longer reference cohorts directly; session access is now managed via CohortSessionAccess. No errors remain after migration and code updates. Next step: refactor UI components for session browsing and calendar to fully use the decoupled model.
+# 2026-01-28
+
+## Session & Cohort Decoupling Architecture Refactor
+
+- Refactored Prisma schema to decouple sessions from cohorts, making sessions global and introducing CohortSessionAccess join table for cohort-based visibility.
+- Applied safe migration and verified schema with `prisma migrate dev`.
+- Updated all session queries to use global sessions and filter by cohort visibility using CohortSessionAccess.
+- Refactored registration logic to check both cohort access (via CohortSessionAccess) and membership entitlement, ensuring independence.
+- Updated business logic to remove all cohort-session coupling.
+- Next: update UI and backfill join table for legacy data.
 # 2026-01-27
 
 ## Role Switcher Implementation

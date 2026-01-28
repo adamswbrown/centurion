@@ -19,7 +19,6 @@ const sessionFormSchema = z.object({
   maxOccupancy: z.coerce.number().int().min(1, "Must allow at least 1 participant"),
   location: z.string().optional(),
   notes: z.string().optional(),
-  cohortId: z.coerce.number().optional(),
 })
 
 type SessionFormValues = z.infer<typeof sessionFormSchema>
@@ -45,7 +44,7 @@ export function SessionForm({ cohorts, onSuccess }: SessionFormProps) {
       maxOccupancy: 12,
       location: "",
       notes: "",
-      cohortId: undefined,
+      // cohortId removed
     },
   })
 
@@ -62,7 +61,6 @@ export function SessionForm({ cohorts, onSuccess }: SessionFormProps) {
         maxOccupancy: values.maxOccupancy,
         location: values.location || undefined,
         notes: values.notes || undefined,
-        cohortId: values.cohortId || undefined,
       })
       setMessage("Session created successfully")
       form.reset()
@@ -159,23 +157,7 @@ export function SessionForm({ cohorts, onSuccess }: SessionFormProps) {
             {...form.register("location")}
           />
         </div>
-        {cohorts && cohorts.length > 0 && (
-          <div className="space-y-2">
-            <Label htmlFor="session-cohort">Cohort (optional)</Label>
-            <select
-              id="session-cohort"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              {...form.register("cohortId")}
-            >
-              <option value="">No cohort</option>
-              {cohorts.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        {/* Cohort select removed: session is now global, access controlled elsewhere */}
       </div>
 
       <div className="space-y-2">
