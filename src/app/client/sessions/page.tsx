@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/layouts/AppLayout"
 import { auth } from "@/auth"
 import { requireAuth } from "@/lib/auth"
-import { ClientSessionBrowser } from "@/features/sessions/ClientSessionBrowser"
+import { ClientSessionCalendar } from "@/features/sessions/calendar"
 
 export default async function ClientSessionsPage() {
   await requireAuth()
@@ -15,11 +15,11 @@ export default async function ClientSessionsPage() {
         <div>
           <h1 className="text-3xl font-bold">Sessions</h1>
           <p className="text-muted-foreground">
-            Browse and book sessions
+            Browse and book available sessions
           </p>
         </div>
 
-        <ClientSessionBrowser />
+        <ClientSessionCalendar />
       </div>
     </AppLayout>
   )
