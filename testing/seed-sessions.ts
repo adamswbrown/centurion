@@ -158,11 +158,11 @@ async function main() {
 
   console.log(`Found ${clients.length} clients for registrations`)
 
-  // Get existing cohort for access
-  const cohort = await prisma.cohort.findFirst({
+  // Get ALL active cohorts for access
+  const cohorts = await prisma.cohort.findMany({
     where: { status: "ACTIVE" },
-    orderBy: { createdAt: "desc" },
   })
+  console.log(`Found ${cohorts.length} active cohorts`)
 
   // Clear existing session data
   console.log("🧹 Clearing existing session data...")
@@ -183,18 +183,20 @@ async function main() {
     console.log(`  Created: ${ct.name} (${ct.color})`)
   }
 
-  // Create cohort session access if cohort exists
-  if (cohort) {
+  // Create cohort session access for ALL active cohorts
+  if (cohorts.length > 0) {
     console.log("🔑 Creating cohort session access...")
-    for (const [name, classTypeId] of classTypeMap) {
-      await prisma.cohortSessionAccess.create({
-        data: {
-          cohortId: cohort.id,
-          classTypeId,
-        },
-      })
+    for (const cohort of cohorts) {
+      for (const [name, classTypeId] of classTypeMap) {
+        await prisma.cohortSessionAccess.create({
+          data: {
+            cohortId: cohort.id,
+            classTypeId,
+          },
+        })
+      }
+      console.log(`  Granted access to ${classTypeMap.size} class types for cohort "${cohort.name}"`)
     }
-    console.log(`  Granted access to ${classTypeMap.size} class types for cohort "${cohort.name}"`)
   }
 
   // Generate sessions for 3 months

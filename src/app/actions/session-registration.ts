@@ -74,27 +74,6 @@ export async function registerForSession(input: RegisterInput) {
     throw new Error("Session is not available for registration")
   }
 
-  // 2. Cohort access check (only for sessions with a classTypeId)
-  if (classSession.classTypeId) {
-    const userCohorts = await prisma.cohortMembership.findMany({
-      where: { userId, status: "ACTIVE" },
-      select: { cohortId: true },
-    })
-    const cohortIds = userCohorts.map((c) => c.cohortId)
-    if (cohortIds.length === 0) {
-      throw new Error("You are not a member of any cohort")
-    }
-    const access = await prisma.cohortSessionAccess.findFirst({
-      where: {
-        cohortId: { in: cohortIds },
-        classTypeId: classSession.classTypeId,
-      },
-    })
-    if (!access) {
-      throw new Error("You do not have access to register for this session")
-    }
-  }
-
   // Check if already registered
   const existing = await prisma.sessionRegistration.findUnique({
     where: {
@@ -433,8 +412,9 @@ export async function getMyRegistrations(params?: {
 }
 
 /**
- * Get sessions available for the current user to book
- * (respects cohort access and membership allowances)
+ * Get sessions available for the current user to book.
+ * Sessions are open to anyone with an active membership.
+ * Membership plan may restrict which class types are allowed.
  */
 export async function getAvailableSessions(params?: {
   startDate?: string
@@ -443,24 +423,7 @@ export async function getAvailableSessions(params?: {
   const session = await requireAuth()
   const userId = Number.parseInt(session.id, 10)
 
-  // Get user's active cohort memberships
-  const userCohorts = await prisma.cohortMembership.findMany({
-    where: { userId, status: "ACTIVE" },
-    select: { cohortId: true },
-  })
-  const cohortIds = userCohorts.map((c) => c.cohortId)
-
-  // Get classTypeIds accessible via cohorts
-  let accessibleClassTypeIds: number[] = []
-  if (cohortIds.length > 0) {
-    const access = await prisma.cohortSessionAccess.findMany({
-      where: { cohortId: { in: cohortIds } },
-      select: { classTypeId: true },
-    })
-    accessibleClassTypeIds = [...new Set(access.map((a) => a.classTypeId))]
-  }
-
-  // Get user's membership allowances (if any)
+  // Check if user has an active membership
   const membership = await prisma.userMembership.findFirst({
     where: { userId, status: MembershipTierStatus.ACTIVE },
     include: {
@@ -469,11 +432,6 @@ export async function getAvailableSessions(params?: {
       },
     },
   })
-
-  let membershipAllowedClassTypeIds: number[] | null = null
-  if (membership?.plan.allowances && membership.plan.allowances.length > 0) {
-    membershipAllowedClassTypeIds = membership.plan.allowances.map((a) => a.classTypeId)
-  }
 
   // Build the where clause
   const where: Record<string, unknown> = {
@@ -489,24 +447,13 @@ export async function getAvailableSessions(params?: {
     }
   }
 
-  // Combine cohort access and membership allowances
-  // If both exist, use the intersection; if only one exists, use that
-  if (accessibleClassTypeIds.length > 0 && membershipAllowedClassTypeIds) {
-    const intersection = accessibleClassTypeIds.filter((id) =>
-      membershipAllowedClassTypeIds!.includes(id)
-    )
-    if (intersection.length > 0) {
-      where.classTypeId = { in: intersection }
-    } else {
-      // No sessions accessible - return empty
-      return []
-    }
-  } else if (accessibleClassTypeIds.length > 0) {
-    where.classTypeId = { in: accessibleClassTypeIds }
-  } else if (membershipAllowedClassTypeIds) {
-    where.classTypeId = { in: membershipAllowedClassTypeIds }
+  // If membership has class type allowances, filter by those
+  // (some plans may only allow certain class types)
+  if (membership?.plan.allowances && membership.plan.allowances.length > 0) {
+    const allowedClassTypeIds = membership.plan.allowances.map((a) => a.classTypeId)
+    where.classTypeId = { in: allowedClassTypeIds }
   }
-  // If neither restriction exists, show all scheduled sessions
+  // If no allowances specified, user can access all class types
 
   return prisma.classSession.findMany({
     where,
