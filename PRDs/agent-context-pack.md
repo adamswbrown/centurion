@@ -83,43 +83,63 @@ src/
 
 | File | Exported Functions | Notes |
 |------|-------------------|-------|
-| `admin-users.ts` | `getUsers`, `getUserById`, `createUser`, `updateUser`, `deleteUser`, `bulkDeleteUsers`, `bulkUpdateRole` | Admin-only |
-| `appointments.ts` | `createAppointment`, `getAppointments`, `getAppointmentById`, `updateAppointment`, `deleteAppointment`, `syncAppointmentToGoogleCalendar`, `batchSyncAppointments` | Conflict detection included |
-| `auth.ts` | `loginWithCredentials`, `registerUser` | |
-| `bootcamps.ts` | `createBootcamp`, `getBootcamps`, `getBootcampById`, `updateBootcamp`, `deleteBootcamp`, `addAttendee`, `removeAttendee` | **LEGACY -- will be removed** |
-| `client-appointments.ts` | `getMyAppointments`, `getMyAppointmentById`, `cancelMyAppointment` | Client self-service |
-| `client-bootcamps.ts` | `getAvailableBootcamps`, `joinBootcamp`, `leaveBootcamp` | **LEGACY -- will be removed** |
-| `client-cohorts.ts` | `getMyCohorts`, `getMyCohortById` | Client self-service |
-| `client-invoices.ts` | `getMyInvoices`, `getMyInvoiceById` | Client self-service |
-| `coach-analytics.ts` | `calculateAttentionScore`, `getCoachInsights`, `getMemberCheckInData`, `getCoachCohortMembers`, `getCoachMembersOverview` | Attention score algorithm |
-| `cohort-analytics.ts` | `getCohortComplianceStats`, `getCohortParticipation` | |
-| `cohorts.ts` | `createCohort`, `getCohorts`, `getCohortById`, `updateCohort`, `deleteCohort`, `addMember`, `removeMember`, `updateMemberStatus`, `addCoach`, `removeCoach` | Full CRUD + member/coach mgmt |
-| `credits.ts` | `allocateCredits`, `getCreditsHistory`, `getCreditsSummary` | |
-| `entries.ts` | `getEntries`, `getEntryByDate`, `upsertEntry`, `getCheckInStats`, `deleteEntry` | Upsert pattern (1/user/day) |
-| `invoices.ts` | `createInvoice`, `getInvoices`, `getInvoiceById`, `updateInvoiceStatus`, `generateInvoicesForMonth`, `createPaymentLinkForInvoice`, `getRevenueStats` | |
-| `members.ts` | `getMembers`, `getMemberById` | Read-only member list |
-| `questionnaires.ts` | `getQuestionnaireBundle`, `getQuestionnaireBundles`, `createQuestionnaireBundle`, `updateQuestionnaireBundle`, `getQuestionnaireResponse`, `upsertQuestionnaireResponse`, `getWeeklyResponses`, `getAllQuestionnaires` | SurveyJS JSON format |
-| `reports.ts` | `getOverviewStats`, `getMemberEngagementData`, `getCohortAnalytics`, `getRevenueAnalytics`, `getComplianceData` | |
-| `review-queue.ts` | `getReviewQueueData`, `saveCoachResponse`, `getWeeklyCoachResponse` | |
-| `settings.ts` | `getSystemSettings`, `updateSystemSettings`, `getSystemSetting`, `getUserSettings`, `updateUserProfile` | Key-value JSON pattern |
+| `admin-users.ts` | `createUser`, `updateUserRole`, `deleteUser` | Admin-only |
+| `appointments.ts` | `getAppointments`, `getAppointmentById`, `createAppointment`, `updateAppointment`, `cancelAppointment`, `syncAppointmentToGoogleCalendar` | Conflict detection included |
+| `auth.ts` | `login`, `register`, `resetPassword` | |
+| `check-in-frequency.ts` | `getCheckInFrequencies`, `updateCheckInFrequency`, `getDefaultCheckInFrequency` | Per-user check-in overrides |
+| `class-types.ts` | `getClassTypes`, `getClassType`, `createClassType`, `updateClassType`, `deleteClassType` | Session class type CRUD |
+| `client-appointments.ts` | `getClientAppointments`, `bookAppointment`, `cancelAppointment` | Client self-service |
+| `client-cohorts.ts` | `getClientCohorts` | Client self-service |
+| `client-invoices.ts` | `getClientInvoices`, `getClientInvoice` | Client self-service |
+| `coach-analytics.ts` | `getAttentionScores`, `getCoachMetrics`, `getComplianceMetrics`, `getMemberProgressData`, `getMemberActivityData` | Attention score algorithm |
+| `cohort-analytics.ts` | `getCohortAnalytics` | |
+| `cohort-session-access.ts` | `getCohortSessionAccess`, `setCohortSessionAccess` | Admin-only, manages which class types a cohort can access |
+| `cohort-types.ts` | `getCohortTypes`, `createCohortType`, `updateCohortType`, `deleteCohortType` | Custom cohort types |
+| `cohorts.ts` | `getCohorts`, `getCohortById`, `createCohort`, `updateCohort`, `archiveCohort`, `addCohortMember`, `removeCohortMember` | Full CRUD + member mgmt |
+| `consent.ts` | `getUserConsents`, `updateConsent`, `getConsent` | GDPR consent tracking |
+| `credits.ts` | `getCreditBalance`, `allocateCredits`, `recordCreditTransaction` | |
+| `email-templates.ts` | `getEmailTemplates`, `getEmailTemplate`, `updateEmailTemplate`, `listEmailTemplates` | Admin email template editor |
+| `entries.ts` | `getEntries`, `getEntry`, `upsertEntry`, `getEntriesByDateRange`, `getEntriesWithStats` | Upsert pattern (1/user/day) |
+| `fitness-wrapped.ts` | `generateFitnessWrapped`, `getFitnessWrapped` | Year-in-review feature |
+| `gdpr.ts` | `exportUserData`, `deleteUserAccount` | GDPR data export + deletion |
+| `goals.ts` | `getUserGoals`, `updateUserGoals`, `deleteGoal`, `getGoalsProgress` | User fitness goals |
+| `invoices.ts` | `getInvoices`, `getInvoiceById`, `createInvoice`, `updateInvoice`, `sendInvoice`, `recordPayment`, `generatePaymentLink` | |
+| `members.ts` | `getMembers`, `getMemberById`, `createMember`, `updateMember`, `deleteMember` | Member CRUD |
+| `memberships.ts` | `getMembershipPlans`, `createMembershipPlan`, `updateMembershipPlan`, `deleteMembershipPlan`, `assignMembership`, `endMembership`, `getUserMemberships` | Session-based memberships |
+| `password-reset.ts` | `requestPasswordReset`, `verifyPasswordResetToken`, `resetPassword` | Password reset flow |
+| `preferences.ts` | `getUserPreferences`, `updateUserPreferences` | User display preferences |
+| `questionnaires.ts` | `getQuestionnaires`, `getQuestionnaire`, `createQuestionnaire`, `updateQuestionnaire`, `deleteQuestionnaire`, `submitResponse`, `getResponses` | SurveyJS JSON format |
+| `reports.ts` | `getReportData`, `generateCohortAnalytics`, `generateMembershipAnalytics`, `generateSessionAnalytics`, `generateRevenueAnalytics`, `generateComplianceReport` | |
+| `review-queue.ts` | `getReviewQueue`, `getReviewQueueItem`, `submitCoachReview`, `acknowledgeReview` | |
+| `session-registration.ts` | `getSessionRegistrations`, `registerForSession`, `cancelSessionRegistration`, `updateAttendance` | Client session booking with cohort access check |
+| `sessions.ts` | `getSessions`, `getSessionById`, `getCohortSessions`, `createSession`, `updateSession`, `cancelSession`, `syncSessionToGoogleCalendar`, `generateRecurringSessions` | Sessions are global; cohort access via CohortSessionAccess |
+| `settings.ts` | `getSystemSettings`, `updateSystemSettings`, `getFeatureFlags`, `getSystemSetting`, `getUserSettings`, `updateUserProfile` | Key-value JSON pattern; `getFeatureFlags` is lightweight (any auth) |
+| `stripe-billing.ts` | `createPaymentLink`, `handleStripeWebhook`, `getInvoiceStatus` | Stripe integration |
+| `workouts.ts` | `getWorkouts`, `getWorkoutById`, `createWorkout`, `updateWorkout`, `deleteWorkout`, `getWorkoutsByDate` | |
 
 ### Hooks (src/hooks/) -- DO NOT DUPLICATE
 
 | File | Exported Hooks |
 |------|---------------|
-| `useAppointments.ts` | `useAppointments`, `useCreateAppointment`, `useUpdateAppointment`, `useDeleteAppointment`, `useSyncAppointment` |
-| `useBootcamps.ts` | `useBootcamps`, `useBootcamp`, `useCreateBootcamp`, `useUpdateBootcamp`, `useDeleteBootcamp`, `useAddAttendee`, `useRemoveAttendee` |
-| `useClientAppointments.ts` | `useMyAppointments`, `useCancelMyAppointment` |
-| `useClientBootcamps.ts` | `useAvailableBootcamps`, `useJoinBootcamp`, `useLeaveBootcamp` |
-| `useClientCohorts.ts` | `useMyCohorts` |
-| `useClientInvoices.ts` | `useMyInvoices` |
-| `useCohorts.ts` | `useCohorts`, `useCohort`, `useCreateCohort`, `useUpdateCohort`, `useDeleteCohort` |
-| `useEntries.ts` | `useEntries`, `useEntryByDate`, `useUpsertEntry`, `useDeleteEntry` |
-| `useInvoices.ts` | `useInvoices`, `useInvoice`, `useCreateInvoice`, `useUpdateInvoiceStatus`, `useCreatePaymentLink`, `useRevenueStats` |
-| `useMembers.ts` | `useMembers`, `useMember` |
-| `useQuestionnaires.ts` | `useQuestionnaireBundle`, `useQuestionnaireBundles`, `useCreateQuestionnaireBundle`, `useUpdateQuestionnaireBundle`, `useQuestionnaireResponse`, `useUpsertQuestionnaireResponse`, `useWeeklyResponses`, `useAllQuestionnaires` |
-| `useReports.ts` | `useOverviewStats`, `useMemberEngagement`, `useCohortAnalytics`, `useRevenueAnalytics`, `useComplianceData` |
-| `useReviewQueue.ts` | `useReviewQueueData`, `useSaveCoachResponse`, `useWeeklyCoachResponse` |
+| `useAppointments.ts` | `useAppointments`, `useAppointment`, `useCreateAppointment`, `useUpdateAppointment`, `useCancelAppointment` |
+| `useClassTypes.ts` | `useClassTypes`, `useClassType`, `useCreateClassType`, `useUpdateClassType`, `useDeleteClassType` |
+| `useClientAppointments.ts` | `useClientAppointments`, `useBookAppointment`, `useCancelAppointment` |
+| `useClientCohorts.ts` | `useClientCohorts` |
+| `useClientInvoices.ts` | `useClientInvoices`, `useClientInvoice` |
+| `useCoachAnalytics.ts` | `useCoachAnalytics`, `useAttentionScores`, `useComplianceMetrics` |
+| `useCohortSessionAccess.ts` | `useCohortSessionAccess`, `useSetCohortSessionAccess` |
+| `useCohorts.ts` | `useCohorts`, `useCohort`, `useCreateCohort`, `useUpdateCohort`, `useArchiveCohort`, `useAddCohortMember`, `useRemoveCohortMember` |
+| `useEntries.ts` | `useEntries`, `useEntry`, `useUpsertEntry` |
+| `useInvoices.ts` | `useInvoices`, `useInvoice`, `useCreateInvoice`, `useUpdateInvoice`, `useSendInvoice`, `useRecordPayment` |
+| `useMembers.ts` | `useMembers`, `useMember`, `useCreateMember`, `useUpdateMember`, `useDeleteMember` |
+| `useMemberships.ts` | `useMemberships`, `useCreateMembership`, `useUpdateMembership`, `useDeleteMembership`, `useAssignMembership`, `useEndMembership` |
+| `usePreferences.ts` | `usePreferences`, `useUpdatePreferences` |
+| `useQuestionnaires.ts` | `useQuestionnaires`, `useQuestionnaire`, `useCreateQuestionnaire`, `useUpdateQuestionnaire`, `useDeleteQuestionnaire`, `useSubmitResponse` |
+| `useReports.ts` | `useReportData`, `useGenerateCohortAnalytics`, `useGenerateMembershipAnalytics`, `useGenerateSessionAnalytics`, `useGenerateRevenueAnalytics` |
+| `useReviewQueue.ts` | `useReviewQueue`, `useReviewQueueItem`, `useSubmitCoachReview` |
+| `useSessionRegistration.ts` | `useSessionRegistrations`, `useRegisterForSession`, `useCancelSessionRegistration`, `useUpdateAttendance` |
+| `useSessions.ts` | `useSessions`, `useSession`, `useCohortSessions`, `useCreateSession`, `useUpdateSession`, `useCancelSession`, `useGenerateRecurringSessions`, `useSyncSession` |
+| `useUnifiedCalendar.ts` | `useUnifiedCalendar` |
 
 ### Lib Utilities (src/lib/) -- REUSE THESE
 
@@ -141,20 +161,26 @@ src/
 
 ```
 appointments/     -- AppointmentDashboard, AppointmentForm, AppointmentList, AppointmentCalendar, AppointmentCard, AppointmentDetail, ClientAppointmentsCalendar
-bootcamps/        -- BootcampForm, BootcampList, BootcampCalendar, BootcampDetail, BootcampRegistration  [LEGACY]
-calendar/         -- Combined calendar views
-cohorts/          -- CohortForm, CohortList, CohortDetail, CoachAssignment, MemberManagement
+calendar/         -- CombinedCalendar, UnifiedCalendar
+cohorts/          -- CohortForm, CohortList, CohortDetail, CoachAssignment, MemberManagement, SessionAccessManager, CheckInConfigEditor, CohortAnalytics, CohortCheckInFrequency, CustomCohortTypeManager, ClientCohortList
+consent/          -- ConsentBanner
 credits/          -- CreditAllocationForm, CreditBalanceWidget, CreditHistoryTable
-entries/          -- CheckInForm, CheckInHistory
-healthkit/        -- HealthKit dashboard components
-invoices/         -- InvoiceList, GenerateInvoiceDialog, InvoiceDetail, RevenueChart
-members/          -- Member management components
-questionnaires/   -- QuestionnaireViewer, QuestionnaireResponseList
-reports/          -- ReportsDashboard, OverviewCards, MemberEngagementChart, CohortAnalytics, RevenueAnalytics, ComplianceReport, ExportButton
+email-templates/  -- EmailTemplateList, EmailTemplateEditor
+entries/          -- CheckInForm, CheckInHistory, CheckInStats, BMIDisplay
+goals/            -- UserGoalsForm, GoalProgressCard
+healthkit/        -- PairingCodeGenerator, HealthDataExplorer, HealthKitAdminDashboard
+invoices/         -- InvoiceList, InvoiceDetail, GenerateInvoiceDialog, RevenueChart, ClientInvoiceList, ClientInvoiceDetail
+members/          -- MembersTable, MemberDetail, CreateMemberDialog, EditMemberDialog
+memberships/      -- MembershipPlanManager, MembershipAssigner, MembershipPlanCard, PlanBrowser, ClientMembershipView, UserMembershipDetail, SessionUsageBar
+questionnaires/   -- QuestionnaireBuilder, QuestionnaireList, QuestionnaireViewer, QuestionnaireResponseList, EditQuestionnaireForm, NewQuestionnaireForm
+reports/          -- ReportsDashboard, OverviewCards, MemberEngagementChart, CohortAnalytics, MembershipAnalytics, RevenueAnalytics, SessionAttendanceAnalytics, ComplianceReport, ExportButton
 review-queue/     -- ReviewQueueDashboard
-settings/         -- SystemSettingsForm, UserSettingsForm
+sessions/         -- SessionList, SessionDetail, SessionForm, SessionCalendar, ClassTypeManager, ClientSessionBrowser
+settings/         -- SystemSettingsForm, UserSettingsForm, UserPreferencesForm, DeleteAccountDialog, DataExportButton
 timer/            -- TimerShell, TimerEditor, TimerPresetImportExport, useIntervalTimer
-users/            -- UserTable, UserSearchForm, DeleteUserButton, UserDetailPanel
+users/            -- UserTable, UserDetail, CreateUserDialog, DeleteUserButton, UserSearchForm, UserCheckInFrequency
+workouts/         -- WorkoutList, WorkoutForm, WorkoutCard
+wrapped/          -- FitnessWrappedCarousel, WrappedStatCard
 ```
 
 ### UI Components (src/components/ui/) -- shadcn/ui primitives
@@ -176,10 +202,13 @@ The full schema lives at `prisma/schema.prisma`. Here's a summary of every model
 - **VerificationToken**: identifier, token, expires
 - **UserConsent**: id, userId (unique), termsAccepted, privacyAccepted, dataProcessing, marketing?, version, ipAddress?, userAgent?
 
-### Personal Training
+### Personal Training & Sessions
 - **Appointment**: id, userId, coachId, startTime, endTime, fee (Decimal), status (ATTENDED/NOT_ATTENDED), notes?, videoUrl?, googleEventId?, invoiceId?, title?
-- **Bootcamp**: id, name, startTime, endTime, location?, capacity?, description? **[LEGACY -- to be removed]**
-- **BootcampAttendee**: id, bootcampId, userId (unique pair) **[LEGACY]**
+- **ClassType**: id, name, description?, durationMinutes, capacity?, isActive. Defines types of sessions (e.g., HIIT, Yoga).
+- **ClassSession**: id, classTypeId?, title?, startTime, endTime, capacity?, status (SCHEDULED/CANCELLED/COMPLETED), coachId?, googleEventId?, notes?, cohortId? (nullable, historical). Global sessions -- not owned by cohorts.
+- **CohortSessionAccess**: cohortId, classTypeId (composite PK `[cohortId, classTypeId]`). Join table controlling which class types a cohort can see/book. Decoupled from ClassSession.
+- **MembershipPlan**: id, name, description?, sessionsPerMonth, price (Decimal), isActive, classTypeRestrictions?
+- **MembershipClassTypeAllowance**: id, membershipPlanId, classTypeId. Controls which class types a membership plan includes.
 - **Workout**: id, userId, coachId?, title, description?, videoUrl?, status (NOT_STARTED/IN_PROGRESS/COMPLETED), scheduledAt?, completedAt?, duration?
 - **Invoice**: id, userId, month (Date), totalAmount (Decimal), emailSent, emailSentAt?, paymentStatus (UNPAID/PAID/OVERDUE/CANCELLED), stripePaymentUrl?, paidAt?
 
@@ -212,8 +241,11 @@ The full schema lives at `prisma/schema.prisma`. Here's a summary of every model
 - **CustomCohortType**: id, label (unique), description?, createdBy
 
 ### Key Relationships to Know
-- User has many: appointments (as client + coach), bootcampAttendees, workouts, invoices, cohortMemberships, coachCohorts, entries, questionnaireResponses, healthKitWorkouts, sleepRecords, creditTransactions
-- Cohort has many: members (CohortMembership), coaches (CoachCohortMembership), bundles (QuestionnaireBundle), one config (CohortCheckInConfig)
+- User has many: appointments (as client + coach), workouts, invoices, cohortMemberships, coachCohorts, entries, questionnaireResponses, healthKitWorkouts, sleepRecords, creditTransactions
+- Cohort has many: members (CohortMembership), coaches (CoachCohortMembership), bundles (QuestionnaireBundle), one config (CohortCheckInConfig), sessionAccess (CohortSessionAccess)
+- ClassType has many: ClassSessions, CohortSessionAccess records, MembershipClassTypeAllowances
+- ClassSession belongs to: optional ClassType, optional Coach. Sessions are **global** (not owned by cohorts)
+- **Session/Cohort Decoupling**: Cohorts access sessions via `CohortSessionAccess` join table (cohortId + classTypeId), NOT via a direct FK on ClassSession. The `classSession.cohortId` field is nullable and historical only.
 - Invoice has many: appointments (linked via invoiceId)
 - Appointment belongs to: user (client), coach, optional invoice
 
@@ -575,23 +607,51 @@ export async function POST(req: NextRequest) {
 
 ### Sidebar Navigation (src/components/layouts/Sidebar.tsx)
 
-Navigation is defined as a static object with three role arrays:
+Navigation is defined as a static object with three role arrays. Each item can have an optional `flag` property to gate visibility via feature flags:
 
 ```typescript
-const navigation = {
+type NavItem = {
+  name: string
+  href: string
+  icon: typeof LayoutDashboard
+  flag?: keyof FeatureFlags  // "appointmentsEnabled" | "sessionsEnabled" | "cohortsEnabled"
+}
+
+const navigation: Record<Role, NavItem[]> = {
   ADMIN: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Members", href: "/members", icon: Users },
+    { name: "Appointments", href: "/appointments", icon: Calendar, flag: "appointmentsEnabled" },
+    { name: "Sessions", href: "/sessions", icon: Dumbbell, flag: "sessionsEnabled" },
+    { name: "Memberships", href: "/admin/memberships", icon: Ticket, flag: "sessionsEnabled" },
+    { name: "Cohorts", href: "/cohorts", icon: Heart, flag: "cohortsEnabled" },
     // ... more items
   ],
   COACH: [ /* similar */ ],
   CLIENT: [ /* similar */ ],
 }
+
+// Items are filtered at render time:
+const flags = useFeatureFlags()
+const navItems = allItems.filter((item) => !item.flag || flags[item.flag])
 ```
 
-To add a new nav item: add to the relevant role array(s) in both `Sidebar.tsx` and `MobileNav.tsx`.
+To add a new nav item: add to the relevant role array(s) in both `Sidebar.tsx` and `MobileNav.tsx`. If the feature should be togglable, add a `flag` property.
 
 Icons: import from `lucide-react`.
+
+### Feature Flags Context (src/contexts/FeatureFlagsContext.tsx)
+
+Feature flags are fetched from SystemSettings via `getFeatureFlags()` (any authenticated user) and provided to the component tree via `FeatureFlagsProvider` in `AppLayout`. Flags control navigation visibility only -- server actions still work regardless of flag state.
+
+```typescript
+interface FeatureFlags {
+  appointmentsEnabled: boolean   // default: false
+  sessionsEnabled: boolean       // default: true
+  cohortsEnabled: boolean        // default: true
+}
+```
+
+Admin users manage flags in Settings > Features tab (`SystemSettingsForm.tsx`).
 
 ### View Mode Switcher
 
@@ -623,8 +683,10 @@ These files are stable and should NOT be modified unless the PRD explicitly says
 | `src/lib/utils.ts` | `cn()` utility -- stable |
 | `vitest.config.ts` | Test config -- stable |
 | `playwright.config.ts` | E2E config -- stable |
-| `src/__tests__/mocks/*` | Test mocks -- only add new mocks, don't modify existing |
+| `src/__tests__/mocks/*` | Test mocks -- only add new model mocks, don't modify existing mock structure |
 | All existing test files | Don't modify existing tests -- add new ones |
+| `src/contexts/FeatureFlagsContext.tsx` | Feature flag context -- stable |
+| `src/contexts/ViewModeContext.tsx` | View mode context -- stable |
 
 ---
 
@@ -762,4 +824,10 @@ Add new Prisma migrations, never edit existing ones. Run `npm run db:migrate` to
 Every page must be wrapped in `<AppLayout session={session}>`. This provides the sidebar, mobile nav, and view mode context.
 
 ### 8. Feature flags are UI-level
-Feature flags (from SystemSettings) control navigation and component visibility. They do NOT gate middleware or server actions. The server actions should still work even if the flag is off -- the UI just won't show the entry point.
+Feature flags (from SystemSettings) control navigation and component visibility. They do NOT gate middleware or server actions. The server actions still work even if the flag is off -- the UI just won't show the entry point. Use `getFeatureFlags()` (not `getSystemSettings()`) to fetch flags for non-admin users.
+
+### 9. Session/Cohort relationship is via join table
+Sessions are global. Cohort access to sessions is mediated through `CohortSessionAccess` (cohortId + classTypeId). Do NOT use `classSession.cohortId` for new code -- it's a historical nullable field. Use `getCohortSessions()` which queries via the join table.
+
+### 10. Backfill scripts
+Data migration scripts live in `scripts/`. Run via `npx tsx scripts/[name].ts`. Existing: `backfill-cohort-session-access.ts`.

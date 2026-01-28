@@ -32,6 +32,9 @@ const SYSTEM_SETTINGS_DEFAULTS: Record<string, unknown> = {
   healthkitEnabled: true,
   iosIntegrationEnabled: true,
   showPersonalizedPlan: true,
+  appointmentsEnabled: false,
+  sessionsEnabled: true,
+  cohortsEnabled: true,
 
   // Admin
   adminOverrideEmail: "",
@@ -102,6 +105,9 @@ const featureFlagsSchema = z.object({
   healthkitEnabled: z.boolean().optional(),
   iosIntegrationEnabled: z.boolean().optional(),
   showPersonalizedPlan: z.boolean().optional(),
+  appointmentsEnabled: z.boolean().optional(),
+  sessionsEnabled: z.boolean().optional(),
+  cohortsEnabled: z.boolean().optional(),
 })
 
 const adminSchema = z.object({
@@ -179,6 +185,32 @@ const updateUserProfileSchema = z.object({
 export async function getSystemSetting<T>(key: string, defaultValue: T): Promise<T> {
   const setting = await prisma.systemSettings.findUnique({ where: { key } })
   return setting ? (setting.value as T) : defaultValue
+}
+
+// ============================================
+// FEATURE FLAGS (lightweight, any authenticated user)
+// ============================================
+
+const FEATURE_FLAG_KEYS = ["appointmentsEnabled", "sessionsEnabled", "cohortsEnabled"] as const
+
+export async function getFeatureFlags() {
+  await requireAuth()
+
+  const settings = await prisma.systemSettings.findMany({
+    where: { key: { in: [...FEATURE_FLAG_KEYS] } },
+  })
+
+  const flags: Record<string, boolean> = {
+    appointmentsEnabled: SYSTEM_SETTINGS_DEFAULTS.appointmentsEnabled as boolean,
+    sessionsEnabled: SYSTEM_SETTINGS_DEFAULTS.sessionsEnabled as boolean,
+    cohortsEnabled: SYSTEM_SETTINGS_DEFAULTS.cohortsEnabled as boolean,
+  }
+
+  for (const setting of settings) {
+    flags[setting.key] = setting.value as boolean
+  }
+
+  return flags as { appointmentsEnabled: boolean; sessionsEnabled: boolean; cohortsEnabled: boolean }
 }
 
 // ============================================

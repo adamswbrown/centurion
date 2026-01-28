@@ -161,6 +161,9 @@ export function SystemSettingsForm({ initialSettings }: SystemSettingsFormProps)
   const [healthkitEnabled, setHealthkitEnabled] = useState(s<boolean>("healthkitEnabled", true))
   const [iosIntegrationEnabled, setIosIntegrationEnabled] = useState(s<boolean>("iosIntegrationEnabled", true))
   const [showPersonalizedPlan, setShowPersonalizedPlan] = useState(s<boolean>("showPersonalizedPlan", true))
+  const [appointmentsEnabled, setAppointmentsEnabled] = useState(s<boolean>("appointmentsEnabled", false))
+  const [sessionsEnabled, setSessionsEnabled] = useState(s<boolean>("sessionsEnabled", true))
+  const [cohortsEnabled, setCohortsEnabled] = useState(s<boolean>("cohortsEnabled", true))
 
   // Nutrition
   const [defaultProteinPercent, setDefaultProteinPercent] = useState(s<number>("defaultProteinPercent", 30))
@@ -296,11 +299,32 @@ export function SystemSettingsForm({ initialSettings }: SystemSettingsFormProps)
               checked={showPersonalizedPlan}
               onChange={setShowPersonalizedPlan}
             />
+            <SettingCheckbox
+              id="appointmentsEnabled"
+              label="Enable Appointments"
+              description="Show appointment scheduling in navigation and allow booking"
+              checked={appointmentsEnabled}
+              onChange={setAppointmentsEnabled}
+            />
+            <SettingCheckbox
+              id="sessionsEnabled"
+              label="Enable Sessions"
+              description="Show sessions and memberships in navigation"
+              checked={sessionsEnabled}
+              onChange={setSessionsEnabled}
+            />
+            <SettingCheckbox
+              id="cohortsEnabled"
+              label="Enable Cohorts"
+              description="Show cohort management in navigation"
+              checked={cohortsEnabled}
+              onChange={setCohortsEnabled}
+            />
             <SaveButton
               loading={loading}
               success={success}
               error={error}
-              onSave={() => handleSave({ healthkitEnabled, iosIntegrationEnabled, showPersonalizedPlan })}
+              onSave={() => handleSave({ healthkitEnabled, iosIntegrationEnabled, showPersonalizedPlan, appointmentsEnabled, sessionsEnabled, cohortsEnabled })}
             />
           </CardContent>
         </Card>

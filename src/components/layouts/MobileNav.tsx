@@ -23,6 +23,7 @@ import {
 import { Button } from "@/components/ui/button"
 import type { Role } from "@prisma/client"
 import { useViewMode } from "@/contexts/ViewModeContext"
+import { useFeatureFlags, type FeatureFlags } from "@/contexts/FeatureFlagsContext"
 import { ViewModeSwitcher } from "./ViewModeSwitcher"
 
 interface MobileNavProps {
@@ -31,16 +32,23 @@ interface MobileNavProps {
   onClose: () => void
 }
 
-const navigation = {
+type NavItem = {
+  name: string
+  href: string
+  icon: typeof LayoutDashboard
+  flag?: keyof FeatureFlags
+}
+
+const navigation: Record<Role, NavItem[]> = {
   ADMIN: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Members", href: "/members", icon: Users },
     { name: "Users", href: "/admin/users", icon: UserCog },
-    { name: "Appointments", href: "/appointments", icon: Calendar },
-    { name: "Sessions", href: "/sessions", icon: Dumbbell },
+    { name: "Appointments", href: "/appointments", icon: Calendar, flag: "appointmentsEnabled" },
+    { name: "Sessions", href: "/sessions", icon: Dumbbell, flag: "sessionsEnabled" },
     { name: "Calendar", href: "/calendar", icon: Calendar },
-    { name: "Memberships", href: "/admin/memberships", icon: Ticket },
-    { name: "Cohorts", href: "/cohorts", icon: Heart },
+    { name: "Memberships", href: "/admin/memberships", icon: Ticket, flag: "sessionsEnabled" },
+    { name: "Cohorts", href: "/cohorts", icon: Heart, flag: "cohortsEnabled" },
     { name: "Billing", href: "/billing", icon: CreditCard },
     { name: "Reports", href: "/reports", icon: BarChart },
     { name: "Questionnaires", href: "/admin/questionnaires", icon: FileText },
@@ -51,10 +59,10 @@ const navigation = {
   COACH: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Members", href: "/members", icon: Users },
-    { name: "Appointments", href: "/appointments", icon: Calendar },
-    { name: "Sessions", href: "/sessions", icon: Dumbbell },
+    { name: "Appointments", href: "/appointments", icon: Calendar, flag: "appointmentsEnabled" },
+    { name: "Sessions", href: "/sessions", icon: Dumbbell, flag: "sessionsEnabled" },
     { name: "Calendar", href: "/calendar", icon: Calendar },
-    { name: "Cohorts", href: "/cohorts", icon: Heart },
+    { name: "Cohorts", href: "/cohorts", icon: Heart, flag: "cohortsEnabled" },
     { name: "Review Queue", href: "/coach/review-queue", icon: ClipboardList },
     { name: "Reports", href: "/reports", icon: BarChart },
     { name: "Invoices", href: "/invoices/me", icon: CreditCard },
@@ -62,10 +70,10 @@ const navigation = {
   ],
   CLIENT: [
     { name: "Dashboard", href: "/client/dashboard", icon: LayoutDashboard },
-    { name: "My Appointments", href: "/client/appointments", icon: Calendar },
-    { name: "My Sessions", href: "/client/sessions", icon: Dumbbell },
-    { name: "My Membership", href: "/client/membership", icon: Ticket },
-    { name: "My Cohorts", href: "/client/cohorts", icon: Heart },
+    { name: "My Appointments", href: "/client/appointments", icon: Calendar, flag: "appointmentsEnabled" },
+    { name: "My Sessions", href: "/client/sessions", icon: Dumbbell, flag: "sessionsEnabled" },
+    { name: "My Membership", href: "/client/membership", icon: Ticket, flag: "sessionsEnabled" },
+    { name: "My Cohorts", href: "/client/cohorts", icon: Heart, flag: "cohortsEnabled" },
     { name: "Health Data", href: "/client/health", icon: Heart },
     { name: "Invoices", href: "/client/invoices", icon: CreditCard },
   ],
@@ -74,7 +82,9 @@ const navigation = {
 export function MobileNav({ userRole, isOpen, onClose }: MobileNavProps) {
   const pathname = usePathname()
   const { effectiveNavRole } = useViewMode()
-  const navItems = navigation[effectiveNavRole] || navigation.CLIENT
+  const flags = useFeatureFlags()
+  const allItems = navigation[effectiveNavRole] || navigation.CLIENT
+  const navItems = allItems.filter((item) => !item.flag || flags[item.flag])
 
   if (!isOpen) return null
 
