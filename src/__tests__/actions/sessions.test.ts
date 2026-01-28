@@ -20,6 +20,8 @@ vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }))
 
+vi.mock("@/lib/google-calendar")
+
 // Import functions under test after mocks
 import {
   getSessions,
@@ -29,9 +31,15 @@ import {
   updateSession,
   cancelSession,
   generateRecurringSessions,
+  syncSessionToGoogleCalendar,
 } from "@/app/actions/sessions"
 import { requireCoach } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
+import {
+  addEventToGoogleCalendar,
+  updateGoogleCalendarEvent,
+  deleteGoogleCalendarEvent,
+} from "@/lib/google-calendar"
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -740,6 +748,209 @@ describe("Sessions Server Actions", () => {
           startDate: "2024-06-03",
         })
       ).rejects.toThrow("Unauthorized")
+    })
+  })
+
+  // -------------------------------------------------------------------------
+  // syncSessionToGoogleCalendar
+  // -------------------------------------------------------------------------
+
+  describe("syncSessionToGoogleCalendar", () => {
+    it("should create a new Google Calendar event for session without googleEventId", async () => {
+      const session = {
+        ...mockSession({ id: 1 }),
+        googleEventId: null,
+        classType: { id: 1, name: "HIIT", description: null, isActive: true },
+      }
+      mockPrisma.classSession.findUnique.mockResolvedValue(session)
+      vi.mocked(addEventToGoogleCalendar).mockResolvedValue({ id: "gcal-123" })
+      mockPrisma.classSession.update.mockResolvedValue({
+        ...session,
+        googleEventId: "gcal-123",
+      })
+
+      const result = await syncSessionToGoogleCalendar(1)
+
+      expect(result.success).toBe(true)
+      expect(result.message).toBe("Synced to Google Calendar")
+      expect(requireCoach).toHaveBeenCalled()
+      expect(mockPrisma.classSession.findUnique).toHaveBeenCalledWith({
+        where: { id: 1 },
+        include: { classType: true },
+      })
+      expect(addEventToGoogleCalendar).toHaveBeenCalledWith({
+        title: session.title,
+        description: "",
+        startDate: session.startTime,
+        endDate: session.endTime,
+        location: session.location,
+        isAllDay: false,
+      })
+      expect(mockPrisma.classSession.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: { googleEventId: "gcal-123" },
+      })
+    })
+
+    it("should update existing Google Calendar event for session with googleEventId", async () => {
+      const session = {
+        ...mockSession({ id: 1 }),
+        googleEventId: "existing-gcal-id",
+        classType: { id: 1, name: "HIIT", description: null, isActive: true },
+      }
+      mockPrisma.classSession.findUnique.mockResolvedValue(session)
+
+      const result = await syncSessionToGoogleCalendar(1)
+
+      expect(result.success).toBe(true)
+      expect(result.message).toBe("Google Calendar event updated")
+      expect(requireCoach).toHaveBeenCalled()
+      expect(updateGoogleCalendarEvent).toHaveBeenCalledWith("existing-gcal-id", {
+        title: session.title,
+        description: "",
+        startDate: session.startTime,
+        endDate: session.endTime,
+        location: session.location,
+        isAllDay: false,
+      })
+    })
+
+    it("should throw error when session not found", async () => {
+      mockPrisma.classSession.findUnique.mockResolvedValue(null)
+
+      await expect(syncSessionToGoogleCalendar(999)).rejects.toThrow(
+        "Session not found"
+      )
+    })
+
+    it("should handle Google Calendar API errors gracefully", async () => {
+      const session = {
+        ...mockSession({ id: 1 }),
+        googleEventId: null,
+        classType: { id: 1, name: "HIIT", description: null, isActive: true },
+      }
+      mockPrisma.classSession.findUnique.mockResolvedValue(session)
+      vi.mocked(addEventToGoogleCalendar).mockRejectedValue(
+        new Error("Google Calendar API error")
+      )
+
+      const result = await syncSessionToGoogleCalendar(1)
+
+      expect(result.success).toBe(false)
+      expect(result.message).toBe("Google Calendar API error")
+    })
+
+    it("should require coach authentication", async () => {
+      vi.mocked(requireCoach).mockRejectedValueOnce(new Error("Unauthorized"))
+
+      await expect(syncSessionToGoogleCalendar(1)).rejects.toThrow("Unauthorized")
+    })
+
+    it("should include session notes as description in calendar event", async () => {
+      const session = {
+        ...mockSession({ id: 1, notes: "Bring yoga mats" }),
+        googleEventId: null,
+        classType: { id: 1, name: "HIIT", description: null, isActive: true },
+      }
+      mockPrisma.classSession.findUnique.mockResolvedValue(session)
+      vi.mocked(addEventToGoogleCalendar).mockResolvedValue({ id: "gcal-123" })
+
+      await syncSessionToGoogleCalendar(1)
+
+      expect(addEventToGoogleCalendar).toHaveBeenCalledWith(
+        expect.objectContaining({
+          description: "Bring yoga mats",
+        })
+      )
+    })
+
+    it("should handle case when Google Calendar returns no event ID", async () => {
+      const session = {
+        ...mockSession({ id: 1 }),
+        googleEventId: null,
+        classType: { id: 1, name: "HIIT", description: null, isActive: true },
+      }
+      mockPrisma.classSession.findUnique.mockResolvedValue(session)
+      vi.mocked(addEventToGoogleCalendar).mockResolvedValue({})
+
+      const result = await syncSessionToGoogleCalendar(1)
+
+      expect(result.success).toBe(false)
+      expect(result.message).toBe("Failed to create Google Calendar event")
+    })
+  })
+
+  // -------------------------------------------------------------------------
+  // cancelSession - Google Calendar cleanup
+  // -------------------------------------------------------------------------
+
+  describe("cancelSession - Google Calendar cleanup", () => {
+    it("should delete Google Calendar event when cancelling session with googleEventId", async () => {
+      const session = mockSession({ id: 3, googleEventId: "gcal-to-delete" })
+      mockPrisma.classSession.findUnique.mockResolvedValue(session)
+      const cancelled = mockSession({ id: 3, status: "CANCELLED" })
+      mockPrisma.classSession.update.mockResolvedValue(cancelled)
+
+      const result = await cancelSession(3)
+
+      expect(result).toEqual(cancelled)
+      expect(requireCoach).toHaveBeenCalled()
+      expect(mockPrisma.classSession.findUnique).toHaveBeenCalledWith({
+        where: { id: 3 },
+      })
+      expect(deleteGoogleCalendarEvent).toHaveBeenCalledWith("gcal-to-delete")
+      expect(mockPrisma.classSession.update).toHaveBeenCalledWith({
+        where: { id: 3 },
+        data: { status: "CANCELLED" },
+      })
+      expect(revalidatePath).toHaveBeenCalledWith("/sessions")
+    })
+
+    it("should not fail if calendar deletion fails", async () => {
+      const session = mockSession({ id: 3, googleEventId: "gcal-fails" })
+      mockPrisma.classSession.findUnique.mockResolvedValue(session)
+      vi.mocked(deleteGoogleCalendarEvent).mockRejectedValue(
+        new Error("Google API unavailable")
+      )
+      const cancelled = mockSession({ id: 3, status: "CANCELLED" })
+      mockPrisma.classSession.update.mockResolvedValue(cancelled)
+
+      const result = await cancelSession(3)
+
+      expect(result).toEqual(cancelled)
+      expect(deleteGoogleCalendarEvent).toHaveBeenCalledWith("gcal-fails")
+      expect(mockPrisma.classSession.update).toHaveBeenCalledWith({
+        where: { id: 3 },
+        data: { status: "CANCELLED" },
+      })
+    })
+
+    it("should skip calendar deletion if no googleEventId", async () => {
+      const session = mockSession({ id: 3, googleEventId: null })
+      mockPrisma.classSession.findUnique.mockResolvedValue(session)
+      const cancelled = mockSession({ id: 3, status: "CANCELLED" })
+      mockPrisma.classSession.update.mockResolvedValue(cancelled)
+
+      const result = await cancelSession(3)
+
+      expect(result).toEqual(cancelled)
+      expect(deleteGoogleCalendarEvent).not.toHaveBeenCalled()
+      expect(mockPrisma.classSession.update).toHaveBeenCalledWith({
+        where: { id: 3 },
+        data: { status: "CANCELLED" },
+      })
+    })
+
+    it("should successfully cancel when session exists but has no googleEventId", async () => {
+      const session = mockSession({ id: 5, googleEventId: null })
+      mockPrisma.classSession.findUnique.mockResolvedValue(session)
+      const cancelled = mockSession({ id: 5, status: "CANCELLED" })
+      mockPrisma.classSession.update.mockResolvedValue(cancelled)
+
+      const result = await cancelSession(5)
+
+      expect(result.status).toBe("CANCELLED")
+      expect(deleteGoogleCalendarEvent).not.toHaveBeenCalled()
     })
   })
 })
