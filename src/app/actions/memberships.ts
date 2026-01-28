@@ -274,6 +274,12 @@ export async function getUserMembershipHistory(userId: number) {
 export async function pauseMembership(membershipId: number) {
   await requireAdmin()
 
+  const existing = await prisma.userMembership.findUnique({ where: { id: membershipId } })
+  if (!existing) throw new Error("Membership not found")
+  if (existing.status !== MembershipTierStatus.ACTIVE) {
+    throw new Error("Can only pause active memberships")
+  }
+
   const result = await prisma.userMembership.update({
     where: { id: membershipId },
     data: { status: MembershipTierStatus.PAUSED },
@@ -288,6 +294,12 @@ export async function pauseMembership(membershipId: number) {
 export async function resumeMembership(membershipId: number) {
   await requireAdmin()
 
+  const existing = await prisma.userMembership.findUnique({ where: { id: membershipId } })
+  if (!existing) throw new Error("Membership not found")
+  if (existing.status !== MembershipTierStatus.PAUSED) {
+    throw new Error("Can only resume paused memberships")
+  }
+
   const result = await prisma.userMembership.update({
     where: { id: membershipId },
     data: { status: MembershipTierStatus.ACTIVE },
@@ -301,6 +313,12 @@ export async function resumeMembership(membershipId: number) {
 
 export async function cancelMembership(membershipId: number) {
   await requireAdmin()
+
+  const existing = await prisma.userMembership.findUnique({ where: { id: membershipId } })
+  if (!existing) throw new Error("Membership not found")
+  if (existing.status === MembershipTierStatus.CANCELLED) {
+    throw new Error("Membership is already cancelled")
+  }
 
   const result = await prisma.userMembership.update({
     where: { id: membershipId },

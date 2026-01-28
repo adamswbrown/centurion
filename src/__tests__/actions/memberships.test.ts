@@ -747,6 +747,9 @@ describe("Memberships Server Actions", () => {
         status: "PAUSED",
       })
 
+      mockPrisma.userMembership.findUnique.mockResolvedValue(
+        createMockUserMembership({ id: 1, status: "ACTIVE" })
+      )
       mockPrisma.userMembership.update.mockResolvedValue(pausedMembership)
 
       const result = await pauseMembership(1)
@@ -775,6 +778,9 @@ describe("Memberships Server Actions", () => {
         status: "ACTIVE",
       })
 
+      mockPrisma.userMembership.findUnique.mockResolvedValue(
+        createMockUserMembership({ id: 1, status: "PAUSED" })
+      )
       mockPrisma.userMembership.update.mockResolvedValue(activeMembership)
 
       const result = await resumeMembership(1)
@@ -804,6 +810,9 @@ describe("Memberships Server Actions", () => {
         endDate: new Date(),
       })
 
+      mockPrisma.userMembership.findUnique.mockResolvedValue(
+        createMockUserMembership({ id: 1, status: "ACTIVE" })
+      )
       mockPrisma.userMembership.update.mockResolvedValue(cancelledMembership)
 
       const result = await cancelMembership(1)

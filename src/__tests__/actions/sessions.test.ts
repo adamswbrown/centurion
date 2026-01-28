@@ -420,6 +420,7 @@ describe("Sessions Server Actions", () => {
   describe("updateSession", () => {
     it("should update a session with valid input", async () => {
       const updated = mockSession({ id: 1, title: "Updated Title" })
+      mockPrisma.classSession.findUnique.mockResolvedValue(mockSession({ id: 1, coachId: 1 }))
       mockPrisma.classSession.update.mockResolvedValue(updated)
 
       const result = await updateSession({
@@ -442,6 +443,7 @@ describe("Sessions Server Actions", () => {
 
     it("should only send defined fields in the update data", async () => {
       const updated = mockSession({ id: 1 })
+      mockPrisma.classSession.findUnique.mockResolvedValue(mockSession({ id: 1, coachId: 1 }))
       mockPrisma.classSession.update.mockResolvedValue(updated)
 
       await updateSession({
@@ -455,6 +457,7 @@ describe("Sessions Server Actions", () => {
 
     it("should convert startTime and endTime to Date objects", async () => {
       const updated = mockSession({ id: 1 })
+      mockPrisma.classSession.findUnique.mockResolvedValue(mockSession({ id: 1, coachId: 1 }))
       mockPrisma.classSession.update.mockResolvedValue(updated)
 
       await updateSession({
@@ -470,6 +473,7 @@ describe("Sessions Server Actions", () => {
 
     it("should allow setting classTypeId and cohortId to null", async () => {
       const updated = mockSession({ id: 1 })
+      mockPrisma.classSession.findUnique.mockResolvedValue(mockSession({ id: 1, coachId: 1 }))
       mockPrisma.classSession.update.mockResolvedValue(updated)
 
       await updateSession({
@@ -517,6 +521,7 @@ describe("Sessions Server Actions", () => {
   describe("cancelSession", () => {
     it("should cancel a session by setting status to CANCELLED", async () => {
       const cancelled = mockSession({ id: 3, status: "CANCELLED" })
+      mockPrisma.classSession.findUnique.mockResolvedValue(mockSession({ id: 3, coachId: 1 }))
       mockPrisma.classSession.update.mockResolvedValue(cancelled)
 
       const result = await cancelSession(3)

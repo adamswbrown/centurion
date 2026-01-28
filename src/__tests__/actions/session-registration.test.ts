@@ -608,7 +608,7 @@ describe("Session Registration Server Actions", () => {
       expect(result.lateCancelled).toBe(false)
       expect(mockPrisma.userMembership.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: { sessionsRemaining: 5 },
+          data: { sessionsRemaining: { increment: 1 } },
         })
       )
     })
@@ -873,7 +873,9 @@ describe("Session Registration Server Actions", () => {
       expect(result!.planName).toBe("30-Day Pass")
     })
 
-    it("should allow querying for a specific userId", async () => {
+    it("should allow coaches to query for a specific userId", async () => {
+      setupAuthMock(mockCoachUser)
+
       const membership = createMockMembership({
         userId: 50,
         plan: {
@@ -893,6 +895,12 @@ describe("Session Registration Server Actions", () => {
           where: expect.objectContaining({ userId: 50 }),
         })
       )
+    })
+
+    it("should block clients from querying other users' usage", async () => {
+      setupAuthMock(mockClientUser)
+
+      await expect(getSessionUsage(50)).rejects.toThrow("Not authorized")
     })
   })
 

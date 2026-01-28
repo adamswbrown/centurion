@@ -298,7 +298,7 @@ export async function cancelRegistration(input: CancelRegistrationInput) {
       },
     })
 
-    // Refund pack session if NOT late cancel
+    // Refund pack session if NOT late cancel (atomic increment)
     if (
       !isLateCancellation &&
       membership?.plan.type === MembershipPlanType.PACK &&
@@ -306,7 +306,7 @@ export async function cancelRegistration(input: CancelRegistrationInput) {
     ) {
       await tx.userMembership.update({
         where: { id: membership.id },
-        data: { sessionsRemaining: membership.sessionsRemaining + 1 },
+        data: { sessionsRemaining: { increment: 1 } },
       })
     }
 
@@ -413,7 +413,13 @@ export async function getMyRegistrations(params?: {
 
 export async function getSessionUsage(userId?: number) {
   const session = await requireAuth()
-  const targetUserId = userId ?? Number.parseInt(session.id, 10)
+  const requestingUserId = Number.parseInt(session.id, 10)
+  const targetUserId = userId ?? requestingUserId
+
+  // Only coaches/admins can view other users' usage
+  if (targetUserId !== requestingUserId && session.role === "CLIENT") {
+    throw new Error("Not authorized to view other users' usage")
+  }
 
   const membership = await prisma.userMembership.findFirst({
     where: {

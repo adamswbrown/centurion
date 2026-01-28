@@ -168,8 +168,15 @@ export async function createSession(input: CreateSessionInput) {
 }
 
 export async function updateSession(input: UpdateSessionInput) {
-  await requireCoach()
+  const user = await requireCoach()
   const { id, ...data } = updateSessionSchema.parse(input)
+
+  const userId = Number.parseInt(user.id, 10)
+  const existing = await prisma.classSession.findUnique({ where: { id } })
+  if (!existing) throw new Error("Session not found")
+  if (user.role !== "ADMIN" && existing.coachId !== userId) {
+    throw new Error("Not authorized to update this session")
+  }
 
   const updateData: Record<string, unknown> = {}
 
@@ -193,11 +200,17 @@ export async function updateSession(input: UpdateSessionInput) {
 }
 
 export async function cancelSession(id: number) {
-  await requireCoach()
+  const user = await requireCoach()
+  const userId = Number.parseInt(user.id, 10)
 
   const session = await prisma.classSession.findUnique({
     where: { id },
   })
+
+  if (!session) throw new Error("Session not found")
+  if (user.role !== "ADMIN" && session.coachId !== userId) {
+    throw new Error("Not authorized to cancel this session")
+  }
 
   if (session?.googleEventId) {
     try {
@@ -218,7 +231,8 @@ export async function cancelSession(id: number) {
 }
 
 export async function syncSessionToGoogleCalendar(id: number) {
-  await requireCoach()
+  const user = await requireCoach()
+  const userId = Number.parseInt(user.id, 10)
 
   const session = await prisma.classSession.findUnique({
     where: { id },
@@ -227,6 +241,10 @@ export async function syncSessionToGoogleCalendar(id: number) {
 
   if (!session) {
     throw new Error("Session not found")
+  }
+
+  if (user.role !== "ADMIN" && session.coachId !== userId) {
+    throw new Error("Not authorized to sync this session")
   }
 
   const calendarEvent: CalendarEvent = {
