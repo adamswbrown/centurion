@@ -269,6 +269,32 @@ export const mockPrisma = {
     groupBy: vi.fn(),
     createMany: vi.fn(),
   },
+  healthKitWorkout: {
+    findMany: vi.fn(),
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    updateMany: vi.fn(),
+    deleteMany: vi.fn(),
+    count: vi.fn(),
+    upsert: vi.fn(),
+    groupBy: vi.fn(),
+  },
+  sleepRecord: {
+    findMany: vi.fn(),
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    updateMany: vi.fn(),
+    deleteMany: vi.fn(),
+    count: vi.fn(),
+    upsert: vi.fn(),
+    groupBy: vi.fn(),
+  },
   $transaction: vi.fn((operations) => {
     if (Array.isArray(operations)) {
       return Promise.all(operations)
