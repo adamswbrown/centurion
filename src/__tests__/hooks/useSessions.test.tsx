@@ -14,6 +14,13 @@ vi.mock("@/app/actions/sessions", () => ({
   syncSessionToGoogleCalendar: vi.fn(),
 }))
 
+vi.mock("@/app/actions/session-registration", () => ({
+  getAvailableSessions: vi.fn(),
+  getMyRegistrations: vi.fn(),
+  registerForSession: vi.fn(),
+  cancelRegistration: vi.fn(),
+}))
+
 import {
   getSessions,
   getSessionById,

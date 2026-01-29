@@ -10,7 +10,7 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
     globals: true,
-    exclude: ["e2e/**", "**/node_modules/**", "CoachFit/**", "personal-trainer-planner/**"],
+    exclude: ["e2e/**", "**/node_modules/**", "CoachFit/**", "personal-trainer-planner/**", "sources/**"],
   },
   resolve: {
     alias: {

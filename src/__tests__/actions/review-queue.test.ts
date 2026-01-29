@@ -75,6 +75,8 @@ describe("Review Queue Server Actions", () => {
           cohort: {
             id: 1,
             name: cohort.name,
+            startDate: new Date("2024-01-01"),
+            bundles: [],
             members: [
               {
                 ...createMockCohortMembership({ userId: 10, cohortId: 1 }),
@@ -150,6 +152,8 @@ describe("Review Queue Server Actions", () => {
           cohort: {
             id: 1,
             name: "Test Cohort",
+            startDate: new Date("2024-01-01"),
+            bundles: [],
             members: [
               {
                 ...createMockCohortMembership({ userId: 10 }),
@@ -183,6 +187,8 @@ describe("Review Queue Server Actions", () => {
           cohort: {
             id: 1,
             name: "Test Cohort",
+            startDate: new Date("2024-01-01"),
+            bundles: [],
             members: [
               {
                 ...createMockCohortMembership({ userId: 10 }),
@@ -216,6 +222,8 @@ describe("Review Queue Server Actions", () => {
           cohort: {
             id: 1,
             name: "Test Cohort",
+            startDate: new Date("2024-01-01"),
+            bundles: [],
             members: [
               {
                 ...createMockCohortMembership({ userId: 10 }),
@@ -407,6 +415,8 @@ describe("Review Queue Server Actions", () => {
           cohort: {
             id: 1,
             name: "Test Cohort",
+            startDate: new Date("2024-01-01"),
+            bundles: [],
             members: [
               {
                 ...createMockCohortMembership({ userId: 10 }),
@@ -437,6 +447,8 @@ describe("Review Queue Server Actions", () => {
           cohort: {
             id: 1,
             name: "Test Cohort",
+            startDate: new Date("2024-01-01"),
+            bundles: [],
             members: [
               {
                 ...createMockCohortMembership({ userId: 10 }),

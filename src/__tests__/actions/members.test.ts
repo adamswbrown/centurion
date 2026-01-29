@@ -150,7 +150,15 @@ describe("Members Server Actions", () => {
             },
           },
           cohortMemberships: {
-            include: { cohort: true },
+            include: {
+              cohort: {
+                select: {
+                  id: true,
+                  name: true,
+                  checkInFrequencyDays: true,
+                },
+              },
+            },
           },
           invoices: {
             orderBy: { month: "desc" },
