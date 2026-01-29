@@ -31,6 +31,7 @@ import {
   Calendar,
   User,
   Bell,
+  ClipboardList,
 } from "lucide-react"
 
 function getGreeting(): string {
@@ -96,6 +97,7 @@ export function ClientDashboard() {
       <TodayAtAGlance
         hasTodayEntry={data.hasTodayEntry}
         checkInOverdue={checkInOverdue}
+        questionnaireStatus={data.questionnaireStatus}
         onCheckInClick={() => setActiveTab("health")}
       />
 
@@ -209,11 +211,20 @@ export function ClientDashboard() {
               onClick={() => setActiveTab("health")}
               badge={checkInOverdue ? "!" : undefined}
             />
-            <QuickActionButton
-              icon={<Calendar className="h-5 w-5" />}
-              label="My Schedule"
-              href="/client/sessions"
-            />
+            {pendingQuestionnaire ? (
+              <QuickActionButton
+                icon={<ClipboardList className="h-5 w-5" />}
+                label="Questionnaire"
+                href={`/client/questionnaires/${data.questionnaireStatus[0]?.cohortId}/${data.questionnaireStatus[0]?.currentWeek}`}
+                badge="!"
+              />
+            ) : (
+              <QuickActionButton
+                icon={<Calendar className="h-5 w-5" />}
+                label="My Schedule"
+                href="/client/sessions"
+              />
+            )}
             <QuickActionButton
               icon={<Sparkles className="h-5 w-5" />}
               label="My Wrapped"
@@ -229,6 +240,11 @@ export function ClientDashboard() {
 
         {/* HEALTH TAB */}
         <TabsContent value="health" className="space-y-4 mt-4">
+          {/* Questionnaire Alert in Health Tab */}
+          {pendingQuestionnaire && (
+            <QuestionnairePrompt questionnaireStatus={data.questionnaireStatus} />
+          )}
+
           <div className="grid gap-4 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <Card>
@@ -246,8 +262,30 @@ export function ClientDashboard() {
                 </CardContent>
               </Card>
             </div>
-            <div>
+            <div className="space-y-4">
               <RecentEntriesSidebar entries={data.recentEntries} />
+
+              {/* Quick link to questionnaire if pending */}
+              {pendingQuestionnaire && (
+                <Card className="border-amber-200 bg-amber-50/30">
+                  <CardContent className="pt-4">
+                    <div className="flex items-center gap-3">
+                      <ClipboardList className="h-5 w-5 text-amber-600" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Weekly Questionnaire</p>
+                        <p className="text-xs text-muted-foreground">
+                          Week {data.questionnaireStatus[0]?.currentWeek} waiting
+                        </p>
+                      </div>
+                      <Button size="sm" asChild>
+                        <Link href={`/client/questionnaires/${data.questionnaireStatus[0]?.cohortId}/${data.questionnaireStatus[0]?.currentWeek}`}>
+                          Start
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </TabsContent>
@@ -314,13 +352,23 @@ export function ClientDashboard() {
 }
 
 // Today at a Glance Component
+interface QuestionnaireStatusItem {
+  cohortId: number
+  cohortName: string
+  currentWeek: number
+  status: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED"
+  bundleId: number | null
+}
+
 function TodayAtAGlance({
   hasTodayEntry,
   checkInOverdue,
+  questionnaireStatus,
   onCheckInClick,
 }: {
   hasTodayEntry: boolean
   checkInOverdue: boolean
+  questionnaireStatus: QuestionnaireStatusItem[]
   onCheckInClick: () => void
 }) {
   const { data: registrations } = useMyRegistrations()
@@ -331,11 +379,14 @@ function TodayAtAGlance({
 
   const hasSessionToday = todaySessions.length > 0
   const nextSession = todaySessions[0]
+  const pendingQuestionnaire = questionnaireStatus.find(q => q.status !== "COMPLETED")
+  const hasNeedsAttention = checkInOverdue || pendingQuestionnaire
 
   return (
-    <Card className={checkInOverdue ? "border-amber-300 bg-amber-50/50" : ""}>
+    <Card className={hasNeedsAttention ? "border-amber-300 bg-amber-50/50" : ""}>
       <CardContent className="pt-4 pb-3">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* Session info */}
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-full ${hasSessionToday ? "bg-primary/10" : "bg-muted"}`}>
               <Calendar className={`h-5 w-5 ${hasSessionToday ? "text-primary" : "text-muted-foreground"}`} />
@@ -346,11 +397,11 @@ function TodayAtAGlance({
                   ? `${nextSession?.session.classType?.name || nextSession?.session.title} at ${format(new Date(nextSession.session.startTime), "h:mm a")}`
                   : "No sessions today"}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                 {hasTodayEntry ? (
                   <span className="flex items-center gap-1 text-green-600">
                     <CheckCircle2 className="h-3 w-3" />
-                    Checked in today
+                    Checked in
                   </span>
                 ) : checkInOverdue ? (
                   <span className="flex items-center gap-1 text-amber-600">
@@ -358,17 +409,35 @@ function TodayAtAGlance({
                     Check-in needed
                   </span>
                 ) : (
-                  "No check-in yet today"
+                  <span className="text-muted-foreground">No check-in yet</span>
                 )}
-              </p>
+                {pendingQuestionnaire && (
+                  <span className="flex items-center gap-1 text-amber-600">
+                    <ClipboardList className="h-3 w-3" />
+                    Questionnaire waiting
+                  </span>
+                )}
+              </div>
             </div>
           </div>
-          {!hasTodayEntry && (
-            <Button size="sm" variant={checkInOverdue ? "default" : "outline"} onClick={onCheckInClick}>
-              <Heart className="h-4 w-4 mr-1" />
-              Check In
-            </Button>
-          )}
+
+          {/* Action buttons */}
+          <div className="flex items-center gap-2">
+            {!hasTodayEntry && (
+              <Button size="sm" variant={checkInOverdue ? "default" : "outline"} onClick={onCheckInClick}>
+                <Heart className="h-4 w-4 mr-1" />
+                Check In
+              </Button>
+            )}
+            {pendingQuestionnaire && (
+              <Button size="sm" variant="outline" asChild>
+                <Link href={`/client/questionnaires/${pendingQuestionnaire.cohortId}/${pendingQuestionnaire.currentWeek}`}>
+                  <ClipboardList className="h-4 w-4 mr-1" />
+                  Questionnaire
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
