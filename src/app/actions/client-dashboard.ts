@@ -183,6 +183,37 @@ export async function getClientDashboardData() {
     checkInOverdue = memberships.length > 0 // Overdue if in cohort but no check-ins
   }
 
+  // Check if user has any completed cohorts (for Wrapped feature)
+  const completedMemberships = await prisma.cohortMembership.findMany({
+    where: {
+      userId,
+      OR: [
+        { status: "INACTIVE" },
+        {
+          cohort: {
+            endDate: { lte: today },
+          },
+        },
+      ],
+    },
+    include: {
+      cohort: {
+        select: { id: true, name: true, endDate: true },
+      },
+    },
+  })
+
+  // Also check if any active cohort is in its final week (week 6)
+  const cohortInFinalWeek = memberships.some((m) => {
+    if (!m.cohort.startDate) return false
+    const weeksSinceStart = Math.floor(
+      differenceInDays(today, startOfDay(m.cohort.startDate)) / 7
+    )
+    return weeksSinceStart >= 5 // Week 6 or later
+  })
+
+  const showWrapped = completedMemberships.length > 0 || cohortInFinalWeek
+
   return {
     user: {
       id: userId,
@@ -218,5 +249,6 @@ export async function getClientDashboardData() {
     showQuestionnairePrompt,
     checkInOverdue,
     nextExpectedCheckIn,
+    showWrapped,
   }
 }

@@ -225,11 +225,19 @@ export function ClientDashboard() {
                 href="/client/sessions"
               />
             )}
-            <QuickActionButton
-              icon={<Sparkles className="h-5 w-5" />}
-              label="My Wrapped"
-              href="/client/wrapped"
-            />
+            {data.showWrapped ? (
+              <QuickActionButton
+                icon={<Sparkles className="h-5 w-5" />}
+                label="My Wrapped"
+                href="/client/wrapped"
+              />
+            ) : (
+              <QuickActionButton
+                icon={<Activity className="h-5 w-5" />}
+                label="My Progress"
+                onClick={() => setActiveTab("progress")}
+              />
+            )}
           </div>
         </TabsContent>
 
@@ -322,12 +330,14 @@ export function ClientDashboard() {
                     Detailed Health Charts
                   </Link>
                 </Button>
-                <Button variant="outline" className="w-full justify-start" asChild>
-                  <Link href="/client/wrapped">
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Your Fitness Wrapped
-                  </Link>
-                </Button>
+                {data.showWrapped && (
+                  <Button variant="outline" className="w-full justify-start" asChild>
+                    <Link href="/client/wrapped">
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Your Fitness Wrapped
+                    </Link>
+                  </Button>
+                )}
                 {hasCohort && (
                   <Button variant="outline" className="w-full justify-start" asChild>
                     <Link href="/client/cohorts">
