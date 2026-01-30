@@ -25,6 +25,16 @@ export async function getMyAppointments(dateRange?: { from?: Date; to?: Date }) 
           }
         : {}),
     },
+    include: {
+      coach: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+        },
+      },
+    },
     orderBy: { startTime: "asc" },
   })
 }

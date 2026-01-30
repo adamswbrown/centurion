@@ -10,6 +10,7 @@ import {
   useRegisterForSession,
   useCancelRegistration,
 } from "@/hooks/useSessionRegistration"
+import { useMyAppointments } from "@/hooks/useClientAppointments"
 import { CalendarHeader } from "./CalendarHeader"
 import { WeekView } from "./WeekView"
 import { DayView } from "./DayView"
@@ -114,14 +115,18 @@ export function ClientSessionCalendar() {
     }
   }, [view, currentDate])
 
-  // Fetch sessions and registrations
+  // Fetch sessions, registrations, and appointments
   const { data: sessionsData, isLoading: sessionsLoading } = useAvailableSessions(dateRange)
   const { data: registrations, isLoading: registrationsLoading } = useMyRegistrations({ upcoming: false })
+  const { data: appointmentsData, isLoading: appointmentsLoading } = useMyAppointments({
+    from: new Date(dateRange.startDate),
+    to: new Date(dateRange.endDate),
+  })
   const registerMutation = useRegisterForSession()
   const cancelMutation = useCancelRegistration()
 
-  // Transform API data to CalendarSession format
-  const sessions: CalendarSession[] = useMemo(() => {
+  // Transform API data to CalendarSession format (group sessions)
+  const groupSessions: CalendarSession[] = useMemo(() => {
     if (!sessionsData) return []
     return sessionsData.map((s) => ({
       id: s.id,
@@ -134,8 +139,34 @@ export function ClientSessionCalendar() {
       registeredCount: s._count?.registrations ?? 0,
       classType: s.classType,
       coach: s.coach,
+      itemType: "session" as const,
     }))
   }, [sessionsData])
+
+  // Transform appointments to CalendarSession format
+  const appointmentSessions: CalendarSession[] = useMemo(() => {
+    if (!appointmentsData) return []
+    return appointmentsData.map((apt) => ({
+      id: apt.id,
+      title: apt.title || "Personal Training",
+      startTime: new Date(apt.startTime),
+      endTime: new Date(apt.endTime),
+      maxOccupancy: 1,
+      location: null,
+      notes: apt.notes,
+      registeredCount: 1,
+      classType: null,
+      coach: apt.coach,
+      itemType: "appointment" as const,
+    }))
+  }, [appointmentsData])
+
+  // Merge sessions and appointments
+  const sessions: CalendarSession[] = useMemo(() => {
+    return [...groupSessions, ...appointmentSessions].sort(
+      (a, b) => a.startTime.getTime() - b.startTime.getTime()
+    )
+  }, [groupSessions, appointmentSessions])
 
   // Track registered and waitlisted sessions
   const { registeredSessionIds, waitlistedSessionIds, registrationBySessionId } = useMemo(() => {
@@ -159,6 +190,10 @@ export function ClientSessionCalendar() {
     (session: CalendarSession): SessionStatus => {
       if (isBefore(session.endTime, new Date())) {
         return "past"
+      }
+      // Appointments are always "registered" (coach-booked)
+      if (session.itemType === "appointment") {
+        return "registered"
       }
       if (registeredSessionIds.has(session.id)) {
         return "registered"
@@ -215,7 +250,7 @@ export function ClientSessionCalendar() {
     setView("day")
   }
 
-  const isLoading = sessionsLoading || registrationsLoading
+  const isLoading = sessionsLoading || registrationsLoading || appointmentsLoading
 
   return (
     <div className="space-y-6">

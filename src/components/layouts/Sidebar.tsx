@@ -69,7 +69,6 @@ const navigation: Record<Role, NavItem[]> = {
   ],
   CLIENT: [
     { name: "Dashboard", href: "/client/dashboard", icon: LayoutDashboard },
-    { name: "My Appointments", href: "/client/appointments", icon: Calendar, flag: "appointmentsEnabled" },
     { name: "My Sessions", href: "/client/sessions", icon: Dumbbell, flag: "sessionsEnabled" },
     { name: "My Membership", href: "/client/membership", icon: Ticket, flag: "sessionsEnabled" },
     { name: "My Workouts", href: "/client/workouts", icon: Dumbbell },

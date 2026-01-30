@@ -4,6 +4,9 @@ export type CalendarView = "week" | "day" | "month"
 
 export type SessionStatus = "available" | "registered" | "waitlisted" | "full" | "past"
 
+// Type to distinguish between group sessions and 1-on-1 appointments
+export type CalendarItemType = "session" | "appointment"
+
 export interface CalendarSession {
   id: number
   title: string
@@ -25,6 +28,8 @@ export interface CalendarSession {
     email: string
     image: string | null
   }
+  // Item type to distinguish appointments from group sessions
+  itemType?: CalendarItemType
 }
 
 export interface CalendarState {

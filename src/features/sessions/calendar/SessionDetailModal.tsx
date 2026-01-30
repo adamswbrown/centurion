@@ -51,6 +51,14 @@ const statusColors: Record<SessionStatus, string> = {
   past: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400",
 }
 
+const appointmentStatusColors: Record<SessionStatus, string> = {
+  available: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+  registered: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+  waitlisted: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+  full: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+  past: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400",
+}
+
 export function SessionDetailModal({
   session,
   status,
@@ -65,9 +73,11 @@ export function SessionDetailModal({
 
   if (!session) return null
 
+  const isAppointment = session.itemType === "appointment"
   const spotsRemaining = session.maxOccupancy - session.registeredCount
-  const classColor = session.classType?.color || "#6366f1"
+  const classColor = isAppointment ? "#9333ea" : (session.classType?.color || "#6366f1")
   const isPast = status === "past"
+  const badgeColors = isAppointment ? appointmentStatusColors : statusColors
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -79,14 +89,15 @@ export function SessionDetailModal({
               style={{ backgroundColor: classColor }}
             />
             <div className="flex-1">
-              <DialogTitle className="text-xl">
-                {session.classType?.name ?? session.title}
+              <DialogTitle className="text-xl flex items-center gap-2">
+                {isAppointment && <User className="h-5 w-5" />}
+                {isAppointment ? session.title : (session.classType?.name ?? session.title)}
               </DialogTitle>
               <div className="flex items-center gap-2 mt-1">
-                <Badge className={cn(statusColors[status])}>
-                  {statusLabels[status]}
+                <Badge className={cn(badgeColors[status])}>
+                  {isAppointment ? "1-on-1 Session" : statusLabels[status]}
                 </Badge>
-                {!isPast && (
+                {!isPast && !isAppointment && (
                   <span className="text-sm text-muted-foreground">
                     {spotsRemaining > 0 ? `${spotsRemaining} spots left` : "Full"}
                   </span>
@@ -116,12 +127,20 @@ export function SessionDetailModal({
                   {format(session.endTime, "h:mm a")}
                 </span>
               </div>
-              <div className="flex items-center gap-3 text-sm">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                <span>
-                  {session.registeredCount} / {session.maxOccupancy} attendees
-                </span>
-              </div>
+              {!isAppointment && (
+                <div className="flex items-center gap-3 text-sm">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <span>
+                    {session.registeredCount} / {session.maxOccupancy} attendees
+                  </span>
+                </div>
+              )}
+              {isAppointment && (
+                <div className="flex items-center gap-3 text-sm">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span>Personal Training Session</span>
+                </div>
+              )}
               {session.location && (
                 <div className="flex items-center gap-3 text-sm">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -225,7 +244,7 @@ export function SessionDetailModal({
             </Button>
           )}
 
-          {status === "registered" && (
+          {status === "registered" && !isAppointment && (
             <div className="space-y-3">
               <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg text-sm">
                 <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -242,6 +261,15 @@ export function SessionDetailModal({
               >
                 {isCancelling ? "Cancelling..." : "Cancel Booking"}
               </Button>
+            </div>
+          )}
+
+          {status === "registered" && isAppointment && (
+            <div className="flex items-center gap-2 p-3 bg-purple-50 dark:bg-purple-950/30 rounded-lg text-sm">
+              <User className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+              <span className="text-purple-800 dark:text-purple-200">
+                This 1-on-1 session was scheduled by your coach
+              </span>
             </div>
           )}
 
