@@ -65,6 +65,16 @@ describe("Client Appointments Server Actions", () => {
       expect(result).toEqual(appointments)
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith({
         where: { userId: 3 },
+        include: {
+          coach: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+            },
+          },
+        },
         orderBy: { startTime: "asc" },
       })
     })
@@ -95,6 +105,16 @@ describe("Client Appointments Server Actions", () => {
           startTime: { gte: from },
           endTime: { lte: to },
         },
+        include: {
+          coach: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+            },
+          },
+        },
         orderBy: { startTime: "asc" },
       })
     })
@@ -107,6 +127,16 @@ describe("Client Appointments Server Actions", () => {
 
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith({
         where: { userId: 3 },
+        include: {
+          coach: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+            },
+          },
+        },
         orderBy: { startTime: "asc" },
       })
     })

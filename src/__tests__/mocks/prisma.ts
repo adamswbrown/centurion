@@ -493,6 +493,14 @@ export function resetPrismaMocks() {
       })
     }
   })
+  // Reset $transaction to its default implementation
+  mockPrisma.$transaction.mockReset()
+  mockPrisma.$transaction.mockImplementation((operations) => {
+    if (Array.isArray(operations)) {
+      return Promise.all(operations)
+    }
+    return operations(mockPrisma)
+  })
 }
 
 // Export the mock for vitest module mock

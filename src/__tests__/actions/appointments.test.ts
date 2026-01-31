@@ -157,15 +157,22 @@ describe("Appointments Server Actions", () => {
     })
 
     it("should detect conflicts with existing appointments", async () => {
-      const tomorrow = new Date()
-      tomorrow.setDate(tomorrow.getDate() + 1)
-      const dateStr = tomorrow.toISOString().split("T")[0]
+      // Use a fixed future date
+      const dateStr = "2026-06-15"
+
+      // Create mock dates using the same approach as combineDateAndTime
+      // to ensure timezone-consistent comparison
+      const baseDate = new Date(dateStr)
+      baseDate.setHours(9, 0, 0, 0) // 9:00 AM local time
+      const existingStart = new Date(baseDate)
+      baseDate.setHours(10, 0, 0, 0) // 10:00 AM local time
+      const existingEnd = new Date(baseDate)
 
       const existingAppointment = createMockAppointment({
         id: 1,
         userId: 1,
-        startTime: new Date(`${dateStr}T09:00:00`),
-        endTime: new Date(`${dateStr}T10:00:00`),
+        startTime: existingStart,
+        endTime: existingEnd,
       })
 
       mockPrisma.appointment.findMany.mockResolvedValue([existingAppointment])
@@ -175,7 +182,7 @@ describe("Appointments Server Actions", () => {
           memberId: 1,
           title: "Test Session",
           date: dateStr,
-          startTime: "09:30", // Overlaps with existing
+          startTime: "09:30", // Overlaps with existing (09:00-10:00)
           endTime: "10:30",
           fee: 50,
         })
