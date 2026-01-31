@@ -71,7 +71,6 @@ const navigation: Record<Role, NavItem[]> = {
     { name: "Dashboard", href: "/client/dashboard", icon: LayoutDashboard },
     { name: "My Sessions", href: "/client/sessions", icon: Dumbbell, flag: "sessionsEnabled" },
     { name: "My Membership", href: "/client/membership", icon: Ticket, flag: "sessionsEnabled" },
-    { name: "My Workouts", href: "/client/workouts", icon: Dumbbell },
     { name: "My Cohorts", href: "/client/cohorts", icon: Heart, flag: "cohortsEnabled" },
     { name: "Health Data", href: "/client/health", icon: Heart },
     { name: "Invoices", href: "/client/invoices", icon: CreditCard },

@@ -82,7 +82,7 @@ function SessionUsageBar() {
 }
 
 export function ClientSessionCalendar() {
-  const [view, setView] = useState<CalendarView>("week")
+  const [view, setView] = useState<CalendarView>("month")
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedSession, setSelectedSession] = useState<CalendarSession | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
