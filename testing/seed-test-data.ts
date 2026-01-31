@@ -12,7 +12,7 @@ import { PrismaClient, Role, CohortStatus, PaymentStatus, ResponseStatus } from 
 import fs from "fs"
 import path from "path"
 import { hash } from "bcryptjs"
-import { addDays, subDays, addWeeks, startOfDay } from "date-fns"
+import { subDays, addWeeks, startOfDay } from "date-fns"
 import { DEFAULT_TEMPLATES } from "../src/lib/default-questionnaire-templates"
 
 const prisma = new PrismaClient()
