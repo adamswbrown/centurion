@@ -35,9 +35,6 @@ export function DataSourceBadge({
   const hasStrava = sources.some(s => s.toLowerCase() === "strava")
   const hasGoogleFit = sources.some(s => s.toLowerCase() === "google_fit")
 
-  // Default to manual if no sources specified
-  const isManualOnly = sources.length === 0 || (hasManual && !hasHealthKit && !hasStrava && !hasGoogleFit)
-
   const sizeClasses = {
     sm: "text-xs px-1.5 py-0.5",
     md: "text-sm px-2 py-1"

@@ -25,7 +25,6 @@ import {
   setMinutes,
   format,
   isBefore,
-  isAfter,
 } from "date-fns"
 
 const prisma = new PrismaClient()
@@ -132,7 +131,6 @@ const WEEKLY_SCHEDULE: ScheduleSlot[] = [
 ]
 
 const VENUE = "Centurion Fitness Studio"
-const VENUE_ADDRESS = "123 Main Street, City Center"
 
 async function main() {
   console.log("🏋️ Starting session seed...")
@@ -187,7 +185,7 @@ async function main() {
   if (cohorts.length > 0) {
     console.log("🔑 Creating cohort session access...")
     for (const cohort of cohorts) {
-      for (const [name, classTypeId] of classTypeMap) {
+      for (const [, classTypeId] of classTypeMap) {
         await prisma.cohortSessionAccess.create({
           data: {
             cohortId: cohort.id,

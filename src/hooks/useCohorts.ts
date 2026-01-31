@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { CohortStatus, CohortType, MembershipStatus } from "@prisma/client"
+import { CohortStatus, MembershipStatus } from "@prisma/client"
 import {
   getCohorts,
   getCohortById,

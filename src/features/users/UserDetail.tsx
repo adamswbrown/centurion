@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { CreditAllocationForm, CreditBalanceWidget, CreditHistoryTable } from "@/features/credits"
+import { CreditAllocationForm, CreditHistoryTable } from "@/features/credits"
 import { UserCheckInFrequency } from "./UserCheckInFrequency"
 
 interface UserDetailProps {

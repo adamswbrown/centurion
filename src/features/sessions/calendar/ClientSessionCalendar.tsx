@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useCallback } from "react"
-import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, addWeeks, addMonths, isBefore } from "date-fns"
+import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, isBefore } from "date-fns"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   useAvailableSessions,

@@ -1,43 +1,17 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { useQuestionnaireStatusForCoach, useWeeklyResponses } from "@/hooks/useQuestionnaires"
+import { useQuestionnaireStatusForCoach } from "@/hooks/useQuestionnaires"
 import { useCoachCohorts } from "@/hooks/useReviewQueue"
 import { format } from "date-fns"
-
-const RESPONSE_LABELS: Record<string, string> = {
-  wins: "What went well this week?",
-  challenges: "Biggest challenge this week?",
-  days_trained: "Days trained in studio",
-  days_hit_steps: "Days hit step target",
-  days_on_calories: "Days within calorie target",
-  nutrition_help: "Nutrition help needed",
-  behavior_goal: "Behaviour goal for next week",
-  behavior_goal_review: "Behaviour goal review",
-  monthly_reflection: "Monthly reflection",
-  program_reflection: "Program reflection",
-  next_steps: "Goals moving forward",
-}
-
-function formatResponseKey(key: string): string {
-  return RESPONSE_LABELS[key] || key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
-}
 
 export function CoachQuestionnaireStatus() {
   const { data: cohorts } = useCoachCohorts()
   const [selectedCohortId, setSelectedCohortId] = useState<number | undefined>(undefined)
   const [selectedWeek, setSelectedWeek] = useState<number | undefined>(undefined)
-  const [viewingResponse, setViewingResponse] = useState<{
-    cohortId: number
-    weekNumber: number
-    memberName: string
-  } | null>(null)
 
   const { data: statusRows, isLoading } = useQuestionnaireStatusForCoach(
     selectedCohortId,
@@ -121,7 +95,7 @@ export function CoachQuestionnaireStatus() {
             <CardContent>
               <div className="text-2xl font-bold text-green-600">{completed}</div>
               <p className="text-xs text-muted-foreground">
-                {total > 0 ? Math.round((completed / total) * 100) : 0}%
+                {Math.round((completed / total) * 100)}%
               </p>
             </CardContent>
           </Card>

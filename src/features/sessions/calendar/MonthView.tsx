@@ -11,7 +11,6 @@ import {
   isSameMonth,
   isToday,
   isBefore,
-  isSameDay,
 } from "date-fns"
 import { cn } from "@/lib/utils"
 import type { CalendarSession, SessionStatus } from "./types"

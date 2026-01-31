@@ -24,7 +24,6 @@ import {
 import { SessionUsageBar } from "./SessionUsageBar"
 
 type MembershipTierStatus = "ACTIVE" | "PAUSED" | "EXPIRED" | "CANCELLED"
-type MembershipPlanType = "RECURRING" | "PACK" | "PREPAID"
 
 function getStatusBadgeVariant(status: MembershipTierStatus) {
   switch (status) {
@@ -37,10 +36,6 @@ function getStatusBadgeVariant(status: MembershipTierStatus) {
     case "CANCELLED":
       return "destructive" as const
   }
-}
-
-function getUsageBarType(planType: MembershipPlanType): "recurring" | "pack" | "prepaid" {
-  return planType.toLowerCase() as "recurring" | "pack" | "prepaid"
 }
 
 interface UserMembershipDetailProps {

@@ -11,8 +11,6 @@
 import { PrismaClient, Role, CohortStatus, PaymentStatus, ResponseStatus } from "@prisma/client"
 import fs from "fs"
 import path from "path"
-// Use AttendanceStatus for appointments
-import type { AttendanceStatus } from "@prisma/client"
 import { hash } from "bcryptjs"
 import { addDays, subDays, addWeeks, startOfDay } from "date-fns"
 import { DEFAULT_TEMPLATES } from "../src/lib/default-questionnaire-templates"
@@ -43,7 +41,7 @@ async function main() {
   const password = await hash("password123", 12)
 
   // Admin user
-  const admin = await prisma.user.create({
+  await prisma.user.create({
     data: {
       email: "admin@centurion.test",
       name: "Admin User",
@@ -552,7 +550,7 @@ async function main() {
     })
 
     // Create a paid invoice for client 1
-    const invoice2 = await prisma.invoice.create({
+    await prisma.invoice.create({
       data: {
         userId: clients[0].id,
         totalAmount: 150.0,

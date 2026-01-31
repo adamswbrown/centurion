@@ -10,7 +10,7 @@ export async function GET() {
     await prisma.$queryRaw`SELECT 1`
     dbStatus = "connected"
   } catch {
-    dbStatus = "disconnected"
+    // dbStatus remains "disconnected"
   }
 
   const uptimeSeconds = Math.floor((Date.now() - startTime) / 1000)

@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useDashboardOverview } from "@/hooks/useReports"
-import { TrendingUp, TrendingDown, Users, Building, DollarSign, AlertCircle, FileText } from "lucide-react"
+import { TrendingUp, TrendingDown, Users, Building, DollarSign, AlertCircle } from "lucide-react"
 
 /**
  * OverviewCards - Summary cards for reports dashboard

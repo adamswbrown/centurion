@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { format, differenceInDays, differenceInWeeks } from "date-fns"
+import { format, differenceInWeeks } from "date-fns"
 import { Calendar, Clock, Users } from "lucide-react"
 
 interface CohortInfoCardProps {
