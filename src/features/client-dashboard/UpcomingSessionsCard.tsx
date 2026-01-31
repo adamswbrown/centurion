@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { format, isToday, isTomorrow } from "date-fns"
-import { Calendar, MapPin, User, Dumbbell } from "lucide-react"
+import { Calendar, User, Dumbbell } from "lucide-react"
 import Link from "next/link"
 import { useAvailableSessions, useMyRegistrations } from "@/hooks/useSessions"
 

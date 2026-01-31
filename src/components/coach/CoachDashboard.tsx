@@ -30,8 +30,6 @@ import {
   ChevronRight,
   CalendarDays,
   Timer,
-  UserPlus,
-  FileText,
 } from "lucide-react"
 
 function getGreeting(): string {

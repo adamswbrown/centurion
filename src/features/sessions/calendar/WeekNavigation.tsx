@@ -2,7 +2,7 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { format, startOfWeek, endOfWeek, addDays, addWeeks, addMonths, startOfMonth, endOfMonth } from "date-fns"
+import { format, startOfWeek, endOfWeek, addDays, addWeeks, addMonths } from "date-fns"
 import type { CalendarView } from "./types"
 
 interface WeekNavigationProps {

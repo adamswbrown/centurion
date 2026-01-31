@@ -25,9 +25,7 @@ export function EditQuestionnaireForm({
   initialQuestions,
 }: EditQuestionnaireFormProps) {
   const router = useRouter()
-  const [selectedWeek, setSelectedWeek] = useState<WeekKey>(
-    `week${weekNumber}` as WeekKey
-  )
+  const selectedWeek: WeekKey = `week${weekNumber}` as WeekKey
   // Initialize bundle with default templates and overlay the saved questions for this week
   const [bundle, setBundle] = useState(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

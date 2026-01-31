@@ -13,10 +13,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Activity, Moon, Users, Key, RefreshCw, Copy, Check } from "lucide-react"
-import {
-  createPairingCode,
-  regeneratePairingCode,
-} from "@/lib/healthkit/pairing"
 import { useRouter } from "next/navigation"
 
 interface Client {

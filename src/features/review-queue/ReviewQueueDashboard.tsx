@@ -18,7 +18,7 @@ import {
 import type { ClientWeeklySummary } from "@/app/actions/review-queue"
 import { generateWeeklyEmailDraft } from "@/lib/email-draft"
 import { format, addDays, subDays } from "date-fns"
-import { ChevronLeft, ChevronRight, RefreshCw, Copy, Check, ExternalLink, Save } from "lucide-react"
+import { ChevronLeft, ChevronRight, RefreshCw, Copy, Check, Save } from "lucide-react"
 
 /**
  * ReviewQueueDashboard - Weekly review queue for coaches
