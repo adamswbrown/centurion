@@ -60,6 +60,21 @@ Implemented comprehensive PWA support with push notifications for iOS, Android, 
 3. Run database migration: `npm run db:push` or `npm run db:migrate`
 4. Set up cron service for scheduled notifications
 
+### Vercel Cron Configuration
+Created `vercel.json` with scheduled cron jobs for automated notifications:
+
+| Schedule | Type | Description |
+|----------|------|-------------|
+| `0 * * * *` (Hourly) | `daily_checkin_reminder` | Matches user's preferred reminder time |
+| `0 10 * * 0` (Sun 10 AM) | `weekly_questionnaire_reminder` | Sunday questionnaire reminders |
+| `*/5 * * * *` (Every 5 min) | `appointment_reminders` | 24h and 1h before appointments |
+| `*/5 * * * *` (Every 5 min) | `session_reminders` | 24h and 1h before sessions |
+| `0 8 * * *` (Daily 8 AM) | `progress_celebrations` | Step goal achievements |
+| `0 9 * * *` (Daily 9 AM) | `streak_notifications` | Streak milestone celebrations |
+| `0 10 * * *` (Daily 10 AM) | `payment_reminders` | Overdue invoice reminders |
+
+Vercel automatically sends `CRON_SECRET` in the Authorization header for security.
+
 ### Documentation
 - Full plan document: `docs/PWA_NOTIFICATIONS_PLAN.md`
 - Environment example updated: `.env.example`

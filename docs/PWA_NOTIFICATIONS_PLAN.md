@@ -1753,25 +1753,11 @@ export async function createInvoice(data: InvoiceData) {
 
 ## Phase 7: Cron Job Setup
 
-### 7.1 Recommended Schedule
+> **✅ IMPLEMENTED** - Vercel Cron is configured in `vercel.json`
 
-Use a cron job service (Vercel Cron, AWS CloudWatch Events, or external like cron-job.org):
+### 7.1 Vercel Cron Configuration (Recommended)
 
-```bash
-# Daily check-in reminders (every hour to catch different timezones)
-0 * * * * curl -X POST https://centurion.app/api/cron/notifications -H "Authorization: Bearer $CRON_SECRET" -d '{"type":"daily_checkin_reminder"}'
-
-# Weekly questionnaire reminders (Sunday 10 AM UTC)
-0 10 * * 0 curl -X POST https://centurion.app/api/cron/notifications -H "Authorization: Bearer $CRON_SECRET" -d '{"type":"weekly_questionnaire_reminder"}'
-
-# Appointment reminders (every 5 minutes)
-*/5 * * * * curl -X POST https://centurion.app/api/cron/notifications -H "Authorization: Bearer $CRON_SECRET" -d '{"type":"appointment_reminders"}'
-
-# Progress celebrations (daily at 8 AM UTC)
-0 8 * * * curl -X POST https://centurion.app/api/cron/notifications -H "Authorization: Bearer $CRON_SECRET" -d '{"type":"progress_celebrations"}'
-```
-
-### 7.2 Vercel Cron Configuration
+Vercel Cron is configured in `vercel.json` and will automatically run on deployment:
 
 **File: `vercel.json`**
 
@@ -1791,11 +1777,75 @@ Use a cron job service (Vercel Cron, AWS CloudWatch Events, or external like cro
       "schedule": "*/5 * * * *"
     },
     {
+      "path": "/api/cron/notifications?type=session_reminders",
+      "schedule": "*/5 * * * *"
+    },
+    {
       "path": "/api/cron/notifications?type=progress_celebrations",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/notifications?type=streak_notifications",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/notifications?type=payment_reminders",
+      "schedule": "0 10 * * *"
     }
   ]
 }
+```
+
+### 7.2 Cron Schedule Reference
+
+| Job | Schedule | Description |
+|-----|----------|-------------|
+| `daily_checkin_reminder` | `0 * * * *` | Every hour (matches user's preferred time) |
+| `weekly_questionnaire_reminder` | `0 10 * * 0` | Sundays at 10 AM UTC |
+| `appointment_reminders` | `*/5 * * * *` | Every 5 minutes |
+| `session_reminders` | `*/5 * * * *` | Every 5 minutes |
+| `progress_celebrations` | `0 8 * * *` | Daily at 8 AM UTC |
+| `streak_notifications` | `0 9 * * *` | Daily at 9 AM UTC |
+| `payment_reminders` | `0 10 * * *` | Daily at 10 AM UTC |
+
+### 7.3 Vercel Setup Instructions
+
+1. **Add Environment Variable** in Vercel Dashboard → Settings → Environment Variables:
+   ```
+   CRON_SECRET=<generate-with-openssl-rand-base64-32>
+   ```
+
+2. **Deploy** - Vercel automatically detects `vercel.json` and registers cron jobs
+
+3. **Monitor** - View cron execution in Vercel Dashboard → Logs → Filter by "Cron"
+
+4. **Limits** - Vercel Cron availability by plan:
+   - **Hobby**: Once per day max
+   - **Pro**: Up to every minute
+   - **Enterprise**: Up to every minute with higher limits
+
+### 7.4 Alternative: External Cron Services
+
+If not using Vercel, use any cron service (AWS CloudWatch, cron-job.org, etc.):
+
+```bash
+# Daily check-in reminders (every hour)
+0 * * * * curl -X POST https://your-domain.com/api/cron/notifications \
+  -H "Authorization: Bearer $CRON_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"type":"daily_checkin_reminder"}'
+
+# Weekly questionnaire reminders (Sunday 10 AM UTC)
+0 10 * * 0 curl -X POST https://your-domain.com/api/cron/notifications \
+  -H "Authorization: Bearer $CRON_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"type":"weekly_questionnaire_reminder"}'
+
+# Appointment reminders (every 5 minutes)
+*/5 * * * * curl -X POST https://your-domain.com/api/cron/notifications \
+  -H "Authorization: Bearer $CRON_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"type":"appointment_reminders"}'
 ```
 
 ---
