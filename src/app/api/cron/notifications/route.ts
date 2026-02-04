@@ -12,17 +12,22 @@ import {
 } from "@/lib/push-notifications"
 
 // Verify cron secret for security
+// Vercel Cron automatically sends CRON_SECRET in Authorization header
 function verifyCronSecret(request: NextRequest): boolean {
   const authHeader = request.headers.get("authorization")
   const cronSecret = process.env.CRON_SECRET
 
-  // Allow in development without secret
+  // Allow in development without secret configured
   if (process.env.NODE_ENV === "development" && !cronSecret) {
     return true
   }
 
-  if (!cronSecret) return false
-  return authHeader === `Bearer ${cronSecret}`
+  // Verify using CRON_SECRET (Vercel automatically adds this header)
+  if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
+    return true
+  }
+
+  return false
 }
 
 export async function POST(request: NextRequest) {

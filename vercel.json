@@ -1,0 +1,33 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/cron/notifications?type=daily_checkin_reminder",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/notifications?type=weekly_questionnaire_reminder",
+      "schedule": "0 10 * * 0"
+    },
+    {
+      "path": "/api/cron/notifications?type=appointment_reminders",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/notifications?type=session_reminders",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/notifications?type=progress_celebrations",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/notifications?type=streak_notifications",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/notifications?type=payment_reminders",
+      "schedule": "0 10 * * *"
+    }
+  ]
+}
