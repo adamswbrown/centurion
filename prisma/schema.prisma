@@ -77,6 +77,10 @@ model User {
   // Cohort Types (Phase 3 - C8)
   customCohortTypes  CustomCohortType[]
 
+  // Push Notifications
+  pushSubscriptions       PushSubscription[]
+  notificationPreference  NotificationPreference?
+
   @@map("users")
   @@index([email])
   @@index([role])
@@ -964,4 +968,103 @@ model CohortSessionAccess {
   @@id([cohortId, classTypeId])
   @@map("cohort_session_access")
   @@index([classTypeId])
+}
+
+// ============================================
+// PUSH NOTIFICATIONS
+// ============================================
+
+model PushSubscription {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  endpoint  String   @unique
+  auth      String   // Base64 encoded auth key
+  p256dh    String   // Base64 encoded public key
+  userAgent String?  // Device info for debugging
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("push_subscriptions")
+  @@index([userId])
+  @@index([endpoint])
+}
+
+model NotificationPreference {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+
+  // Master toggle
+  pushEnabled   Boolean @default(true)
+  emailEnabled  Boolean @default(true)
+
+  // Daily check-in reminders
+  dailyCheckInReminder      Boolean @default(true)
+  dailyCheckInTime          String  @default("09:00")  // HH:mm format
+  dailyCheckInTimezone      String  @default("America/New_York")
+
+  // Weekly questionnaire reminders (Sunday)
+  weeklyQuestionnaireReminder     Boolean @default(true)
+  weeklyQuestionnaireTime         String  @default("10:00")
+  weeklyQuestionnaireDay          Int     @default(0)  // 0=Sunday, 6=Saturday
+
+  // Motivational/progress notifications
+  progressNotifications     Boolean @default(true)
+  stepGoalCelebrations      Boolean @default(true)
+  streakNotifications       Boolean @default(true)
+
+  // Appointment reminders
+  appointmentReminder24h    Boolean @default(true)
+  appointmentReminder1h     Boolean @default(true)
+
+  // Session reminders
+  sessionReminder24h        Boolean @default(true)
+  sessionReminder1h         Boolean @default(true)
+
+  // Coach notifications (for CLIENT role)
+  coachNoteReceived         Boolean @default(true)
+  weeklyReviewReady         Boolean @default(true)
+
+  // Client notifications (for COACH role)
+  clientCheckInReceived     Boolean @default(true)
+  questionnaireSubmitted    Boolean @default(true)
+  attentionScoreAlerts      Boolean @default(true)
+
+  // Invoice/payment notifications
+  invoiceReceived           Boolean @default(true)
+  paymentReminders          Boolean @default(true)
+
+  // System notifications
+  systemAnnouncements       Boolean @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("notification_preferences")
+  @@index([userId])
+}
+
+model NotificationLog {
+  id             Int       @id @default(autoincrement())
+  userId         Int
+  type           String    // PUSH, EMAIL
+  category       String    // daily_reminder, questionnaire, etc.
+  title          String
+  body           String?
+  status         String    // SENT, FAILED, CLICKED
+  deliveredAt    DateTime?
+  clickedAt      DateTime?
+  errorMessage   String?
+
+  createdAt DateTime @default(now())
+
+  @@map("notification_logs")
+  @@index([userId])
+  @@index([type])
+  @@index([category])
+  @@index([createdAt])
 }

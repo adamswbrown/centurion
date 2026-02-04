@@ -10,6 +10,12 @@ import type { MemberAttentionScore } from "./coach-analytics"
 import { calculateAttentionScore } from "./coach-analytics"
 import { sendSystemEmail } from "@/lib/email"
 import { EMAIL_TEMPLATE_KEYS } from "@/lib/email-templates"
+import {
+  sendPushNotification,
+  createWeeklyReviewNotification,
+  createWeeklyQuestionnaireReminder,
+  isPushConfigured,
+} from "@/lib/push-notifications"
 
 /**
  * Review Queue Server Actions
@@ -484,6 +490,7 @@ export async function saveWeeklyResponse(input: {
   })
 
   if (client?.email && (loomUrl || note)) {
+    // Send email notification
     await sendSystemEmail({
       templateKey: EMAIL_TEMPLATE_KEYS.COACH_NOTE_RECEIVED,
       to: client.email,
@@ -494,6 +501,23 @@ export async function saveWeeklyResponse(input: {
       },
       isTestUser: client.isTestUser ?? false,
     })
+
+    // Send push notification (non-blocking)
+    if (isPushConfigured()) {
+      // Calculate week number for the notification
+      const weekNumber = Math.ceil(
+        (weekDate.getTime() - new Date().setMonth(new Date().getMonth() - 3)) /
+          (7 * 24 * 60 * 60 * 1000)
+      )
+
+      sendPushNotification(
+        clientId,
+        "weekly_review",
+        createWeeklyReviewNotification(coach?.name || "Your Coach", weekNumber)
+      ).catch((err) => {
+        console.error("Failed to send weekly review push notification:", err)
+      })
+    }
   }
 
   return response
@@ -717,6 +741,27 @@ export async function sendQuestionnaireReminder(input: {
     },
     isTestUser: client.isTestUser ?? false,
   })
+
+  // Also send push notification
+  if (isPushConfigured()) {
+    // Get cohort name for the notification
+    const cohortDetails = await prisma.cohort.findUnique({
+      where: { id: cohortId },
+      select: { name: true },
+    })
+
+    sendPushNotification(
+      clientId,
+      "weekly_questionnaire",
+      createWeeklyQuestionnaireReminder(
+        cohortDetails?.name || "your program",
+        currentWeekNumber,
+        cohortId
+      )
+    ).catch((err) => {
+      console.error("Failed to send questionnaire reminder push notification:", err)
+    })
+  }
 
   return {
     success: true,

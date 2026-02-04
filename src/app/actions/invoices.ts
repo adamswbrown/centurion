@@ -8,6 +8,11 @@ import { createPaymentLink } from "@/lib/stripe"
 import { startOfMonth, endOfMonth, format } from "date-fns"
 import { sendSystemEmail } from "@/lib/email"
 import { EMAIL_TEMPLATE_KEYS } from "@/lib/email-templates"
+import {
+  sendPushNotification,
+  createInvoiceNotification,
+  isPushConfigured,
+} from "@/lib/push-notifications"
 
 const generateInvoiceSchema = z.object({
   userId: z.number().int().positive(),
@@ -207,6 +212,20 @@ export async function generateInvoice(input: GenerateInvoiceInput) {
       },
       isTestUser: user.isTestUser ?? false,
     })
+
+    // Also send push notification (non-blocking)
+    if (isPushConfigured()) {
+      sendPushNotification(
+        userId,
+        "invoice",
+        createInvoiceNotification(
+          `$${Number(totalAmount).toFixed(2)}`,
+          monthYear
+        )
+      ).catch((err) => {
+        console.error("Failed to send invoice push notification:", err)
+      })
+    }
   }
 
   return invoice

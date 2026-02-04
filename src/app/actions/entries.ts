@@ -4,6 +4,12 @@ import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import { startOfDay, endOfDay } from "date-fns"
+import {
+  sendPushNotification,
+  createClientCheckInNotification,
+  createStreakNotification,
+  isPushConfigured,
+} from "@/lib/push-notifications"
 
 const upsertEntrySchema = z.object({
   date: z.string().min(1),
@@ -158,7 +164,13 @@ export async function upsertEntry(input: UpsertEntryInput) {
     data.dataSources = dataSources
   }
 
-  return prisma.entry.upsert({
+  // Check if this is a new entry (for notification purposes)
+  const existingEntry = await prisma.entry.findUnique({
+    where: { userId_date: { userId, date } },
+  })
+  const isNewEntry = !existingEntry
+
+  const entry = await prisma.entry.upsert({
     where: {
       userId_date: {
         userId,
@@ -172,6 +184,115 @@ export async function upsertEntry(input: UpsertEntryInput) {
     },
     update: data,
   })
+
+  // Send notifications for new entries (non-blocking)
+  if (isNewEntry && isPushConfigured()) {
+    // Get the user's coaches and notify them
+    notifyCoachesOfCheckIn(userId, session.user.name || "A client").catch((err) => {
+      console.error("Failed to notify coaches:", err)
+    })
+
+    // Check and send streak notification
+    checkAndSendStreakNotification(userId).catch((err) => {
+      console.error("Failed to send streak notification:", err)
+    })
+  }
+
+  return entry
+}
+
+/**
+ * Notify all coaches who manage this client about a new check-in
+ */
+async function notifyCoachesOfCheckIn(clientId: number, clientName: string) {
+  // Find all coaches for this client's active cohorts
+  const memberships = await prisma.cohortMembership.findMany({
+    where: {
+      userId: clientId,
+      status: "ACTIVE",
+    },
+    include: {
+      cohort: {
+        include: {
+          coaches: {
+            include: {
+              coach: {
+                select: { id: true, notificationPreference: true },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+
+  const coachIds = new Set<number>()
+  for (const membership of memberships) {
+    for (const coachMembership of membership.cohort.coaches) {
+      if (coachMembership.coach.notificationPreference?.clientCheckInReceived !== false) {
+        coachIds.add(coachMembership.coachId)
+      }
+    }
+  }
+
+  // Send notification to each coach
+  for (const coachId of coachIds) {
+    await sendPushNotification(
+      coachId,
+      "client_activity",
+      createClientCheckInNotification(clientName)
+    )
+  }
+}
+
+/**
+ * Check if user has reached a streak milestone and send notification
+ */
+async function checkAndSendStreakNotification(userId: number) {
+  const entries = await prisma.entry.findMany({
+    where: { userId },
+    orderBy: { date: "desc" },
+    take: 100,
+    select: { date: true },
+  })
+
+  if (entries.length === 0) return
+
+  // Calculate streak
+  let streak = 0
+  const today = new Date()
+  today.setUTCHours(0, 0, 0, 0)
+  let expectedDate = today
+
+  for (const entry of entries) {
+    const entryDate = new Date(entry.date)
+    entryDate.setUTCHours(0, 0, 0, 0)
+
+    if (streak === 0) {
+      const diffDays = Math.floor(
+        (today.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24)
+      )
+      if (diffDays > 1) return // No recent entry
+      expectedDate = entryDate
+    }
+
+    if (entryDate.getTime() === expectedDate.getTime()) {
+      streak++
+      expectedDate = new Date(expectedDate.getTime() - 24 * 60 * 60 * 1000)
+    } else if (entryDate.getTime() < expectedDate.getTime()) {
+      break
+    }
+  }
+
+  // Send notifications at milestone days
+  const milestones = [3, 5, 7, 14, 21, 30, 60, 90, 100]
+  if (milestones.includes(streak)) {
+    await sendPushNotification(
+      userId,
+      "streak_notification",
+      createStreakNotification(streak)
+    )
+  }
 }
 
 /**
