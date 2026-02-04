@@ -1,3 +1,71 @@
+## 2026-02-04 — Full PWA with Push Notifications Implementation
+
+Implemented comprehensive PWA support with push notifications for iOS, Android, and desktop browsers.
+
+### PWA Foundation
+- **Manifest** (`public/manifest.webmanifest`): App installable with icons, shortcuts, theme
+- **Service Worker** (`public/sw.js`): Push notifications, caching, offline support, background sync
+- **Icons** (`public/icons/*`): All required PWA icon sizes (72x72 to 512x512)
+- **Offline Page** (`src/app/offline/page.tsx`): Graceful fallback when offline
+- **ServiceWorkerProvider** (`src/components/providers/ServiceWorkerProvider.tsx`): Registration and update handling
+- **Layout Updates**: iOS meta tags, theme-color, viewport settings
+
+### Push Notification Infrastructure
+- **web-push Integration**: Server-side push delivery with VAPID authentication
+- **Database Models**: PushSubscription, NotificationPreference, NotificationLog
+- **Server Actions** (`src/app/actions/push-notifications.ts`): Subscribe, unsubscribe, preferences CRUD
+- **VAPID API** (`src/app/api/push/vapid/route.ts`): Public key endpoint for client subscription
+- **Cron API** (`src/app/api/cron/notifications/route.ts`): Scheduled notification delivery
+
+### Notification Types Implemented
+**For Clients:**
+- Daily check-in reminders (configurable time, default 9 AM)
+- Weekly questionnaire reminders (configurable day, default Sunday)
+- Step goal celebrations (hit goal, near goal)
+- Streak notifications (milestones: 3, 5, 7, 14, 21, 30, 60, 90, 100 days)
+- Appointment reminders (24h and 1h before)
+- Session reminders (24h and 1h before)
+- Coach note received
+- Weekly review ready
+- Invoice received
+- Payment reminders (overdue invoices)
+
+**For Coaches:**
+- Client check-in received
+- Questionnaire submitted
+- Attention score alerts (red/amber clients)
+
+### Frontend Components
+- **usePushNotifications Hook** (`src/hooks/usePushNotifications.ts`): Client-side subscription management
+- **NotificationSettings** (`src/features/settings/NotificationSettings.tsx`): Full preferences UI with toggles for all notification types
+- **Switch Component** (`src/components/ui/switch.tsx`): shadcn/radix switch for toggles
+
+### Integration Points
+- **entries.ts**: Notifies coaches on client check-in, sends streak notifications
+- **review-queue.ts**: Sends weekly review ready and questionnaire reminder notifications
+- **invoices.ts**: Sends invoice created notifications
+
+### iOS Compatibility (16.4+)
+- PWA must be installed to home screen for push notifications
+- apple-mobile-web-app-capable meta tag
+- black-translucent status bar style
+
+### Setup Requirements
+1. Generate VAPID keys: `npx web-push generate-vapid-keys`
+2. Configure environment variables:
+   - `VAPID_PUBLIC_KEY`
+   - `VAPID_PRIVATE_KEY`
+   - `VAPID_SUBJECT` (mailto: URL)
+   - `CRON_SECRET` (for cron endpoint auth)
+3. Run database migration: `npm run db:push` or `npm run db:migrate`
+4. Set up cron service for scheduled notifications
+
+### Documentation
+- Full plan document: `docs/PWA_NOTIFICATIONS_PLAN.md`
+- Environment example updated: `.env.example`
+
+---
+
 ## 2026-01-28 — Session/Cohort Decoupling UI Refactor Complete
 
 Completed the full session/cohort decoupling refactor:

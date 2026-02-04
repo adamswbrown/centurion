@@ -1,3 +1,32 @@
+# 2026-02-04
+PWA with Push Notifications fully implemented. App is now installable on iOS (16.4+), Android, and desktop browsers with full push notification support.
+
+### PWA Features Complete
+- App-wide manifest.webmanifest with icons and shortcuts
+- Service worker with push notifications, caching, and offline support
+- Offline fallback page at /offline
+- iOS support with apple-mobile-web-app meta tags
+
+### Push Notifications
+- PushSubscription, NotificationPreference, NotificationLog database models
+- web-push integration for server-side delivery
+- User preferences UI at /settings for notification management
+- Cron endpoint at /api/cron/notifications for scheduled reminders
+
+### Notification Types
+- Daily check-in reminders (configurable time)
+- Weekly questionnaire reminders (configurable day, default Sunday)
+- Step goal celebrations
+- Streak notifications (milestones: 3, 5, 7, 14, 21, 30+ days)
+- Appointment reminders (24h and 1h before)
+- Session reminders (24h and 1h before)
+- Coach note received
+- Weekly review ready
+- Invoice notifications
+- Payment reminders
+- Client check-in notifications (for coaches)
+- Attention score alerts (for coaches)
+
 # 2026-01-28
 Session & Cohort decoupling refactor fully completed (backend + UI). Sessions are global, cohort visibility managed via CohortSessionAccess join table. Registration logic enforces cohort access check after auth/session fetch. Admin UI for managing cohort session access added to CohortDetail page (SessionAccessManager component). Backfill script created at scripts/backfill-cohort-session-access.ts. All cohortId references removed from session creation, update, and UI forms. 1632 tests passing, build clean.
 # 2026-01-26
@@ -143,6 +172,11 @@ Seed script run completed successfully. Test admin, coach, and client accounts c
 - Unified fitness platform combining Personal Trainer Planner (appointments, bootcamps, invoicing) and CoachFit (cohorts, health data).
 - **Phase 7 (Daily Check-In System) and Phase 8 (Weekly Questionnaires) complete**. Ready for Phase 9: Health Data Tracking.
 - Interval timer PWA (standalone `/timer`) implementation complete.
+- **Full PWA with Push Notifications** (2026-02-04):
+  - App installable on iOS, Android, and desktop
+  - Push notifications for all major events
+  - Offline support with service worker caching
+  - NotificationSettings component for user preferences
 
 ## What’s Implemented
 - Member management aligned to spec naming (members, not clients): list, detail, create/edit/delete.
@@ -352,6 +386,19 @@ Seed script run completed successfully. Test admin, coach, and client accounts c
   - `public/manifest.json`
   - `public/timer-sw.js`
   - `public/timer-icon-192.png`, `public/timer-icon-512.png`
+- PWA & Push Notifications:
+  - `public/manifest.webmanifest`
+  - `public/sw.js`
+  - `public/icons/*`
+  - `src/lib/push-notifications.ts`
+  - `src/app/actions/push-notifications.ts`
+  - `src/app/api/push/vapid/route.ts`
+  - `src/app/api/cron/notifications/route.ts`
+  - `src/app/offline/page.tsx`
+  - `src/hooks/usePushNotifications.ts`
+  - `src/features/settings/NotificationSettings.tsx`
+  - `src/components/providers/ServiceWorkerProvider.tsx`
+  - `src/components/ui/switch.tsx`
 
 ## Data Model Notes
 - Prisma Appointment model uses `startTime`, `endTime`, `fee`, `status`, optional `googleEventId`, `invoiceId`.
@@ -372,6 +419,8 @@ Seed script run completed successfully. Test admin, coach, and client accounts c
 - `recharts` for revenue data visualization.
 - React Query provider registered in `src/app/layout.tsx` via `src/app/providers.tsx`.
 - Environment variables: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` (for production deployments).
+- `web-push` for server-side push notification delivery.
+- Environment variables for push: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `CRON_SECRET`.
 
 ## Cross-Platform Audit (2026-01-27)
 - **~65 features implemented** from CoachFit + PTP
@@ -381,11 +430,12 @@ Seed script run completed successfully. Test admin, coach, and client accounts c
 
 ## Open TODOs
 - Consider adding global toast notifications for feedback (currently inline messages).
-- Run database migration for CreditTransaction and isTestUser fields (`npx prisma migrate dev`).
-- Add cron job for weekly review queue reminder notifications.
+- Run database migration for CreditTransaction, isTestUser, and push notification fields (`npx prisma migrate dev`).
 - Consider adding print/PDF export for reports.
 - iOS app development for HealthKit sync.
 - Address 9 critical gaps from cross-platform audit (see Features Next Up).
+- Set up cron service (Vercel Cron, AWS CloudWatch, etc.) for scheduled notifications.
+- Generate and configure VAPID keys for push notifications.
 
 ## How to Run
 - `npm run dev` - Start development server
